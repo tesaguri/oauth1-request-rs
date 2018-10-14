@@ -113,6 +113,17 @@
 //! );
 //!
 //! assert_eq!(
+//!     authorization,
+//!     "OAuth \
+//!      oauth_consumer_key=\"consumer_key\",\
+//!      oauth_nonce=\"nonce\",\
+//!      oauth_signature_method=\"HMAC-SHA1\",\
+//!      oauth_timestamp=\"9999999999\",\
+//!      oauth_token=\"token\",\
+//!      oauth_version=\"1.0\",\
+//!      oauth_signature=\"JeDlFImHxfukYP0e6P2fy63G6V4%3D\"",
+//! );
+//! assert_eq!(
 //!     data,
 //!     "https://example.com/api/v1/get.json?abc=value&lmn=something&qrs=stuff&xyz=blah-blah",
 //! );
