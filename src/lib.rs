@@ -66,10 +66,7 @@
 //! # sign.append("abc", "value").append("lmn", "something");
 //! # let mut sign = sign.append_oauth_params(
 //! #     "consumer_key",
-//! #     &*oauth::Options::new()
-//! #         .token("token")
-//! #         .nonce("nonce")
-//! #         .timestamp(9999999999),
+//! #     &*oauth::Options::new().token("token").nonce("nonce").timestamp(9999999999),
 //! # );
 //! # sign.append("qrs", "stuff").append("xyz", "blah-blah");
 //!
@@ -102,7 +99,10 @@
 //!     "consumer_key",
 //!     "consumer_secret",
 //!     "token_secret",
-//!     &*oauth::Options::new().token("token").nonce("nonce").timestamp(9999999999),
+//!     &*oauth::Options::new()
+//!         .token("token")
+//!         .nonce("nonce")
+//!         .timestamp(9999999999),
 //!     Some(&[
 //!         // Ordering doesn't matter here:
 //!         ("xyz", "blah-blah"),
@@ -150,8 +150,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::display::Base64Display;
 use hmac::{Hmac, Mac};
-use rand::thread_rng;
 use rand::distributions::Distribution;
+use rand::thread_rng;
 use sha1::Sha1;
 
 use util::*;
@@ -725,10 +725,10 @@ mod tests {
 
     #[cfg(debug_assertions)]
     #[test]
-    #[should_panic(expected =
-        "appended key is less than previously appended one in dictionary order\
-         \n previous: `\"foo\"`,\
-         \n  current: `\"bar\"`"
+    #[should_panic(
+        expected = "appended key is less than previously appended one in dictionary order\
+                    \n previous: `\"foo\"`,\
+                    \n  current: `\"bar\"`"
     )]
     fn panic_on_misordering() {
         Signer::new("", "", "", None)

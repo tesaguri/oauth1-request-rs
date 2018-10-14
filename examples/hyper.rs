@@ -3,9 +3,9 @@ extern crate oauth1_request;
 
 use std::str;
 
-use hyper::{Client, Request, Uri};
 use hyper::header::AUTHORIZATION;
 use hyper::rt::{self, Future, Stream};
+use hyper::{Client, Request, Uri};
 use oauth1_request as oauth;
 
 fn main() {
@@ -29,8 +29,7 @@ fn main() {
         .and_then(|res| res.into_body().concat2())
         .map(|body| {
             println!("{}", str::from_utf8(&body).unwrap());
-        })
-        .map_err(|e| panic!("{:?}", e));
+        }).map_err(|e| panic!("{:?}", e));
 
     rt::run(fut);
 }
