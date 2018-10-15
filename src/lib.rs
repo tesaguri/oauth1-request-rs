@@ -243,29 +243,17 @@ impl Signer<NotReady> {
     }
 
     fn new_(method: &str, uri: impl Display, cs: &str, ts: Option<&str>, q: bool) -> Self {
-        let standard_header_len = str::len(
-            "OAuth \
-             oauth_consumer_key=\"XXXXXXXXXXXXXXXXXXXXXXXXX\",\
-             oauth_nonce=\"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",\
-             oauth_signature_method=\"HMAC-SHA1\",\
-             oauth_timestamp=\"NNNNNNNNNN\",\
-             oauth_token=\"NNNNNNNNNNNNNNNNNNN-\
-             XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\",\
-             oauth_version=\"1.0\",\
-             oauth_signature=\"\
-             %XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX\
-             %XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX%XX\"",
-        );
-
-        let mut authorization = String::with_capacity(standard_header_len);
-        authorization.push_str("OAuth ");
-
-        let mut signing_key = String::with_capacity(3 * (cs.len() + ts.map_or(0, str::len)) + 1);
+        let mut signing_key = String::with_capacity(512);
         write!(signing_key, "{}&", percent_encode(cs)).unwrap();
         if let Some(ts) = ts {
             write!(signing_key, "{}", percent_encode(ts)).unwrap();
         }
         let mut signature = MacWrite(Hmac::new_varkey(signing_key.as_bytes()).unwrap());
+
+        // Reuse the buffer
+        signing_key.clear();
+        let mut authorization = signing_key;
+        authorization.push_str("OAuth ");
 
         let uri = DisplayBefore('?', uri);
         let data = if q {
