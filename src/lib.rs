@@ -176,6 +176,8 @@ options! {
     /// Optional OAuth parameters.
     #[derive(Clone, Debug, Default)]
     pub struct Options<'a> {
+        /// Sets `oauth_callback` parameter.
+        callback: Option<&'a str>,
         /// Sets `oauth_nonce` parameter.
         nonce: Option<&'a str>,
         /// Sets `oauth_timestamp` parameter.
@@ -187,6 +189,8 @@ options! {
         timestamp: Option<NonZeroU64>,
         /// Sets `oauth_token` parameter.
         token: Option<&'a str>,
+        /// Sets `oauth_verifier` parameter.
+        verifier: Option<&'a str>,
     }
 }
 
@@ -332,12 +336,18 @@ impl Signer<NotReady> {
             }
         };
 
+        if let Some(c) = opts.callback {
+            self.append_to_header("oauth_callback", c);
+        }
         self.append_to_header("oauth_consumer_key", ck);
         self.append_to_header_encoded("oauth_nonce", nonce);
         self.append_to_header_encoded("oauth_signature_method", "HMAC-SHA1");
         self.append_to_header_encoded("oauth_timestamp", timestamp);
         if let Some(t) = opts.token {
             self.append_to_header("oauth_token", t);
+        }
+        if let Some(v) = opts.verifier {
+            self.append_to_header("oauth_verifier", v);
         }
         self.append_to_header_encoded("oauth_version", "1.0");
 

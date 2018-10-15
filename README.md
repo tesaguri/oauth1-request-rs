@@ -29,5 +29,5 @@ extern crate oauth1_request;
 ## Cons
 
 * Only dogfooded on Twitter and likely to break on other sites.
-* Some OAuth 1 features (like "callback") are not implemented (yet).
+* Signature methods other than `HMAC-SHA1` are not implemented (yet).
 * Less ergonomic API: it requires you to explicitly handle the ordering of query/OAuth parameters.
