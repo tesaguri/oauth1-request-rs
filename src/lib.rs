@@ -340,7 +340,7 @@ impl Signer<NotReady> {
             self.append_to_header("oauth_callback", c);
         }
         self.append_to_header("oauth_consumer_key", ck);
-        self.append_to_header_encoded("oauth_nonce", nonce);
+        self.append_to_header("oauth_nonce", nonce);
         self.append_to_header_encoded("oauth_signature_method", "HMAC-SHA1");
         self.append_to_header_encoded("oauth_timestamp", timestamp);
         if let Some(t) = opts.token {
