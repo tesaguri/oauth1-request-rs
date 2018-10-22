@@ -11,7 +11,7 @@ use oauth1_request as oauth;
 fn main() {
     let uri = Uri::from_static("http://oauthbin.com/v1/echo");
 
-    let mut signer = oauth::Signer::new_form("POST", &uri, "secret", "accesssecret");
+    let mut signer = oauth::PlaintextSigner::new_form("POST", &uri, "secret", "accesssecret");
     signer.append("foo", "風");
     let mut signer = signer.append_oauth_params("key", &*oauth::Options::new().token("accesskey"));
     signer.append_encoded("qux", true);

@@ -29,5 +29,4 @@ extern crate oauth1_request;
 ## Cons
 
 * Only dogfed on Twitter and likely to break on other sites.
-* Signature methods other than `HMAC-SHA1` are not implemented (yet).
 * Less ergonomic API: it requires you to explicitly handle the ordering of query/OAuth parameters.

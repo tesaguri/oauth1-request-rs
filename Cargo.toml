@@ -13,12 +13,18 @@ Yet yet yet another OAuth 1 client library.
 """
 
 [dependencies]
-base64 = "0.9"
 bitflags = "1"
-hmac = "0.7"
+cfg-if = "0.1"
 percent-encoding = "1"
 rand = "0.5"
-sha-1 = "0.8"
+base64 = { version = "0.9", optional = true }
+either = { version = "1", optional = true }
+hmac = { version = "0.7", optional = true }
+sha-1 = { version = "0.8", optional = true }
 
 [dev-dependencies]
 hyper = "0.12"
+
+[features]
+default = ["hmac-sha1"]
+hmac-sha1 = ["base64", "hmac", "sha-1"]

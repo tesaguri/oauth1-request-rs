@@ -7,7 +7,7 @@
 //! ```rust
 //! extern crate oauth1_request as oauth;
 //!
-//! let mut sign = oauth::Signer::new(
+//! let mut sign = oauth::HmacSha1Signer::new(
 //!     "GET",
 //!     "https://example.com/api/v1/get.json",
 //!     "consumer_secret",
@@ -54,7 +54,7 @@
 //! ```rust
 //! # extern crate oauth1_request as oauth;
 //! // Use `new_form` method to create an `x-www-form-urlencoded` string.
-//! let mut sign = oauth::Signer::new_form(
+//! let mut sign = oauth::HmacSha1Signer::new_form(
 //!     "POST",
 //!     "https://example.com/api/v1/post.json",
 //!     "consumer_secret",
@@ -99,6 +99,7 @@
 //!     "consumer_key",
 //!     "consumer_secret",
 //!     "token_secret",
+//!     oauth::HmacSha1,
 //!     &*oauth::Options::new()
 //!         .token("token")
 //!         .nonce("nonce")
@@ -129,16 +130,19 @@
 //! );
 //! ```
 
-extern crate base64;
 #[macro_use]
 extern crate bitflags;
-extern crate hmac;
+#[macro_use]
+extern crate cfg_if;
 extern crate percent_encoding;
 extern crate rand;
-extern crate sha1;
+
+pub mod signature_method;
 
 #[macro_use]
 mod util;
+
+pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
 use std::collections::BTreeSet;
@@ -148,19 +152,17 @@ use std::num::NonZeroU64;
 use std::str;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use base64::display::Base64Display;
-use hmac::{Hmac, Mac};
 use rand::distributions::Distribution;
 use rand::thread_rng;
-use sha1::Sha1;
 
+use signature_method::{Sign, SignatureMethod};
 use util::*;
 
 /// A type that creates a signed `Request`.
 #[derive(Debug)]
-pub struct Signer<S = NotReady> {
-    inner: Inner,
-    state: PhantomData<fn() -> S>,
+pub struct Signer<SM: SignatureMethod, State = NotReady> {
+    inner: Inner<SM::Sign>,
+    state: PhantomData<fn() -> State>,
 }
 
 /// A pair of an OAuth header and its corresponding query/form string.
@@ -202,11 +204,22 @@ pub enum NotReady {}
 /// and ready to `finish`.
 pub enum Ready {}
 
+/// A version of `Signer` that uses the `PLAINTEXT` signature method.
+pub type PlaintextSigner<State = NotReady> = Signer<Plaintext, State>;
+
+cfg_if! {
+    if #[cfg(feature = "hmac-sha1")] {
+        pub use signature_method::HmacSha1;
+        /// A version of `Signer` that uses the `HMAC-SHA1` signature method.
+        pub type HmacSha1Signer<State = NotReady> = Signer<HmacSha1, State>;
+    }
+}
+
 #[derive(Debug)]
-struct Inner {
+struct Inner<S> {
     authorization: String,
     data: String,
-    signature: MacWrite<Hmac<Sha1>>,
+    sign: S,
     next_append: Append,
     #[cfg(debug_assertions)]
     prev_key: String,
@@ -214,13 +227,13 @@ struct Inner {
 
 bitflags! {
     struct Append: u8 {
-        const QUESTION  = 0b001;
-        const AMPERSAND = 0b010;
-        const COMMA     = 0b100;
+        const QUESTION   = 0b001;
+        const AMPERSAND  = 0b010;
+        const SIGN_DELIM = 0b100;
     }
 }
 
-impl Signer<NotReady> {
+impl<SM: SignatureMethod> Signer<SM, NotReady> {
     /// Returns a `Signer` that appends query string to `uri` and returns it as `Request.data`.
     ///
     /// `?` character and any characters following it (i.e. query part) in `uri` will be ignored.
@@ -229,8 +242,35 @@ impl Signer<NotReady> {
         uri: impl Display,
         consumer_secret: &str,
         token_secret: impl Into<Option<&'a str>>,
+    ) -> Self
+    where
+        SM: Default,
+    {
+        Self::with_signature_method(
+            Default::default(),
+            method,
+            uri,
+            consumer_secret,
+            token_secret,
+        )
+    }
+
+    /// Same as `new` except that this uses `signature_method` as the signature method.
+    pub fn with_signature_method<'a>(
+        signature_method: SM,
+        method: &str,
+        uri: impl Display,
+        consumer_secret: &str,
+        token_secret: impl Into<Option<&'a str>>,
     ) -> Self {
-        Self::new_(method, uri, consumer_secret, token_secret.into(), true)
+        Self::new_(
+            method,
+            uri,
+            consumer_secret,
+            token_secret.into(),
+            signature_method,
+            true,
+        )
     }
 
     /// Returns a `Signer` that creates an x-www-form-urlencoded string and returns it as
@@ -242,30 +282,52 @@ impl Signer<NotReady> {
         uri: impl Display,
         consumer_secret: &str,
         token_secret: impl Into<Option<&'a str>>,
-    ) -> Self {
-        Self::new_(method, uri, consumer_secret, token_secret.into(), false)
+    ) -> Self
+    where
+        SM: Default,
+    {
+        Self::form_with_signature_method(
+            Default::default(),
+            method,
+            uri,
+            consumer_secret,
+            token_secret,
+        )
     }
 
-    fn new_(method: &str, uri: impl Display, cs: &str, ts: Option<&str>, q: bool) -> Self {
-        let mut signing_key = String::with_capacity(512);
-        write!(signing_key, "{}&", percent_encode(cs)).unwrap();
-        if let Some(ts) = ts {
-            write!(signing_key, "{}", percent_encode(ts)).unwrap();
-        }
-        let mut signature = MacWrite(Hmac::new_varkey(signing_key.as_bytes()).unwrap());
+    /// Same as `new_form` except that this uses `signature_method` as the signature method.
+    pub fn form_with_signature_method<'a>(
+        signature_method: SM,
+        method: &str,
+        uri: impl Display,
+        consumer_secret: &str,
+        token_secret: impl Into<Option<&'a str>>,
+    ) -> Self {
+        Self::new_(
+            method,
+            uri,
+            consumer_secret,
+            token_secret.into(),
+            signature_method,
+            false,
+        )
+    }
 
-        // Reuse the buffer
-        signing_key.clear();
-        let mut authorization = signing_key;
+    fn new_(method: &str, uri: impl Display, cs: &str, ts: Option<&str>, sm: SM, q: bool) -> Self {
+        let mut sign = sm.sign_with(percent_encode(cs), ts.map(percent_encode));
+
+        let mut authorization = String::with_capacity(512);
         authorization.push_str("OAuth ");
+
+        sign.request_method(method);
 
         let uri = DisplayBefore('?', uri);
         let data = if q {
             let data = uri.to_string();
-            write!(signature, "{}&{}&", method, percent_encode(&data)).unwrap();
+            sign.uri(percent_encode(&data));
             data
         } else {
-            write!(signature, "{}&{}&", method, PercentEncode(uri)).unwrap();
+            sign.uri(PercentEncode(uri));
             String::new()
         };
 
@@ -277,7 +339,7 @@ impl Signer<NotReady> {
                 Inner {
                     authorization,
                     data,
-                    signature,
+                    sign,
                     next_append,
                     prev_key: String::new(),
                 }
@@ -287,7 +349,7 @@ impl Signer<NotReady> {
                 Inner {
                     authorization,
                     data,
-                    signature,
+                    sign,
                     next_append,
                 }
             }
@@ -307,49 +369,68 @@ impl Signer<NotReady> {
         self,
         consumer_key: &str,
         options: impl Into<Option<&'a Options<'a>>>,
-    ) -> Signer<Ready> {
+    ) -> Signer<SM, Ready> {
         // Let's cross fingers and hope that this will be optimized into a `static`.
         let default = Options::new();
         let options = options.into().unwrap_or(&default);
         self.append_oauth_params_(consumer_key, options)
     }
 
-    fn append_oauth_params_(mut self, ck: &str, opts: &Options) -> Signer<Ready> {
-        let mut nonce_buf = [0; 32];
-        let nonce = if let Some(n) = opts.nonce {
-            n
-        } else {
-            let mut rng = thread_rng();
-            for b in &mut nonce_buf {
-                *b = UrlSafe.sample(&mut rng);
-            }
-            debug_assert!(nonce_buf.is_ascii());
-            unsafe { str::from_utf8_unchecked(&nonce_buf) }
-        };
-        let timestamp = if let Some(t) = opts.timestamp {
-            t.get()
-        } else {
-            match SystemTime::now().duration_since(UNIX_EPOCH) {
-                Ok(d) => d.as_secs(),
-                #[cold]
-                Err(_) => 1,
-            }
-        };
+    fn append_oauth_params_(mut self, ck: &str, opts: &Options) -> Signer<SM, Ready> {
+        macro_rules! append {
+            (@inner $k:ident, $v:expr, $w:expr) => {{
+                let k = concat!("oauth_", stringify!($k));
+                self.append_to_header_encoded(k, $v);
+                self.append_to_signature_with(Sign::$k, k, $w);
+            }};
+            (encoded $k:ident, $v:expr) => {{
+                let v = $v;
+                append!(@inner $k, v, v);
+            }};
+            ($k:ident, $v:expr) => {{
+                let v = $v;
+                append!(@inner $k, percent_encode(v), DoublePercentEncode(v));
+            }};
+        }
 
         if let Some(c) = opts.callback {
-            self.append_to_header("oauth_callback", c);
+            append!(callback, c);
         }
-        self.append_to_header("oauth_consumer_key", ck);
-        self.append_to_header("oauth_nonce", nonce);
-        self.append_to_header_encoded("oauth_signature_method", "HMAC-SHA1");
-        self.append_to_header_encoded("oauth_timestamp", timestamp);
+        append!(consumer_key, ck);
+        if self.inner.sign.use_nonce() {
+            let mut nonce_buf = [0; 32];
+            let nonce = if let Some(n) = opts.nonce {
+                n
+            } else {
+                let mut rng = thread_rng();
+                for b in &mut nonce_buf {
+                    *b = UrlSafe.sample(&mut rng);
+                }
+                debug_assert!(nonce_buf.is_ascii());
+                unsafe { str::from_utf8_unchecked(&nonce_buf) }
+            };
+            append!(nonce, nonce);
+        }
+        append!(encoded signature_method, self.inner.sign.get_signature_method_name());
+        if self.inner.sign.use_timestamp() {
+            let t = if let Some(t) = opts.timestamp {
+                t.get()
+            } else {
+                match SystemTime::now().duration_since(UNIX_EPOCH) {
+                    Ok(d) => d.as_secs(),
+                    #[cold]
+                    Err(_) => 1,
+                }
+            };
+            append!(encoded timestamp, t);
+        }
         if let Some(t) = opts.token {
-            self.append_to_header("oauth_token", t);
+            append!(token, t);
         }
         if let Some(v) = opts.verifier {
-            self.append_to_header("oauth_verifier", v);
+            append!(verifier, v);
         }
-        self.append_to_header_encoded("oauth_version", "1.0");
+        append!(encoded version, "1.0");
 
         Signer {
             inner: self.inner,
@@ -357,25 +438,13 @@ impl Signer<NotReady> {
         }
     }
 
-    fn append_to_header(&mut self, k: &str, v: &str) {
-        self.check_dictionary_order(k);
-        write!(
-            self.inner.authorization,
-            r#"{}="{}","#,
-            k,
-            percent_encode(v),
-        ).unwrap();
-        self.append_to_signature(k, v);
-    }
-
     fn append_to_header_encoded(&mut self, k: &str, v: impl Display) {
         self.check_dictionary_order(k);
         write!(self.inner.authorization, r#"{}="{}","#, k, v).unwrap();
-        self.append_to_signature_encoded(k, PercentEncode(v));
     }
 }
 
-impl<S> Signer<S> {
+impl<SM: SignatureMethod, State> Signer<SM, State> {
     /// Appends a parameter to the query/form string and signing key.
     ///
     /// This percent encodes the value, but not the key.
@@ -427,12 +496,19 @@ impl<S> Signer<S> {
     }
 
     fn append_to_signature_encoded(&mut self, k: &str, v: impl Display) {
-        if self.inner.next_append.contains(Append::COMMA) {
-            self.inner.signature.write_str("%26").unwrap();
+        self.append_to_signature_with(Sign::parameter, k, v);
+    }
+
+    fn append_to_signature_with<K, V, F>(&mut self, f: F, k: K, v: V)
+    where
+        F: FnOnce(&mut SM::Sign, K, V),
+    {
+        if self.inner.next_append.contains(Append::SIGN_DELIM) {
+            self.inner.sign.delimiter();
         } else {
-            self.inner.next_append.insert(Append::COMMA);
+            self.inner.next_append.insert(Append::SIGN_DELIM);
         }
-        write!(self.inner.signature, "{}%3D{}", k, v).unwrap();
+        f(&mut self.inner.sign, k, v);
     }
 
     fn check_dictionary_order(&mut self, _k: &str) {
@@ -452,7 +528,7 @@ impl<S> Signer<S> {
     }
 }
 
-impl Signer<Ready> {
+impl<SM: SignatureMethod> Signer<SM, Ready> {
     /// Consumes the `Signer` and returns a `Request`.
     ///
     /// This can only be called after `append_oauth_params` is called.
@@ -460,16 +536,12 @@ impl Signer<Ready> {
         let Inner {
             mut authorization,
             data,
-            signature,
+            sign,
             ..
         } = self.inner;
 
         authorization.push_str("oauth_signature=");
-        write!(
-            authorization,
-            r#""{}""#,
-            PercentEncode(Base64Display::standard(&signature.0.result().code())),
-        ).unwrap();
+        write!(authorization, r#""{}""#, sign.finish()).unwrap();
 
         Request {
             authorization,
@@ -492,16 +564,18 @@ impl Request {
     ///     "consumer_key",
     ///     "consumer_secret",
     ///     "token_secret",
+    ///     oauth::HmacSha1,
     ///     &*oauth::Options::new().token("token"),
     ///     Some(&[("key", "value")].iter().cloned().collect()),
     /// );
     /// ```
-    pub fn new<'a>(
+    pub fn new<'a, SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
         consumer_key: &str,
         consumer_secret: &str,
         token_secret: impl Into<Option<&'a str>>,
+        signature_method: SM,
         options: impl Into<Option<&'a Options<'a>>>,
         params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
     ) -> Self {
@@ -511,6 +585,7 @@ impl Request {
             consumer_key,
             consumer_secret,
             token_secret.into(),
+            signature_method,
             options.into(),
             params,
             true,
@@ -530,16 +605,18 @@ impl Request {
     ///     "consumer_key",
     ///     "consumer_secret",
     ///     "token_secret",
+    ///     oauth::HmacSha1,
     ///     &*oauth::Options::new().token("token"),
     ///     Some(&[("key", "value")].iter().cloned().collect()),
     /// );
     /// ```
-    pub fn new_form<'a>(
+    pub fn new_form<'a, SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
         consumer_key: &str,
         consumer_secret: &str,
         token_secret: impl Into<Option<&'a str>>,
+        signature_method: SM,
         options: impl Into<Option<&'a Options<'a>>>,
         params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
     ) -> Self {
@@ -549,23 +626,25 @@ impl Request {
             consumer_key,
             consumer_secret,
             token_secret.into(),
+            signature_method,
             options.into(),
             params,
             false,
         )
     }
 
-    fn new_(
+    fn new_<SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
         ck: &str,
         cs: &str,
         ts: Option<&str>,
+        sm: SM,
         opts: Option<&Options>,
         params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
         q: bool,
     ) -> Self {
-        let mut signer = Signer::new_(method, uri, cs, ts, q);
+        let mut signer = Signer::new_(method, uri, cs, ts, sm, q);
         let signer = if let Some(params) = params {
             let mut params = params
                 .iter()
@@ -595,24 +674,32 @@ impl Request {
         signer.finish()
     }
 
-    /// Alias of `Signer::new` for convenience.
-    pub fn signer<'a>(
+    /// Alias of `Signer::with_signature_method` for convenience.
+    pub fn signer<'a, SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
         consumer_secret: &str,
         token_secret: impl Into<Option<&'a str>>,
-    ) -> Signer<NotReady> {
-        Signer::new(method, uri, consumer_secret, token_secret)
+        signature_method: SM,
+    ) -> Signer<SM, NotReady> {
+        Signer::with_signature_method(signature_method, method, uri, consumer_secret, token_secret)
     }
 
-    /// Alias of `Signer::new_form` for convenience.
-    pub fn signer_form<'a>(
+    /// Alias of `Signer::form_with_signature_method` for convenience.
+    pub fn signer_form<'a, SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
         consumer_secret: &str,
         token_secret: impl Into<Option<&'a str>>,
-    ) -> Signer<NotReady> {
-        Signer::new_form(method, uri, consumer_secret, token_secret)
+        signature_method: SM,
+    ) -> Signer<SM, NotReady> {
+        Signer::form_with_signature_method(
+            signature_method,
+            method,
+            uri,
+            consumer_secret,
+            token_secret,
+        )
     }
 }
 
@@ -629,6 +716,47 @@ mod tests {
     const NONCE: &str = "kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg";
     const TIMESTAMP: u64 = 1318622958;
 
+    struct Inspect<SM>(SM);
+    struct InspectSign<S>(S);
+
+    impl<SM: SignatureMethod> SignatureMethod for Inspect<SM> {
+        type Sign = InspectSign<SM::Sign>;
+
+        fn sign_with(self, cs: impl Display, ts: Option<impl Display>) -> Self::Sign {
+            println!("cs: {:?}", cs.to_string());
+            println!("ts: {:?}", ts.as_ref().map(ToString::to_string));
+            InspectSign(self.0.sign_with(cs, ts))
+        }
+    }
+
+    impl<S: Sign> Sign for InspectSign<S> {
+        type Signature = S::Signature;
+
+        fn get_signature_method_name(&self) -> &'static str {
+            self.0.get_signature_method_name()
+        }
+        fn request_method(&mut self, method: &str) {
+            println!("method: {:?}", method);
+            self.0.request_method(method);
+        }
+        fn uri(&mut self, uri: impl Display) {
+            println!("uri: {:?}", uri.to_string());
+            self.0.uri(uri);
+        }
+        fn delimiter(&mut self) {
+            println!("delimiter");
+            self.0.delimiter();
+        }
+        fn parameter(&mut self, k: &str, v: impl Display) {
+            println!("parameter: {:?}={:?}", k, v.to_string());
+            self.0.parameter(k, v);
+        }
+        fn finish(self) -> S::Signature {
+            println!("finish");
+            self.0.finish()
+        }
+    }
+
     #[test]
     fn signer() {
         macro_rules! test {
@@ -640,10 +768,10 @@ mod tests {
             ) -> ($expected_sign:expr, $expected_data:expr $(,)*);)*) => {$(
                 #[allow(unused_mut)]
                 let mut signer = if $method == "POST" {
-                    Signer::new_form
+                    Signer::form_with_signature_method
                 } else {
-                    Signer::new
-                }($method, $ep, $cs, $ts);
+                    Signer::with_signature_method
+                }(Inspect(HmacSha1), $method, $ep, $cs, $ts);
 
                 test_inner! { signer; $($param1)* }
                 #[allow(unused_mut)]
@@ -729,7 +857,7 @@ mod tests {
                     \n  current: `\"bar\"`"
     )]
     fn panic_on_misordering() {
-        Signer::new("", "", "", None)
+        PlaintextSigner::new("", "", "", None)
             .append_encoded("foo", true)
             .append("bar", "ばー！");
     }

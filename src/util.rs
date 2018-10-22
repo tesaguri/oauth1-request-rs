@@ -1,7 +1,6 @@
 use std::fmt::{self, Display, Formatter, Write};
 use std::str;
 
-use hmac::Mac;
 use percent_encoding::{EncodeSet as EncodeSet_, PercentEncode as PercentEncode_};
 use rand::prelude::*;
 
@@ -61,9 +60,6 @@ pub struct DoublePercentEncode<'a>(pub &'a str);
 
 #[derive(Clone)]
 pub struct EncodeSet;
-
-#[derive(Debug)]
-pub struct MacWrite<M>(pub M);
 
 pub struct PercentEncode<D>(pub D);
 
@@ -182,13 +178,6 @@ impl EncodeSet_ for EncodeSet {
         ];
 
         ENCODE_MAP[usize::from(b)]
-    }
-}
-
-impl<M: Mac> Write for MacWrite<M> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.0.input(s.as_bytes());
-        Ok(())
     }
 }
 
