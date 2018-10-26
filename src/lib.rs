@@ -178,6 +178,8 @@ options! {
     /// Optional OAuth parameters.
     #[derive(Clone, Debug, Default)]
     pub struct Options<'a> {
+        /// Creates a blank `Options` with default values (`None`).
+        new;
         /// Sets `oauth_callback` parameter.
         callback: Option<&'a str>,
         /// Sets `oauth_nonce` parameter.

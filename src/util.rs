@@ -8,6 +8,7 @@ macro_rules! options {
     ($(
         $(#[$attr:meta])*
         pub struct $O:ident<$lifetime:tt> {
+            $(#[$ctor_attr:meta])* $ctor:ident;
             $($field:tt)*
         }
     )*) => {$(
@@ -17,7 +18,8 @@ macro_rules! options {
         }
 
         impl<$lifetime> $O<$lifetime> {
-            pub fn new() -> Self {
+            $(#[$ctor_attr])*
+            pub fn $ctor() -> Self {
                 Default::default()
             }
 
