@@ -198,11 +198,11 @@ options! {
 
 /// Represents the state of a `Signer` before `append_oauth_params` method is called
 /// and unready to `finish`.
-pub enum NotReady {}
+pub struct NotReady(Never);
 
 /// Represents the state of a `Signer` after `append_oauth_params` method is called
 /// and ready to `finish`.
-pub enum Ready {}
+pub struct Ready(Never);
 
 #[derive(Debug)]
 struct Inner {

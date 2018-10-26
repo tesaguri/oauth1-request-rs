@@ -67,6 +67,10 @@ pub struct EncodeSet;
 #[derive(Debug)]
 pub struct MacWrite<M>(pub M);
 
+// TODO: Use `!` type once it's stable and we've bumped minimum supported Rust version.
+#[cfg_attr(feature = "cargo-clippy", allow(empty_enum))]
+pub enum Never {}
+
 pub struct PercentEncode<D>(pub D);
 
 pub struct UrlSafe;
