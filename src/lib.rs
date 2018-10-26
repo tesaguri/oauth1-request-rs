@@ -15,11 +15,11 @@
 //! );
 //!
 //! // The parameters must be appended in the ascending ordering.
-//! sign.append("abc", "value")
-//!     .append("lmn", "something");
+//! sign.parameter("abc", "value")
+//!     .parameter("lmn", "something");
 //!
 //! // Append `oauth_*` parameters.
-//! let mut sign = sign.append_oauth_params(
+//! let mut sign = sign.oauth_parameters(
 //!     "consumer_key",
 //!     &*oauth::Options::new()
 //!         .token("token")
@@ -27,8 +27,8 @@
 //!         .timestamp(9999999999),
 //! );
 //!
-//! sign.append("qrs", "stuff")
-//!     .append("xyz", "blah-blah");
+//! sign.parameter("qrs", "stuff")
+//!     .parameter("xyz", "blah-blah");
 //!
 //! let oauth::Request { authorization, data } = sign.finish();
 //!
@@ -63,12 +63,12 @@
 //!
 //! // ...
 //! // (same as the above example...)
-//! # sign.append("abc", "value").append("lmn", "something");
-//! # let mut sign = sign.append_oauth_params(
+//! # sign.parameter("abc", "value").parameter("lmn", "something");
+//! # let mut sign = sign.oauth_parameters(
 //! #     "consumer_key",
 //! #     &*oauth::Options::new().token("token").nonce("nonce").timestamp(9999999999),
 //! # );
-//! # sign.append("qrs", "stuff").append("xyz", "blah-blah");
+//! # sign.parameter("qrs", "stuff").parameter("xyz", "blah-blah");
 //!
 //! let oauth::Request { authorization, data } = sign.finish();
 //!
@@ -198,11 +198,11 @@ options! {
     }
 }
 
-/// Represents the state of a `Signer` before `append_oauth_params` method is called
+/// Represents the state of a `Signer` before `oauth_parameters` method is called
 /// and unready to `finish`.
 pub struct NotReady(Never);
 
-/// Represents the state of a `Signer` after `append_oauth_params` method is called
+/// Represents the state of a `Signer` after `oauth_parameters` method is called
 /// and ready to `finish`.
 pub struct Ready(Never);
 
@@ -367,7 +367,7 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
     ///
     /// This must be called just after all the keys less than `oauth_*` in byte order (if any)
     /// is appended, and just before a key greater than `oauth_*` (if any) is appended.
-    pub fn append_oauth_params<'a>(
+    pub fn oauth_parameters<'a>(
         self,
         consumer_key: &str,
         options: impl Into<Option<&'a Options<'a>>>,
@@ -375,10 +375,10 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
         // Let's cross fingers and hope that this will be optimized into a `static`.
         let default = Options::new();
         let options = options.into().unwrap_or(&default);
-        self.append_oauth_params_(consumer_key, options)
+        self.oauth_parameters_(consumer_key, options)
     }
 
-    fn append_oauth_params_(mut self, ck: &str, opts: &Options) -> Signer<SM, Ready> {
+    fn oauth_parameters_(mut self, ck: &str, opts: &Options) -> Signer<SM, Ready> {
         macro_rules! append {
             (@inner $k:ident, $v:expr, $w:expr) => {{
                 let k = concat!("oauth_", stringify!($k));
@@ -457,7 +457,7 @@ impl<SM: SignatureMethod, State> Signer<SM, State> {
     ///
     /// In debug builds, panics if the key is not appended in ascending order
     #[inline]
-    pub fn append(&mut self, k: &str, v: &str) -> &mut Self {
+    pub fn parameter(&mut self, k: &str, v: &str) -> &mut Self {
         self.check_dictionary_order(k);
         self.append_delim();
         write!(self.inner.data, "{}={}", k, percent_encode(v)).unwrap();
@@ -467,13 +467,13 @@ impl<SM: SignatureMethod, State> Signer<SM, State> {
 
     /// Appends a parameter to the query/form string and signing key.
     ///
-    /// Unlike `append`, this will not percent encode the value.
+    /// Unlike `parameter`, this will not percent encode the value.
     ///
     /// # Panics
     ///
     /// In debug builds, panics if the key is not appended in ascending order.
     #[inline]
-    pub fn append_encoded(&mut self, k: &str, v: impl Display) -> &mut Self {
+    pub fn parameter_encoded(&mut self, k: &str, v: impl Display) -> &mut Self {
         self.check_dictionary_order(k);
         self.append_delim();
         write!(self.inner.data, "{}={}", k, v).unwrap();
@@ -655,22 +655,22 @@ impl Request {
             let (mut signer, mut pair) = loop {
                 let (k, v) = match params.next() {
                     Some(kv) => kv,
-                    None => break (signer.append_oauth_params(ck, opts), None),
+                    None => break (signer.oauth_parameters(ck, opts), None),
                 };
                 if k > "oauth_" {
-                    break (signer.append_oauth_params(ck, opts), Some((k, v)));
+                    break (signer.oauth_parameters(ck, opts), Some((k, v)));
                 }
-                signer.append(k, v);
+                signer.parameter(k, v);
             };
 
             while let Some((k, v)) = pair {
-                signer.append(k, v);
+                signer.parameter(k, v);
                 pair = params.next();
             }
 
             signer
         } else {
-            signer.append_oauth_params(ck, opts)
+            signer.oauth_parameters(ck, opts)
         };
 
         signer.finish()
@@ -777,7 +777,7 @@ mod tests {
 
                 test_inner! { signer; $($param1)* }
                 #[allow(unused_mut)]
-                let mut signer = signer.append_oauth_params(
+                let mut signer = signer.oauth_parameters(
                     $ck,
                     &*Options::new()
                         .token($t)
@@ -809,11 +809,11 @@ mod tests {
 
         macro_rules! test_inner {
             ($signer:ident; encoded $key:ident: $v:expr, $($rest:tt)*) => {
-                $signer.append_encoded(stringify!($key), $v);
+                $signer.parameter_encoded(stringify!($key), $v);
                 test_inner! { $signer; $($rest)* }
             };
             ($signer:ident; $key:ident: $v:expr, $($rest:tt)*) => {
-                $signer.append(stringify!($key), $v);
+                $signer.parameter(stringify!($key), $v);
                 test_inner! { signerb; $($rest)* }
             };
             ($_signer:ident;) => ();
@@ -860,7 +860,7 @@ mod tests {
     )]
     fn panic_on_misordering() {
         PlaintextSigner::new("", "", "", None)
-            .append_encoded("foo", true)
-            .append("bar", "ばー！");
+            .parameter_encoded("foo", true)
+            .parameter("bar", "ばー！");
     }
 }

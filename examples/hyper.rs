@@ -12,9 +12,9 @@ fn main() {
     let uri = Uri::from_static("http://oauthbin.com/v1/echo");
 
     let mut signer = oauth::PlaintextSigner::new_form("POST", &uri, "secret", "accesssecret");
-    signer.append("foo", "風");
-    let mut signer = signer.append_oauth_params("key", &*oauth::Options::new().token("accesskey"));
-    signer.append_encoded("qux", true);
+    signer.parameter("foo", "風");
+    let mut signer = signer.oauth_parameters("key", &*oauth::Options::new().token("accesskey"));
+    signer.parameter_encoded("qux", true);
     let oauth::Request {
         authorization,
         data,
