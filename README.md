@@ -12,7 +12,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oauth1-request = "0.1"
+oauth1-request = "0.2"
 ```
 
 and this to your crate root:
