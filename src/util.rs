@@ -58,7 +58,7 @@ macro_rules! impl_setters {
 
 pub struct DisplayBefore<D>(pub char, pub D);
 
-pub struct DoublePercentEncode<'a>(pub &'a str);
+pub struct DoublePercentEncode<D>(pub D);
 
 #[derive(Clone)]
 pub struct EncodeSet;
@@ -111,36 +111,44 @@ impl<D: Display> Display for DisplayBefore<D> {
     }
 }
 
-impl<'a> Display for DoublePercentEncode<'a> {
+impl<D: Display> Display for DoublePercentEncode<D> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let mut bytes = self.0.as_bytes();
-        while let Some((&b, rem)) = bytes.split_first() {
-            if EncodeSet.contains(b) {
-                f.write_str(double_encode_byte(b))?;
-                bytes = rem;
-                continue;
-            }
+        struct Adapter<'a, 'b: 'a>(&'a mut Formatter<'b>);
 
-            // Write as much characters as possible at once:
-            if let Some((i, &b)) = bytes
-                .iter()
-                .enumerate()
-                .skip(1)
-                .find(|&(_, &b)| EncodeSet.contains(b))
-            {
-                let rem = &bytes[i + 1..];
-                let s = &bytes[..i];
-                debug_assert!(s.is_ascii());
-                f.write_str(unsafe { str::from_utf8_unchecked(s) })?;
-                f.write_str(double_encode_byte(b))?;
-                bytes = rem;
-            } else {
-                debug_assert!(bytes.is_ascii());
-                return f.write_str(unsafe { str::from_utf8_unchecked(bytes) });
+        impl<'a, 'b: 'a> Write for Adapter<'a, 'b> {
+            fn write_str(&mut self, s: &str) -> fmt::Result {
+                let mut bytes = s.as_bytes();
+                while let Some((&b, rem)) = bytes.split_first() {
+                    if EncodeSet.contains(b) {
+                        self.0.write_str(double_encode_byte(b))?;
+                        bytes = rem;
+                        continue;
+                    }
+
+                    // Write as much characters as possible at once:
+                    if let Some((i, &b)) = bytes
+                        .iter()
+                        .enumerate()
+                        .skip(1)
+                        .find(|&(_, &b)| EncodeSet.contains(b))
+                    {
+                        let rem = &bytes[i + 1..];
+                        let s = &bytes[..i];
+                        debug_assert!(s.is_ascii());
+                        self.0.write_str(unsafe { str::from_utf8_unchecked(s) })?;
+                        self.0.write_str(double_encode_byte(b))?;
+                        bytes = rem;
+                    } else {
+                        debug_assert!(bytes.is_ascii());
+                        return self.0.write_str(unsafe { str::from_utf8_unchecked(bytes) });
+                    }
+                }
+
+                Ok(())
             }
         }
 
-        Ok(())
+        write!(Adapter(f), "{}", self.0)
     }
 }
 

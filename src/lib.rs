@@ -457,10 +457,10 @@ impl<SM: SignatureMethod, State> Signer<SM, State> {
     ///
     /// In debug builds, panics if the key is not appended in ascending order
     #[inline]
-    pub fn parameter(&mut self, k: &str, v: &str) -> &mut Self {
+    pub fn parameter(&mut self, k: &str, v: impl Display) -> &mut Self {
         self.check_dictionary_order(k);
         self.append_delim();
-        write!(self.inner.data, "{}={}", k, percent_encode(v)).unwrap();
+        write!(self.inner.data, "{}={}", k, PercentEncode(&v)).unwrap();
         self.append_to_signature(k, v);
         self
     }
@@ -493,7 +493,7 @@ impl<SM: SignatureMethod, State> Signer<SM, State> {
         }
     }
 
-    fn append_to_signature(&mut self, k: &str, v: &str) {
+    fn append_to_signature(&mut self, k: &str, v: impl Display) {
         self.append_to_signature_encoded(k, DoublePercentEncode(v));
     }
 
