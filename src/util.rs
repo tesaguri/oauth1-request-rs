@@ -56,8 +56,6 @@ macro_rules! impl_setters {
     () => {};
 }
 
-pub struct DisplayBefore<D>(pub char, pub D);
-
 pub struct DoublePercentEncode<D>(pub D);
 
 #[derive(Clone)]
@@ -70,46 +68,6 @@ pub enum Never {}
 pub struct PercentEncode<D>(pub D);
 
 pub struct UrlSafe;
-
-impl<D: Display> Display for DisplayBefore<D> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        struct Adapter<'a, 'b: 'a> {
-            f: &'a mut Formatter<'b>,
-            sep: char,
-            finished: bool,
-        }
-
-        impl<'a, 'b: 'a> Write for Adapter<'a, 'b> {
-            fn write_str(&mut self, mut s: &str) -> fmt::Result {
-                if self.finished {
-                    return Ok(());
-                }
-                if let Some(i) = s.find(self.sep) {
-                    self.finished = true;
-                    s = &s[..i];
-                }
-                self.f.write_str(s)
-            }
-            fn write_char(&mut self, c: char) -> fmt::Result {
-                if self.finished {
-                    return Ok(());
-                }
-                if c == self.sep {
-                    self.finished = true;
-                    return Ok(());
-                }
-                self.f.write_char(c)
-            }
-        }
-
-        let mut a = Adapter {
-            f,
-            sep: self.0,
-            finished: false,
-        };
-        write!(a, "{}", self.1)
-    }
-}
 
 impl<D: Display> Display for DoublePercentEncode<D> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {

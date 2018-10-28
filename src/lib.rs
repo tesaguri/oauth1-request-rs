@@ -238,7 +238,11 @@ bitflags! {
 impl<SM: SignatureMethod> Signer<SM, NotReady> {
     /// Returns a `Signer` that appends query string to `uri` and returns it as `Request.data`.
     ///
-    /// `?` character and any characters following it (i.e. query part) in `uri` will be ignored.
+    /// `uri` must not contain a query part. Otherwise, the `Signer` will produce a wrong signature.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, panics if `uri` contains a `'?'` character.
     pub fn new<'a>(
         method: &str,
         uri: impl Display,
@@ -278,7 +282,11 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
     /// Returns a `Signer` that creates an x-www-form-urlencoded string and returns it as
     /// `Request.data`.
     ///
-    /// `?` character and any characters following it (i.e. query part) in `uri` will be ignored.
+    /// `uri` must not contain a query part. Otherwise, the `Signer` will produce a wrong signature.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, panics if `uri` contains a `'?'` character.
     pub fn new_form<'a>(
         method: &str,
         uri: impl Display,
@@ -323,7 +331,11 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
 
         sign.request_method(method);
 
-        let uri = DisplayBefore('?', uri);
+        // We can determine if the URI contains a query part by just checking if it containsa `'?'`
+        // character, because the scheme and authority part of a valid URI does not contain
+        // that character.
+        debug_assert!(!uri.to_string().contains('?'), "`uri` must not contain a query part");
+
         let data = if q {
             let data = uri.to_string();
             sign.uri(percent_encode(&data));
