@@ -45,6 +45,14 @@ macro_rules! impl_setters {
         }
         impl_setters! { $($rest)* }
     };
+    ($(#[$attr:meta])* $setter:ident: bool, $($rest:tt)*) => {
+        $(#[$attr])*
+        pub fn $setter(&mut self, $setter: bool) -> &mut Self {
+            self.$setter = $setter;
+            self
+        }
+        impl_setters! { $($rest)* }
+    };
     ($(#[$attr:meta])* $setter:ident: $t:ty, $($rest:tt)*) => {
         $(#[$attr])*
         pub fn $setter(&mut self, $setter: impl Into<Option<$t>>) -> &mut Self {

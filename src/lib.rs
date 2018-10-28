@@ -40,8 +40,7 @@
 //!      oauth_signature_method=\"HMAC-SHA1\",\
 //!      oauth_timestamp=\"9999999999\",\
 //!      oauth_token=\"token\",\
-//!      oauth_version=\"1.0\",\
-//!      oauth_signature=\"JeDlFImHxfukYP0e6P2fy63G6V4%3D\"",
+//!      oauth_signature=\"R1%2B4C7PHNUwA2TyMeNZDo0T8lSM%3D\"",
 //! );
 //! assert_eq!(
 //!     data,
@@ -80,8 +79,7 @@
 //!      oauth_signature_method=\"HMAC-SHA1\",\
 //!      oauth_timestamp=\"9999999999\",\
 //!      oauth_token=\"token\",\
-//!      oauth_version=\"1.0\",\
-//!      oauth_signature=\"3S3N5Dod9azPWhXZKh4h44bTp4Y%3D\"",
+//!      oauth_signature=\"YUOk%2FeMb2r%2BAF5wW0H%2FgEx%2FoLp0%3D\"",
 //! );
 //! assert_eq!(
 //!     data,
@@ -121,8 +119,7 @@
 //!      oauth_signature_method=\"HMAC-SHA1\",\
 //!      oauth_timestamp=\"9999999999\",\
 //!      oauth_token=\"token\",\
-//!      oauth_version=\"1.0\",\
-//!      oauth_signature=\"JeDlFImHxfukYP0e6P2fy63G6V4%3D\"",
+//!      oauth_signature=\"R1%2B4C7PHNUwA2TyMeNZDo0T8lSM%3D\"",
 //! );
 //! assert_eq!(
 //!     data,
@@ -195,6 +192,8 @@ options! {
         token: Option<&'a str>,
         /// Sets `oauth_verifier` parameter.
         verifier: Option<&'a str>,
+        /// Sets whether to include `oauth_version="1.0"` parameter in the `Authorization` header.
+        version: bool,
     }
 }
 
@@ -444,7 +443,9 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
         if let Some(v) = opts.verifier {
             append!(verifier, v);
         }
-        append!(encoded version, "1.0");
+        if opts.version {
+            append!(encoded version, "1.0");
+        }
 
         Signer {
             inner: self.inner,
@@ -794,7 +795,8 @@ mod tests {
                     &*Options::new()
                         .token($t)
                         .nonce($nonce)
-                        .timestamp($timestamp),
+                        .timestamp($timestamp)
+                        .version(true),
                 );
                 test_inner! { signer; $($param2)* }
 
