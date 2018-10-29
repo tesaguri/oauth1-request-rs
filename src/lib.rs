@@ -333,7 +333,10 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
         // We can determine if the URI contains a query part by just checking if it containsa `'?'`
         // character, because the scheme and authority part of a valid URI does not contain
         // that character.
-        debug_assert!(!uri.to_string().contains('?'), "`uri` must not contain a query part");
+        debug_assert!(
+            !uri.to_string().contains('?'),
+            "`uri` must not contain a query part",
+        );
 
         let data = if q {
             let data = uri.to_string();
