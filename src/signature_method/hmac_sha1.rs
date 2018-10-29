@@ -96,7 +96,8 @@ impl Sign for HmacSha1Sign {
 
 impl Display for HmacSha1Signature {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        Display::fmt(&PercentEncode(Base64Display::standard(&self.signature)), f)
+        let d = PercentEncode(Base64Display::with_config(&self.signature, base64::STANDARD));
+        Display::fmt(&d, f)
     }
 }
 

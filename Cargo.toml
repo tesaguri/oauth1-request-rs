@@ -17,7 +17,7 @@ bitflags = "1"
 cfg-if = "0.1"
 percent-encoding = "1"
 rand = "0.5"
-base64 = { version = "0.9", optional = true }
+base64 = { version = "0.10", optional = true }
 either = { version = "1", optional = true }
 hmac = { version = "0.7", optional = true }
 sha-1 = { version = "0.8", optional = true }
