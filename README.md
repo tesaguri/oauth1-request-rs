@@ -1,6 +1,6 @@
 # oauth1-request
 
-[![Build Status](https://travis-ci.org/tesaguri/oauth1-request.svg?branch=master)](https://travis-ci.org/tesaguri/oauth1-request-rs/)
+[![Build Status](https://travis-ci.org/tesaguri/oauth1-request-rs.svg?branch=master)](https://travis-ci.org/tesaguri/oauth1-request-rs/)
 [![Current Version](https://img.shields.io/crates/v/oauth1-request.svg)](https://crates.io/crates/oauth1-request)
 [![Documentation](https://docs.rs/oauth1-request/badge.svg)](https://docs.rs/oauth1-request/)
 
