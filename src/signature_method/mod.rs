@@ -7,12 +7,6 @@
 //! custom methods by themselves.
 
 cfg_if! {
-    if #[cfg(feature = "either")] {
-        mod either;
-    }
-}
-
-cfg_if! {
     if #[cfg(feature = "hmac-sha1")] {
         pub mod hmac_sha1;
         pub use self::hmac_sha1::HmacSha1;
@@ -20,6 +14,9 @@ cfg_if! {
 }
 
 pub mod plaintext;
+
+#[cfg(feature = "either")]
+mod either;
 
 pub use self::plaintext::Plaintext;
 
