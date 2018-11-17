@@ -71,6 +71,7 @@ pub struct EncodeSet;
 
 // TODO: Use `!` type once it's stable and we've bumped minimum supported Rust version.
 #[cfg_attr(feature = "cargo-clippy", allow(empty_enum))]
+#[derive(Clone, Debug)]
 pub enum Never {}
 
 pub struct PercentEncode<D>(pub D);

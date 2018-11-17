@@ -25,6 +25,7 @@ use util::PercentEncode;
 pub struct HmacSha1;
 
 /// A type that signs a signature base string with the HMAC-SHA1 signature algorithm.
+#[derive(Clone, Debug)]
 pub struct HmacSha1Sign {
     mac: Hmac<Sha1>,
 }

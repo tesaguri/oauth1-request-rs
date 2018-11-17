@@ -156,7 +156,7 @@ use signature_method::{Sign, SignatureMethod};
 use util::*;
 
 /// A type that creates a signed `Request`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Signer<SM: SignatureMethod, State = NotReady> {
     inner: Inner<SM::Sign>,
     state: PhantomData<fn() -> State>,
@@ -199,10 +199,12 @@ options! {
 
 /// Represents the state of a `Signer` before `oauth_parameters` method is called
 /// and unready to `finish`.
+#[derive(Clone, Debug)]
 pub struct NotReady(Never);
 
 /// Represents the state of a `Signer` after `oauth_parameters` method is called
 /// and ready to `finish`.
+#[derive(Clone, Debug)]
 pub struct Ready(Never);
 
 /// A version of `Signer` that uses the `PLAINTEXT` signature method.
@@ -216,7 +218,7 @@ cfg_if! {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Inner<S> {
     authorization: String,
     data: String,
@@ -746,6 +748,13 @@ mod tests {
             InspectSign(self.0.sign_with(cs, ts))
         }
     }
+
+    #[derive(Clone, Debug)]
+    struct AssertImpl(
+        HmacSha1Signer,
+        PlaintextSigner,
+        Ready,
+    );
 
     impl<S: Sign> Sign for InspectSign<S> {
         type Signature = S::Signature;

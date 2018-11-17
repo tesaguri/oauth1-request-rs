@@ -11,6 +11,7 @@ use super::*;
 pub struct Plaintext;
 
 /// A `Sign` implementation that just returns the signing key used to construct it.
+#[derive(Clone, Debug)]
 pub struct PlaintextSign(String);
 
 impl SignatureMethod for Plaintext {
