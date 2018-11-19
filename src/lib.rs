@@ -197,13 +197,11 @@ options! {
     }
 }
 
-/// Represents the state of a `Signer` before `oauth_parameters` method is called
-/// and unready to `finish`.
+/// Represents the state of a `Signer` before `oauth_parameters` method is called.
 #[derive(Clone, Debug)]
 pub struct NotReady(Never);
 
-/// Represents the state of a `Signer` after `oauth_parameters` method is called
-/// and ready to `finish`.
+/// Represents the state of a `Signer` after `oauth_parameters` method is called.
 #[derive(Clone, Debug)]
 pub struct Ready(Never);
 
@@ -548,10 +546,19 @@ impl<SM: SignatureMethod, State> Signer<SM, State> {
     }
 }
 
+impl<SM: SignatureMethod> Signer<SM, NotReady> {
+    /// Shorthand for `self.oauth_parameters(consumer_key, options).finish()`.
+    pub fn finish<'a>(
+        self,
+        consumer_key: &str,
+        options: impl Into<Option<&'a Options<'a>>>,
+    ) -> Request {
+        self.oauth_parameters(consumer_key, options).finish()
+    }
+}
+
 impl<SM: SignatureMethod> Signer<SM, Ready> {
     /// Consumes the `Signer` and returns a `Request`.
-    ///
-    /// This can only be called after `append_oauth_params` is called.
     pub fn finish(self) -> Request {
         let Inner {
             mut authorization,
@@ -750,11 +757,7 @@ mod tests {
     }
 
     #[derive(Clone, Debug)]
-    struct AssertImpl(
-        HmacSha1Signer,
-        PlaintextSigner,
-        Ready,
-    );
+    struct AssertImpl(HmacSha1Signer, PlaintextSigner, Ready);
 
     impl<S: Sign> Sign for InspectSign<S> {
         type Signature = S::Signature;
