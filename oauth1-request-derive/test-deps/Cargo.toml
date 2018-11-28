@@ -1,0 +1,11 @@
+[package]
+name = "test-deps"
+version = "0.0.0"
+authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
+publish = false
+
+[workspace]
+
+[dependencies]
+oauth1-request = { version = "0.2", path = "../../oauth1-request", default-features = false }
+oauth1-request-derive = { version = "0.2", path = "../../oauth1-request-derive" }

@@ -1,0 +1,31 @@
+[package]
+name = "oauth1-request"
+version = "0.2.0"
+authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
+license = "MIT OR Apache-2.0"
+readme = "../README.md"
+keywords = ["oauth", "oauth1"]
+categories = ["authentication"]
+homepage = "https://github.com/tesaguri/oauth1-request-rs"
+repository = "https://github.com/tesaguri/oauth1-request-rs"
+documentation = "https://docs.rs/oauth1-request/0.2.0/oauth1_request/"
+description = """
+Yet yet yet another OAuth 1 client library.
+"""
+
+[dependencies]
+bitflags = "1"
+cfg-if = "0.1"
+percent-encoding = "1"
+rand = "0.6"
+base64 = { version = "0.10", optional = true }
+either = { version = "1", optional = true }
+hmac = { version = "0.7", optional = true }
+sha-1 = { version = "0.8", optional = true }
+
+[dev-dependencies]
+oauth1-request-derive = "0.2"
+
+[features]
+default = ["hmac-sha1"]
+hmac-sha1 = ["base64", "hmac", "sha-1"]

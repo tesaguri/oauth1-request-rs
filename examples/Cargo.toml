@@ -5,11 +5,22 @@ version = "0.0.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 publish = false
 
+# Exclude this project from the parent workspace
+# to support Cargo versions that don't understand `edition`
+[workspace]
+
 [[bin]]
-name = "hyper"
-path = "src/hyper.rs"
+name = "derive"
+path = "src/derive.rs"
+
+[[bin]]
+name = "signer"
+path = "src/signer.rs"
 
 [dependencies]
+bytes = "0.4"
 hyper = "0.12"
 oauth1-request = { version = "0.2", path = "../oauth1-request" }
+oauth1-request-derive = { version = "0.2", path = "../oauth1-request-derive" }
+string = "0.1.2"
 tokio = { version = "0.1", features = ["async-await-preview"] }

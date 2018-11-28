@@ -2,98 +2,38 @@
 //!
 //! # Usage
 //!
+//! ## Using `#[derive]` (recommended)
+//!
+//! Add this to your `Cargo.toml`:
+//!
+//! ```toml
+//! oauth1-request-derive = "0.2"
+//! ```
+//!
 //! Creating a `GET` request:
 //!
 //! ```rust
 //! extern crate oauth1_request as oauth;
+//! #[macro_use]
+//! extern crate oauth1_request_derive;
 //!
-//! let mut sign = oauth::HmacSha1Signer::new(
+//! use oauth::OAuth1Authorize;
+//!
+//! #[derive(OAuth1Authorize)]
+//! struct SearchComments<'a> {
+//!     article_id: u64,
+//!     text: &'a str,
+//! }
+//!
+//! # fn main() {
+//! let req = SearchComments {
+//!     article_id: 123456789,
+//!     text: "Rust",
+//! };
+//!
+//! let oauth::Request { authorization, data } = req.authorize(
 //!     "GET",
-//!     "https://example.com/api/v1/get.json",
-//!     "consumer_secret",
-//!     "token_secret", // or `None`
-//! );
-//!
-//! // The parameters must be appended in the ascending ordering.
-//! sign.parameter("abc", "value")
-//!     .parameter("lmn", "something");
-//!
-//! // Append `oauth_*` parameters.
-//! let mut sign = sign.oauth_parameters(
-//!     "consumer_key",
-//!     &*oauth::Options::new()
-//!         .token("token")
-//!         .nonce("nonce")
-//!         .timestamp(9999999999),
-//! );
-//!
-//! sign.parameter("qrs", "stuff")
-//!     .parameter("xyz", "blah-blah");
-//!
-//! let oauth::Request { authorization, data } = sign.finish();
-//!
-//! assert_eq!(
-//!     authorization,
-//!     "OAuth \
-//!      oauth_consumer_key=\"consumer_key\",\
-//!      oauth_nonce=\"nonce\",\
-//!      oauth_signature_method=\"HMAC-SHA1\",\
-//!      oauth_timestamp=\"9999999999\",\
-//!      oauth_token=\"token\",\
-//!      oauth_signature=\"R1%2B4C7PHNUwA2TyMeNZDo0T8lSM%3D\"",
-//! );
-//! assert_eq!(
-//!     data,
-//!     "https://example.com/api/v1/get.json?abc=value&lmn=something&qrs=stuff&xyz=blah-blah",
-//! );
-//! ```
-//!
-//! Creating an `x-www-form-urlencoded` request:
-//!
-//! ```rust
-//! # extern crate oauth1_request as oauth;
-//! // Use `new_form` method to create an `x-www-form-urlencoded` string.
-//! let mut sign = oauth::HmacSha1Signer::new_form(
-//!     "POST",
-//!     "https://example.com/api/v1/post.json",
-//!     "consumer_secret",
-//!     "token_secret", // or `None`
-//! );
-//!
-//! // ...
-//! // (same as the above example...)
-//! # sign.parameter("abc", "value").parameter("lmn", "something");
-//! # let mut sign = sign.oauth_parameters(
-//! #     "consumer_key",
-//! #     &*oauth::Options::new().token("token").nonce("nonce").timestamp(9999999999),
-//! # );
-//! # sign.parameter("qrs", "stuff").parameter("xyz", "blah-blah");
-//!
-//! let oauth::Request { authorization, data } = sign.finish();
-//!
-//! assert_eq!(
-//!     authorization,
-//!     "OAuth \
-//!      oauth_consumer_key=\"consumer_key\",\
-//!      oauth_nonce=\"nonce\",\
-//!      oauth_signature_method=\"HMAC-SHA1\",\
-//!      oauth_timestamp=\"9999999999\",\
-//!      oauth_token=\"token\",\
-//!      oauth_signature=\"YUOk%2FeMb2r%2BAF5wW0H%2FgEx%2FoLp0%3D\"",
-//! );
-//! assert_eq!(
-//!     data,
-//!     "abc=value&lmn=something&qrs=stuff&xyz=blah-blah",
-//! );
-//! ```
-//!
-//! Using the convenience wrapper method:
-//!
-//! ```rust
-//! # extern crate oauth1_request as oauth;
-//! let oauth::Request { authorization, data } = oauth::Request::new(
-//!     "GET",
-//!     "https://example.com/api/v1/get.json",
+//!     "https://example.com/api/v1/comments/search.json",
 //!     "consumer_key",
 //!     "consumer_secret",
 //!     "token_secret",
@@ -102,30 +42,77 @@
 //!         .token("token")
 //!         .nonce("nonce")
 //!         .timestamp(9999999999),
-//!     Some(&[
-//!         // Ordering doesn't matter here:
-//!         ("xyz", "blah-blah"),
-//!         ("qrs", "stuff"),
-//!         ("abc", "value"),
-//!         ("lmn", "something"),
-//!     ].iter().cloned().collect()),
 //! );
 //!
 //! assert_eq!(
 //!     authorization,
 //!     "OAuth \
-//!      oauth_consumer_key=\"consumer_key\",\
-//!      oauth_nonce=\"nonce\",\
-//!      oauth_signature_method=\"HMAC-SHA1\",\
-//!      oauth_timestamp=\"9999999999\",\
-//!      oauth_token=\"token\",\
-//!      oauth_signature=\"R1%2B4C7PHNUwA2TyMeNZDo0T8lSM%3D\"",
+//!          oauth_consumer_key=\"consumer_key\",\
+//!          oauth_nonce=\"nonce\",\
+//!          oauth_signature_method=\"HMAC-SHA1\",\
+//!          oauth_timestamp=\"9999999999\",\
+//!          oauth_token=\"token\",\
+//!          oauth_signature=\"kAkbCLL7obDyzdjz3uJoWSwiLqU%3D\"",
 //! );
 //! assert_eq!(
 //!     data,
-//!     "https://example.com/api/v1/get.json?abc=value&lmn=something&qrs=stuff&xyz=blah-blah",
+//!     "https://example.com/api/v1/comments/search.json?article_id=123456789&text=Rust",
 //! );
+//! # }
 //! ```
+//!
+//! Creating an `x-www-form-urlencoded` request:
+//!
+//! ```rust
+//! # extern crate oauth1_request as oauth;
+//! # #[macro_use] extern crate oauth1_request_derive;
+//! # use oauth::OAuth1Authorize;
+//! #[derive(OAuth1Authorize)]
+//! struct CreateComment<'a> {
+//!     article_id: u64,
+//!     text: &'a str,
+//! }
+//!
+//! # fn main() {
+//! let req = CreateComment {
+//!     article_id: 123456789,
+//!     text: "Rust lang is great 🦀",
+//! };
+//!
+//! // Use `authorize_form` method to create an `x-www-form-urlencoded` string.
+//! let oauth::Request { authorization, data } = req.authorize_form(
+//!     "POST",
+//!     "https://example.com/api/v1/comments/create.json",
+//!     "consumer_key",
+//!     "consumer_secret",
+//!     "token_secret",
+//!     oauth::HmacSha1,
+//!     &*oauth::Options::new()
+//!         .token("token")
+//!         .nonce("nonce")
+//!         .timestamp(9999999999),
+//! );
+//!
+//! assert_eq!(
+//!     authorization,
+//!     "OAuth \
+//!          oauth_consumer_key=\"consumer_key\",\
+//!          oauth_nonce=\"nonce\",\
+//!          oauth_signature_method=\"HMAC-SHA1\",\
+//!          oauth_timestamp=\"9999999999\",\
+//!          oauth_token=\"token\",\
+//!          oauth_signature=\"bbhEIrjfisdDBrZkKnEXKa4ykE4%3D\"",
+//! );
+//! assert_eq!(
+//!     data,
+//!     "article_id=123456789&text=Rust%20lang%20is%20great%20%F0%9F%A6%80",
+//! );
+//! # }
+//! ```
+//!
+//! # Using `Signer`
+//!
+//! See [`Signer`](struct.Signer.html).
 
 #[macro_use]
 extern crate bitflags;
@@ -136,6 +123,7 @@ extern crate rand;
 
 pub mod signature_method;
 
+mod oauth1_authorize;
 #[macro_use]
 mod util;
 
@@ -156,6 +144,93 @@ use signature_method::{Sign, SignatureMethod};
 use util::*;
 
 /// A type that creates a signed `Request`.
+///
+/// # Example
+///
+/// Creating a `GET` request:
+///
+/// ```rust
+/// extern crate oauth1_request as oauth;
+///
+/// let mut sign = oauth::HmacSha1Signer::new(
+///     "GET",
+///     "https://example.com/api/v1/get.json",
+///     "consumer_secret",
+///     "token_secret", // or `None`
+/// );
+///
+/// // The parameters must be appended in the ascending ordering.
+/// sign.parameter("abc", "value")
+///     .parameter("lmn", "something");
+///
+/// // Append `oauth_*` parameters.
+/// let mut sign = sign.oauth_parameters(
+///     "consumer_key",
+///     &*oauth::Options::new()
+///         .token("token")
+///         .nonce("nonce")
+///         .timestamp(9999999999),
+/// );
+///
+/// sign.parameter("qrs", "stuff")
+///     .parameter("xyz", "blah-blah");
+///
+/// let oauth::Request { authorization, data } = sign.finish();
+///
+/// assert_eq!(
+///     authorization,
+///     "OAuth \
+///      oauth_consumer_key=\"consumer_key\",\
+///      oauth_nonce=\"nonce\",\
+///      oauth_signature_method=\"HMAC-SHA1\",\
+///      oauth_timestamp=\"9999999999\",\
+///      oauth_token=\"token\",\
+///      oauth_signature=\"R1%2B4C7PHNUwA2TyMeNZDo0T8lSM%3D\"",
+/// );
+/// assert_eq!(
+///     data,
+///     "https://example.com/api/v1/get.json?abc=value&lmn=something&qrs=stuff&xyz=blah-blah",
+/// );
+/// ```
+///
+/// Creating an `x-www-form-urlencoded` request
+///
+/// ```rust
+/// # extern crate oauth1_request as oauth;
+/// // Use `new_form` method to create an `x-www-form-urlencoded` string.
+/// let mut sign = oauth::HmacSha1Signer::new_form(
+///     "POST",
+///     "https://example.com/api/v1/post.json",
+///     "consumer_secret",
+///     "token_secret", // or `None`
+/// );
+///
+/// // ...
+/// // (same as the above example...)
+/// # sign.parameter("abc", "value").parameter("lmn", "something");
+/// # let mut sign = sign.oauth_parameters(
+/// #     "consumer_key",
+/// #     &*oauth::Options::new().token("token").nonce("nonce").timestamp(9999999999),
+/// # );
+/// # sign.parameter("qrs", "stuff").parameter("xyz", "blah-blah");
+///
+/// let oauth::Request { authorization, data } = sign.finish();
+///
+/// assert_eq!(
+///     authorization,
+///     "OAuth \
+///      oauth_consumer_key=\"consumer_key\",\
+///      oauth_nonce=\"nonce\",\
+///      oauth_signature_method=\"HMAC-SHA1\",\
+///      oauth_timestamp=\"9999999999\",\
+///      oauth_token=\"token\",\
+///      oauth_signature=\"YUOk%2FeMb2r%2BAF5wW0H%2FgEx%2FoLp0%3D\"",
+/// );
+/// assert_eq!(
+///     data,
+///     "abc=value&lmn=something&qrs=stuff&xyz=blah-blah",
+/// );
+/// ```
 #[derive(Clone, Debug)]
 pub struct Signer<SM: SignatureMethod, State = NotReady> {
     inner: Inner<SM::Sign>,
@@ -204,6 +279,71 @@ pub struct NotReady(Never);
 /// Represents the state of a `Signer` after `oauth_parameters` method is called.
 #[derive(Clone, Debug)]
 pub struct Ready(Never);
+
+/// Types that can be made into a `Request` using given credentials.
+pub trait OAuth1Authorize {
+    /// Signs `self` using `signer`.
+    ///
+    /// Users of the trait should use `authorize` or `authorize_form` instead.
+    fn authorize_with<SM>(
+        &self,
+        signer: Signer<SM>,
+        consumer_key: &str,
+        options: Option<&Options>,
+    ) -> Request
+    where
+        SM: SignatureMethod;
+
+    /// Signs `self` using the given credentials and returns a `Request` with a URI with query
+    /// string.
+    fn authorize<'a, SM>(
+        &self,
+        method: &str,
+        uri: impl Display,
+        consumer_key: &str,
+        consumer_secret: &str,
+        token_secret: impl Into<Option<&'a str>>,
+        signature_method: SM,
+        options: impl Into<Option<&'a Options<'a>>>,
+    ) -> Request
+    where
+        SM: SignatureMethod,
+    {
+        let signer = Signer::with_signature_method(
+            signature_method,
+            method,
+            uri,
+            consumer_secret,
+            token_secret,
+        );
+        self.authorize_with(signer, consumer_key, options.into())
+    }
+
+    /// Signs `self` using the given credentials and returns a `Request` with
+    /// an `x-www-form-urlencoded` string.
+    fn authorize_form<'a, SM>(
+        &self,
+        method: &str,
+        uri: impl Display,
+        consumer_key: &str,
+        consumer_secret: &str,
+        token_secret: impl Into<Option<&'a str>>,
+        signature_method: SM,
+        options: impl Into<Option<&'a Options<'a>>>,
+    ) -> Request
+    where
+        SM: SignatureMethod,
+    {
+        let signer = Signer::form_with_signature_method(
+            signature_method,
+            method,
+            uri,
+            consumer_secret,
+            token_secret,
+        );
+        self.authorize_with(signer, consumer_key, options.into())
+    }
+}
 
 /// A version of `Signer` that uses the `PLAINTEXT` signature method.
 pub type PlaintextSigner<State = NotReady> = Signer<Plaintext, State>;
@@ -596,6 +736,10 @@ impl Request {
     ///     Some(&[("key", "value")].iter().cloned().collect()),
     /// );
     /// ```
+    #[deprecated(
+        since = "0.2.1",
+        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize` instead",
+    )]
     pub fn new<'a, SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
@@ -606,16 +750,14 @@ impl Request {
         options: impl Into<Option<&'a Options<'a>>>,
         params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
     ) -> Self {
-        Self::new_(
+        params.authorize(
             method,
             uri,
             consumer_key,
             consumer_secret,
-            token_secret.into(),
+            token_secret,
             signature_method,
-            options.into(),
-            params,
-            true,
+            options,
         )
     }
 
@@ -637,6 +779,10 @@ impl Request {
     ///     Some(&[("key", "value")].iter().cloned().collect()),
     /// );
     /// ```
+    #[deprecated(
+        since = "0.2.1",
+        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize_form` instead",
+    )]
     pub fn new_form<'a, SM: SignatureMethod>(
         method: &str,
         uri: impl Display,
@@ -647,58 +793,15 @@ impl Request {
         options: impl Into<Option<&'a Options<'a>>>,
         params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
     ) -> Self {
-        Self::new_(
+        params.authorize_form(
             method,
             uri,
             consumer_key,
             consumer_secret,
-            token_secret.into(),
+            token_secret,
             signature_method,
-            options.into(),
-            params,
-            false,
+            options,
         )
-    }
-
-    fn new_<SM: SignatureMethod>(
-        method: &str,
-        uri: impl Display,
-        ck: &str,
-        cs: &str,
-        ts: Option<&str>,
-        sm: SM,
-        opts: Option<&Options>,
-        params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
-        q: bool,
-    ) -> Self {
-        let mut signer = Signer::new_(method, uri, cs, ts, sm, q);
-        let signer = if let Some(params) = params {
-            let mut params = params
-                .iter()
-                .map(|&(ref k, ref v)| (k.borrow(), v.borrow()));
-
-            let (mut signer, mut pair) = loop {
-                let (k, v) = match params.next() {
-                    Some(kv) => kv,
-                    None => break (signer.oauth_parameters(ck, opts), None),
-                };
-                if k > "oauth_" {
-                    break (signer.oauth_parameters(ck, opts), Some((k, v)));
-                }
-                signer.parameter(k, v);
-            };
-
-            while let Some((k, v)) = pair {
-                signer.parameter(k, v);
-                pair = params.next();
-            }
-
-            signer
-        } else {
-            signer.oauth_parameters(ck, opts)
-        };
-
-        signer.finish()
     }
 
     /// Alias of `Signer::with_signature_method` for convenience.
