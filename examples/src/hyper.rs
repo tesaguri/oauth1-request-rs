@@ -1,12 +1,15 @@
+#![feature(async_await, await_macro, futures_api)]
+
 extern crate hyper;
-extern crate oauth1_request;
+extern crate oauth1_request as oauth;
+extern crate tokio;
 
 use std::str;
 
 use hyper::header::AUTHORIZATION;
-use hyper::rt::{self, Future, Stream};
 use hyper::{Client, Request, Uri};
-use oauth1_request as oauth;
+use tokio::await;
+use tokio::prelude::*;
 
 fn main() {
     let uri = Uri::from_static("http://oauthbin.com/v1/echo");
@@ -24,12 +27,12 @@ fn main() {
         .header(AUTHORIZATION, authorization)
         .body(data.into())
         .unwrap();
-    let fut = Client::new()
-        .request(req)
-        .and_then(|res| res.into_body().concat2())
-        .map(|body| {
-            println!("{}", str::from_utf8(&body).unwrap());
-        }).map_err(|e| panic!("{:?}", e));
 
-    rt::run(fut);
+    tokio::run_async(
+        async {
+            let client = Client::new();
+            let body = await!(await!(client.request(req)).unwrap().into_body().concat2()).unwrap();
+            println!("{}", str::from_utf8(&body).unwrap());
+        },
+    );
 }

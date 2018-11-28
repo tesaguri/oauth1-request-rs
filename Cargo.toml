@@ -22,9 +22,6 @@ either = { version = "1", optional = true }
 hmac = { version = "0.7", optional = true }
 sha-1 = { version = "0.8", optional = true }
 
-[dev-dependencies]
-hyper = "0.12"
-
 [features]
 default = ["hmac-sha1"]
 hmac-sha1 = ["base64", "hmac", "sha-1"]

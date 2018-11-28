@@ -1,0 +1,15 @@
+[package]
+name = "examples"
+edition = "2018"
+version = "0.0.0"
+authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
+publish = false
+
+[[bin]]
+name = "hyper"
+path = "src/hyper.rs"
+
+[dependencies]
+hyper = "0.12"
+oauth1-request = { version = "0.2", path = "../oauth1-request" }
+tokio = { version = "0.1", features = ["async-await-preview"] }
