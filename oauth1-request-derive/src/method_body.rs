@@ -75,7 +75,7 @@ impl<'a> ToTokens for MethodBody<'a> {
 
                             MakeAdapter
                         }({
-                            let fmt: fn(&_, &mut std::fmt::Formatter<'_>) -> std::fmt::Result =
+                            let fmt: fn(&_, &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result =
                                 #fmt;
                             fmt
                         })
