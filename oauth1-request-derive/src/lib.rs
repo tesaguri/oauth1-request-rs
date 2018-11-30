@@ -103,7 +103,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                         &#name #ty_generics,
                         _oauth1_request::Signer<#dummy>,
                         &str,
-                        Option<&_oauth1_request::Options>,
+                        ::std::option::Option<&_oauth1_request::Options>,
                     ),
                 ) -> _oauth1_request::Request
                 #where_clause
@@ -118,7 +118,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                         &self,
                         signer: _oauth1_request::Signer<SM>,
                         ck: &str,
-                        opts: Option<&_oauth1_request::Options>,
+                        opts: ::std::option::Option<&_oauth1_request::Options>,
                     ) -> _oauth1_request::Request
                     where
                         SM: _oauth1_request::signature_method::SignatureMethod,

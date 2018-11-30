@@ -21,14 +21,31 @@ macro_rules! assert_expand {
         #[test]
         fn $Name() {
             use oauth::{HmacSha1Signer, Options, Request, OAuth1Authorize};
-            $(#[$attr])*
-            struct $Name<$($lt,)* $($ty_param $(: $($bound)*)*),*>
-                $(where $($where_ty: $($where_bound)*,)*)*
-            {
-                $($(#[$f_attr])* $field: $f_ty,)*
+
+            mod inner {
+                // Shadow items imported via the prelude:
+                #[allow(dead_code)]
+                struct Option;
+                #[allow(dead_code)]
+                struct Some;
+                #[allow(dead_code)]
+                struct None;
+                #[allow(dead_code)]
+                struct Result;
+                #[allow(dead_code)]
+                struct Ok;
+                #[allow(dead_code)]
+                struct Err;
+
+                $(#[$attr])*
+                pub struct $Name<$($lt,)* $($ty_param $(: $($bound)*)*),*>
+                    $(where $($where_ty: $($where_bound)*,)*)*
+                {
+                    $($(#[$f_attr])* pub $field: $f_ty,)*
+                }
             }
 
-            impl<$($lt,)* $($ty_param$(: $($bound)*)*),*> $Name<$($lt,)* $($ty_param),*>
+            impl<$($lt,)* $($ty_param$(: $($bound)*)*),*> inner::$Name<$($lt,)* $($ty_param),*>
             where
                 $($ty_param: ::std::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
@@ -46,7 +63,7 @@ macro_rules! assert_expand {
                 ($this:expr) => ($this);
                 () => (Default::default());
             }
-            let x = $Name $(::<$($ty),*>)* {
+            let x = inner::$Name $(::<$($ty),*>)* {
                 $($field: this_or_default!($($value)*),)*
             };
 
@@ -61,193 +78,190 @@ macro_rules! assert_expand {
     };
 }
 
-// Putting the derives on a separate module so that they cannot access `std` without leading `::`.
-mod tests {
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct OneBeforeOAuth[][] {
-            foo: u64,
-        }
-        |this, mut signer, ck, opts| {
-            signer.parameter("foo", this.foo);
-            signer.finish(ck, opts)
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct MultipleBeforeOAuth[][] {
-            foo: u64,
-            bar: bool,
-        }
-        |this, mut signer, ck, opts| {
-            signer.parameter("bar", this.bar);
-            signer.parameter("foo", this.foo);
-            signer.finish(ck, opts)
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct OneBeforeAndAfterOAuth[][] {
-            baz: char,
-            qux: f64,
-        }
-        |this, mut signer, ck, opts| {
-            signer.parameter("baz", this.baz);
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("qux", this.qux);
-            signer.finish()
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct OneBeforeAndAfterOAuthRev[][] {
-            qux: f64,
-            baz: char,
-        }
-        |this, mut signer, ck, opts| {
-            signer.parameter("baz", this.baz);
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("qux", this.qux);
-            signer.finish()
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct OneAfterOAuth[][] {
-            qux: f64,
-        }
-        |this, signer, ck, opts| {
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("qux", this.qux);
-            signer.finish()
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct MultipleAfterOAuth[][] {
-            qux: f64,
-            quux: String = "quux".to_owned(),
-        }
-        |this, signer, ck, opts| {
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("quux", &this.quux);
-            signer.parameter("qux", this.qux);
-            signer.finish()
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct Empty[][] {}
-        |_this, signer, ck, opts| signer.finish(ck, opts)
-    }
-
-    // Just checking that this compiles.
+assert_expand! {
     #[derive(OAuth1Authorize)]
-    struct Unsized {
-        a: u64,
-        c: u64,
-        b: str,
+    struct OneBeforeOAuth[][] {
+        foo: u64,
     }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct TyParam[][T = u64] {
-            t: T,
-        }
-        |this, signer, ck, opts| {
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("t", &this.t);
-            signer.finish()
-        }
+    |this, mut signer, ck, opts| {
+        signer.parameter("foo", this.foo);
+        signer.finish(ck, opts)
     }
+}
 
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct Bound[][T: (AsRef<str>)] {
-            t: T = "bound",
-        }
-        |this, signer, ck, opts| {
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("t", this.t.as_ref());
-            signer.finish()
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct Where[][T]
-        where
-            T: (AsRef<str>),
-        {
-            t: T = "where",
-        }
-        |this, signer, ck, opts| {
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter("t", this.t.as_ref());
-            signer.finish()
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct Lifetime['a][] {
-            a: &'a str,
-        }
-        |this, mut signer, ck, opts| {
-            signer.parameter("a", &this.a);
-            signer.finish(ck, opts)
-        }
-    }
-
-    assert_expand! {
-        #[derive(OAuth1Authorize)]
-        struct Attrs['a][T: ('static + ::std::fmt::Debug)] {
-            #[oauth1(encoded)]
-            percent_encoded: T = "%20",
-
-            #[oauth1(rename = "FLAG")]
-            flag: bool,
-
-            #[oauth1()] // OK
-            #[oauth1(skip)]
-            _marker: [*const (); 0],
-
-            #[oauth1(skip_if = "Option::is_none", fmt = "super::fmt_option_str")]
-            some: Option<&'static str> = Some("option"),
-
-            #[oauth1(skip_if = "::std::any::Any::is::<&'static str>")]
-            #[oauth1(fmt = "::std::fmt::Debug::fmt")]
-            trait_item: T,
-
-            #[oauth1(skip_if = "super::tautology", fmt = "super::fmt_ignore")]
-            ty_param: T,
-
-            #[oauth1(skip_if = "str::is_empty")]
-            #[oauth1(fmt = "super::fmt_str")]
-            deref_arg: &'a Box<String> = &Box::new(String::new()),
-        }
-        |this, mut signer, ck, opts| {
-            signer.parameter("FLAG", this.flag);
-            let mut signer = signer.oauth_parameters(ck, opts);
-            signer.parameter_encoded("percent_encoded", &this.percent_encoded);
-            signer.parameter("some", "option");
-            signer.finish()
-        }
-    }
-
-    // Just checking that this produces no warnings.
+assert_expand! {
     #[derive(OAuth1Authorize)]
-    #[allow(nonstandard_style)]
-    struct non_camel_case {
-        #[oauth1(skip_if = "Option::is_none", fmt = "::std::fmt::Debug::fmt")]
-        SHOUTING_SNAKE_CASE: Option<&'static str>,
+    struct MultipleBeforeOAuth[][] {
+        foo: u64,
+        bar: bool,
     }
+    |this, mut signer, ck, opts| {
+        signer.parameter("bar", this.bar);
+        signer.parameter("foo", this.foo);
+        signer.finish(ck, opts)
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct OneBeforeAndAfterOAuth[][] {
+        baz: char,
+        qux: f64,
+    }
+    |this, mut signer, ck, opts| {
+        signer.parameter("baz", this.baz);
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("qux", this.qux);
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct OneBeforeAndAfterOAuthRev[][] {
+        qux: f64,
+        baz: char,
+    }
+    |this, mut signer, ck, opts| {
+        signer.parameter("baz", this.baz);
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("qux", this.qux);
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct OneAfterOAuth[][] {
+        qux: f64,
+    }
+    |this, signer, ck, opts| {
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("qux", this.qux);
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct MultipleAfterOAuth[][] {
+        qux: f64,
+        quux: String = "quux".to_owned(),
+    }
+    |this, signer, ck, opts| {
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("quux", &this.quux);
+        signer.parameter("qux", this.qux);
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct Empty[][] {}
+    |_this, signer, ck, opts| signer.finish(ck, opts)
+}
+
+// Just checking that this compiles.
+#[derive(OAuth1Authorize)]
+struct Unsized {
+    a: u64,
+    c: u64,
+    b: str,
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct TyParam[][T = u64] {
+        t: T,
+    }
+    |this, signer, ck, opts| {
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("t", &this.t);
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct Bound[][T: (AsRef<str>)] {
+        t: T = "bound",
+    }
+    |this, signer, ck, opts| {
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("t", this.t.as_ref());
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct Where[][T]
+    where
+        T: (AsRef<str>),
+    {
+        t: T = "where",
+    }
+    |this, signer, ck, opts| {
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("t", this.t.as_ref());
+        signer.finish()
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct Lifetime['a][] {
+        a: &'a str,
+    }
+    |this, mut signer, ck, opts| {
+        signer.parameter("a", &this.a);
+        signer.finish(ck, opts)
+    }
+}
+
+assert_expand! {
+    #[derive(OAuth1Authorize)]
+    struct Attrs['a][T: ('static + ::std::fmt::Debug)] {
+        #[oauth1(encoded)]
+        percent_encoded: T = "%20",
+
+        #[oauth1(rename = "FLAG")]
+        flag: bool,
+
+        #[oauth1()] // OK
+        #[oauth1(skip)]
+        _marker: [*const (); 0],
+
+        #[oauth1(skip_if = "::std::option::Option::is_none", fmt = "super::fmt_option_str")]
+        some: ::std::option::Option<&'static str> = Some("option"),
+
+        #[oauth1(skip_if = "::std::any::Any::is::<&'static str>")]
+        #[oauth1(fmt = "::std::fmt::Debug::fmt")]
+        trait_item: T,
+
+        #[oauth1(skip_if = "super::tautology", fmt = "super::fmt_ignore")]
+        ty_param: T,
+
+        #[oauth1(skip_if = "str::is_empty")]
+        #[oauth1(fmt = "super::fmt_str")]
+        deref_arg: &'a Box<String> = &Box::new(String::new()),
+    }
+    |this, mut signer, ck, opts| {
+        signer.parameter("FLAG", this.flag);
+        let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter_encoded("percent_encoded", &this.percent_encoded);
+        signer.parameter("some", "option");
+        signer.finish()
+    }
+}
+
+// Just checking that this produces no warnings.
+#[derive(OAuth1Authorize)]
+#[allow(nonstandard_style)]
+struct non_camel_case {
+    #[oauth1(skip_if = "Option::is_none", fmt = "::std::fmt::Debug::fmt")]
+    SHOUTING_SNAKE_CASE: Option<&'static str>,
 }
 
 fn fmt_option_str(s: &Option<&str>, f: &mut Formatter<'_>) -> fmt::Result {
