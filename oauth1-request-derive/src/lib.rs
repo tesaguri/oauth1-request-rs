@@ -5,6 +5,7 @@
 //!
 //! [OAuth1Authorize]: https://docs.rs/oauth1-request/^0.2.1/oauth1_request/trait.OAuth1Authorize.html
 
+#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.2.0")]
 #![recursion_limit = "128"]
 
 extern crate proc_macro;

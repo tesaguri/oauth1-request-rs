@@ -25,6 +25,7 @@ sha-1 = { version = "0.8", optional = true }
 
 [dev-dependencies]
 oauth1-request-derive = "0.2"
+version-sync = "0.6"
 
 [features]
 default = ["hmac-sha1"]
