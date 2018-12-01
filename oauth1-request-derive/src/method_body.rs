@@ -45,7 +45,16 @@ impl<'a> ToTokens for MethodBody<'a> {
                     ready = true;
                 }
 
-                let value = if let Some(fmt) = f.meta.fmt.get() {
+                let value = if f.meta.option {
+                    quote_spanned! {f.ty.span()=> {
+                        let ref value = #this.#ident;
+                        ::std::option::Option::as_ref(value).unwrap()
+                    }}
+                } else {
+                    quote! { &#this.#ident }
+                };
+
+                let display = if let Some(fmt) = f.meta.fmt.get() {
                     quote! {
                         {
                             use std::fmt::{Display, Formatter, Result};
@@ -79,19 +88,19 @@ impl<'a> ToTokens for MethodBody<'a> {
                                 #fmt;
                             fmt
                         })
-                        .make_adapter(&#this.#ident)
+                        .make_adapter(#value)
                     }
                 } else {
-                    quote! { &#this.#ident }
+                    value.clone()
                 };
 
                 let mut stmt = if f.meta.encoded {
                     quote_spanned! {f.ty.span()=>
-                        #signer.parameter_encoded(#name, #value);
+                        #signer.parameter_encoded(#name, #display);
                     }
                 } else {
                     quote_spanned! {f.ty.span()=>
-                        #signer.parameter(#name, #value);
+                        #signer.parameter(#name, #display);
                     }
                 };
                 if let Some(skip_if) = f.meta.skip_if.get() {
@@ -99,8 +108,18 @@ impl<'a> ToTokens for MethodBody<'a> {
                         if !{
                             let skip_if: fn(&_) -> bool = #skip_if;
                             skip_if
-                        }(&#this.#ident)
+                        }(#value)
                         {
+                            #stmt
+                        }
+                    };
+                }
+                if f.meta.option {
+                    stmt = quote_spanned! {f.ty.span()=>
+                        if {
+                            let ref value = #this.#ident;
+                            ::std::option::Option::is_some(value)
+                        } {
                             #stmt
                         }
                     };

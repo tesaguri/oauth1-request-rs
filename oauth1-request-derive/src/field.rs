@@ -109,6 +109,7 @@ def_meta! {
     pub struct FieldMeta {
         pub encoded: bool,
         pub fmt: MetaValue<Path>,
+        pub option: bool,
         pub rename: MetaValue<UriSafe>,
         pub skip: bool,
         pub skip_if: MetaValue<Path>,

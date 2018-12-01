@@ -236,6 +236,15 @@ assert_expand! {
         #[oauth1(skip_if = "::std::option::Option::is_none", fmt = "super::fmt_option_str")]
         some: ::std::option::Option<&'static str> = Some("option"),
 
+        #[oauth1(option)]
+        some_2: ::std::option::Option<&'static str> = Some("option"),
+
+        #[oauth1(option)]
+        none: ::std::option::Option<T> = None,
+
+        #[oauth1(option, fmt = "super::fmt_ignore")]
+        option_fmt: ::std::option::Option<&'static str> = Some("option_fmt"),
+
         #[oauth1(skip_if = "::std::any::Any::is::<&'static str>")]
         #[oauth1(fmt = "::std::fmt::Debug::fmt")]
         trait_item: T,
@@ -250,8 +259,10 @@ assert_expand! {
     |this, mut signer, ck, opts| {
         signer.parameter("FLAG", this.flag);
         let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("option_fmt", "");
         signer.parameter_encoded("percent_encoded", &this.percent_encoded);
         signer.parameter("some", "option");
+        signer.parameter("some_2", "option");
         signer.finish()
     }
 }

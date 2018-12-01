@@ -41,6 +41,11 @@ struct Test {
     //~| expected fn pointer, found ()
     fmt_not_fn: (),
 
+    #[oauth1(option)]
+    option_not_option: u8,
+    //~^ ERROR: mismatched types
+    //~| expected enum `std::option::Option`, found u8
+
     #[oauth1(skip_if = "skip_if_too_many_args")]
     //~^ ERROR: mismatched types
     //~| incorrect number of function parameters
