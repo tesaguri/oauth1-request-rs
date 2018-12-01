@@ -23,10 +23,9 @@ extern crate oauth1_request;
 
 ## Pros
 
-* No dependency on `ring` (which can cause some compatibility issues).
+* Customizable crypto implementations (no dependency on`ring` by default).
 * *Slightly* lower memory footprint (*maybe*): it avoids allocating memory for sorting query pairs unlike other crates.
 
 ## Cons
 
 * Only dogfed on Twitter and likely to break on other sites.
-* Less ergonomic API: it requires you to explicitly handle the ordering of query/OAuth parameters.
