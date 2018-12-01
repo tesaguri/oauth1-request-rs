@@ -110,6 +110,8 @@
 //! # }
 //! ```
 //!
+//! See [`OAuth1Authorize`](trait.OAuth1Authorize.html) for more details on the custom derive macro.
+//!
 //! # Using `Signer`
 //!
 //! See [`Signer`](struct.Signer.html).
@@ -281,6 +283,46 @@ pub struct NotReady(Never);
 pub struct Ready(Never);
 
 /// Types that can be made into a `Request` using given credentials.
+///
+/// ## `#[derive(OAuth1Authorize)]`
+///
+/// [`oauth1-request-derive`][derive] crate provides a custom derive macro for
+/// `OAuth1Authorize`trait.
+///
+/// The derive macro generates a code to create a query string using the struct's field names and
+/// `Display` implementation of the values.
+///
+/// You can customize the trait implementation produced by the derive macro with the following
+/// field attributes:
+///
+/// [derive]: https://crates.io/crates/oauth1-request-derive
+///
+/// - `#[oauth1(encoded)]`
+///
+/// Do not percent encode the value when appending it to query string.
+///
+/// - `#[oauth1(fmt = "path")]`
+///
+/// Format the value using the given function. The function must be callable as
+/// `fn(&T, &mut Formatter<'_>) -> fmt::Result` (same as `Display::fmt`).
+///
+/// - `#[oauth1(option)]`
+///
+/// Skip the field if the value is `None` or use the unwrapped value otherwise.
+/// The value's type must be `Option<T>`.
+///
+/// - `#[oauth1(rename = "name")]`
+///
+/// Use the given string as the key of the query pair. The given string must be URI-safe.
+///
+/// - `#[oauth1(skip)]`
+///
+/// Unconditionally skip the field.
+///
+/// - `#[oauth1(skip_if = "path")]`
+///
+/// Call the given function and skip the field if the function returns `true`.
+/// The function must be callable as `fn(&T) -> bool`.
 pub trait OAuth1Authorize {
     /// Signs `self` using `signer`.
     ///
