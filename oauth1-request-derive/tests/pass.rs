@@ -20,7 +20,8 @@ macro_rules! assert_expand {
         #[allow(non_snake_case)]
         #[test]
         fn $Name() {
-            use oauth::{HmacSha1Signer, Options, Request, OAuth1Authorize};
+            use oauth::signature_method::Identity;
+            use oauth::{Options, Request, Signer, OAuth1Authorize};
 
             mod inner {
                 // Shadow items imported via the prelude:
@@ -50,10 +51,10 @@ macro_rules! assert_expand {
                 $($ty_param: ::std::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
             {
-                fn expected(&self, signer: HmacSha1Signer, ck: &str, opts: Option<&Options>)
+                fn expected(&self, signer: Signer<Identity>, ck: &str, opts: Option<&Options>)
                     -> Request
                 {
-                    let expand_to: fn(&Self, HmacSha1Signer, _, _) -> _ = $expand_to;
+                    let expand_to: fn(&Self, Signer<Identity>, _, _) -> _ = $expand_to;
                     expand_to(self, signer, ck, opts)
                 }
             }
@@ -67,7 +68,7 @@ macro_rules! assert_expand {
                 $($field: this_or_default!($($value)*),)*
             };
 
-            let signer = HmacSha1Signer::new("GET", "https://example.com/get", "", None);
+            let signer = Signer::<Identity>::new("GET", "https://example.com/get", "", None);
             let mut opts = Options::new();
             opts.nonce("nonce").timestamp(9999999999);
             let req = OAuth1Authorize::authorize_with(&x, signer.clone(), "", Some(&opts));

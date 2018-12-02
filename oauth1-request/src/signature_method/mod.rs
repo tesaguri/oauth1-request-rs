@@ -13,11 +13,13 @@ cfg_if! {
     }
 }
 
+pub mod identity;
 pub mod plaintext;
 
 #[cfg(feature = "either")]
 mod either;
 
+pub use self::identity::Identity;
 pub use self::plaintext::Plaintext;
 
 use std::fmt::{Display, Write};

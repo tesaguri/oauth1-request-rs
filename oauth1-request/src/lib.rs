@@ -880,6 +880,7 @@ impl Request {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use signature_method::Identity;
 
     // These values are taken from Twitter's document:
     // https://developer.twitter.com/en/docs/basics/authentication/guides/creating-a-signature.html
@@ -904,7 +905,7 @@ mod tests {
     }
 
     #[derive(Clone, Debug)]
-    struct AssertImpl(HmacSha1Signer, PlaintextSigner, Ready);
+    struct AssertImpl(HmacSha1Signer, PlaintextSigner, Identity, Ready);
 
     impl<S: Sign> Sign for InspectSign<S> {
         type Signature = S::Signature;
