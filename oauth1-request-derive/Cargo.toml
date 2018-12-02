@@ -20,5 +20,5 @@ syn = "0.15.10"
 
 [dev-dependencies]
 compiletest_rs = { version = "0.3", features = ["stable"] }
-oauth1-request = "0.2"
+oauth1-request = "0.2.1"
 version-sync = "0.6"

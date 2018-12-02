@@ -116,7 +116,7 @@
 //!
 //! See [`Signer`](struct.Signer.html).
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.0")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.1")]
 
 #[macro_use]
 extern crate bitflags;
