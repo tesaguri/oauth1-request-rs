@@ -782,7 +782,7 @@ impl Request {
     /// ```
     #[deprecated(
         since = "0.2.1",
-        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize` instead",
+        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize` instead"
     )]
     pub fn new<'a, SM: SignatureMethod>(
         method: &str,
@@ -825,7 +825,7 @@ impl Request {
     /// ```
     #[deprecated(
         since = "0.2.1",
-        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize_form` instead",
+        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize_form` instead"
     )]
     pub fn new_form<'a, SM: SignatureMethod>(
         method: &str,

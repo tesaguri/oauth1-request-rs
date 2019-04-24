@@ -41,7 +41,8 @@ impl<'a> ToTokens for MethodBody<'a> {
                             #this,
                             #signer.oauth_parameters(#ck, #opts),
                         );
-                    ).to_tokens(tokens);
+                    )
+                    .to_tokens(tokens);
                     ready = true;
                 }
 
@@ -135,6 +136,7 @@ impl<'a> ToTokens for MethodBody<'a> {
             quote! {
                 #signer.finish(#ck, #opts)
             }
-        }.to_tokens(tokens);
+        }
+        .to_tokens(tokens);
     }
 }

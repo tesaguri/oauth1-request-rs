@@ -14,7 +14,12 @@ fn run_mode(mode: &'static str) {
     if fs::metadata(deps).is_ok() {
         for entry in fs::read_dir(deps).unwrap() {
             let path = entry.unwrap().path();
-            if path.file_name().unwrap().to_string_lossy().starts_with("liboauth1_request-") {
+            if path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .starts_with("liboauth1_request-")
+            {
                 fs::remove_file(path).unwrap();
             }
         }
