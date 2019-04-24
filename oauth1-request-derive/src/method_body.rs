@@ -47,7 +47,7 @@ impl<'a> ToTokens for MethodBody<'a> {
 
                 let value = if f.meta.option {
                     quote_spanned! {f.ty.span()=> {
-                        let ref value = #this.#ident;
+                        let value = &#this.#ident;
                         ::std::option::Option::as_ref(value).unwrap()
                     }}
                 } else {
@@ -117,7 +117,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                 if f.meta.option {
                     stmt = quote_spanned! {f.ty.span()=>
                         if {
-                            let ref value = #this.#ident;
+                            let value = &#this.#ident;
                             ::std::option::Option::is_some(value)
                         } {
                             #stmt
