@@ -3,10 +3,6 @@ extern crate oauth1_request_derive;
 
 #[derive(OAuth1Authorize)]
 struct Test {
-    #[::oauth1(skip)]
-    //~^ ERROR: expected meta identifier
-    leading_colon: u8,
-
     #[oauth1]
     //~^ ERROR: expected meta list
     meta_word: u8,
