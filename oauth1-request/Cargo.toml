@@ -24,6 +24,8 @@ hmac = { version = "0.7", optional = true }
 sha-1 = { version = "0.8", optional = true }
 
 [dev-dependencies]
+# Trick to make `proc-macro-crate` work in doctests.
+oauth1-request = { version = "0.2", path = "" }
 oauth1-request-derive = "0.2"
 version-sync = "0.6"
 

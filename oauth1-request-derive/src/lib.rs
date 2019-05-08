@@ -10,6 +10,7 @@
 
 extern crate proc_macro;
 extern crate proc_macro2;
+extern crate proc_macro_crate;
 #[macro_use]
 extern crate quote;
 #[macro_use]
@@ -79,6 +80,9 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
     let dummy = format!("_impl_ToOAuth1Request_for_{}", name);
     let dummy = Ident::new(&dummy, Span::call_site());
 
+    let krate = proc_macro_crate::crate_name("oauth1-request").unwrap();
+    let krate = Ident::new(&krate, Span::call_site());
+
     add_trait_bounds(&mut generics);
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
@@ -96,7 +100,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
 
         impl #dummy {
             fn _dummy(self) {
-                extern crate oauth1_request as _oauth1_request;
+                extern crate #krate as _oauth1_request;
 
                 #[allow(nonstandard_style)]
                 fn #dummy #fn_generics(
