@@ -1,6 +1,7 @@
-#![feature(async_await, await_macro, futures_api)]
+#![feature(async_await)]
 
 extern crate bytes;
+extern crate futures;
 extern crate hyper;
 extern crate oauth1_request as oauth;
 extern crate oauth1_request_derive;
@@ -8,10 +9,9 @@ extern crate string;
 extern crate tokio;
 
 use bytes::Bytes;
+use futures::prelude::*;
 use hyper::client::{Client, ResponseFuture};
 use oauth1_request_derive::OAuth1Authorize;
-use tokio::await;
-use tokio::prelude::*;
 
 macro_rules! def_requests {
     ($(
@@ -56,7 +56,7 @@ macro_rules! def_requests {
                 C: ::hyper::client::connect::Connect + Sync + 'static,
                 C::Transport: 'static,
                 C::Future: 'static,
-                B: ::hyper::body::Payload + Default + From<Vec<u8>> + Send + 'static,
+                B: ::hyper::body::Payload + Default + From<Vec<u8>> + ::std::marker::Unpin + Send + 'static,
                 B::Data: Send,
             {
                 use hyper::header::{HeaderValue, AUTHORIZATION, CONTENT_TYPE};
@@ -130,26 +130,25 @@ def_requests! {
     }
 }
 
-fn main() {
-    tokio::run_async(
-        async {
-            let client = Client::new();
-            let res1 =
-                GetEcho::new("hello").send("key", "secret", "accesskey", "accesssecret", &client);
-            let res2 = PostEcho::new("hello").note("world").send(
-                "key",
-                "secret",
-                "accesskey",
-                "accesssecret",
-                &client,
-            );
-            println!("{}", await!(to_string(res1)));
-            println!("{}", await!(to_string(res2)));
-        },
+#[tokio::main]
+async fn main() {
+    let client = Client::new();
+
+    let res1 = GetEcho::new("hello").send("key", "secret", "accesskey", "accesssecret", &client);
+    let res2 = PostEcho::new("hello").note("world").send(
+        "key",
+        "secret",
+        "accesskey",
+        "accesssecret",
+        &client,
     );
+
+    let (res1, res2) = future::join(to_string(res1), to_string(res2)).await;
+    println!("{}", res1);
+    println!("{}", res2);
 }
 
 async fn to_string(res: ResponseFuture) -> string::String<Bytes> {
-    let body = await!(await!(res).unwrap().into_body().concat2()).unwrap();
+    let body = res.await.unwrap().into_body().try_concat().await.unwrap();
     string::TryFrom::try_from(Bytes::from(body)).unwrap()
 }

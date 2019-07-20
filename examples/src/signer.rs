@@ -1,17 +1,18 @@
-#![feature(async_await, await_macro, futures_api)]
+#![feature(async_await)]
 
+extern crate futures;
 extern crate hyper;
 extern crate oauth1_request as oauth;
 extern crate tokio;
 
 use std::str;
 
+use futures::prelude::*;
 use hyper::header::AUTHORIZATION;
 use hyper::{Client, Request, Uri};
-use tokio::await;
-use tokio::prelude::*;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let uri = Uri::from_static("http://oauthbin.com/v1/echo");
 
     let mut signer = oauth::PlaintextSigner::new_form("POST", &uri, "secret", "accesssecret");
@@ -28,11 +29,14 @@ fn main() {
         .body(data.into())
         .unwrap();
 
-    tokio::run_async(
-        async {
-            let client = Client::new();
-            let body = await!(await!(client.request(req)).unwrap().into_body().concat2()).unwrap();
-            println!("{}", str::from_utf8(&body).unwrap());
-        },
-    );
+    let client = Client::new();
+    let body = client
+        .request(req)
+        .await
+        .unwrap()
+        .into_body()
+        .try_concat()
+        .await
+        .unwrap();
+    println!("{}", str::from_utf8(&body).unwrap());
 }

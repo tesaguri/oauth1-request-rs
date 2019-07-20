@@ -19,8 +19,9 @@ path = "src/signer.rs"
 
 [dependencies]
 bytes = "0.4"
-hyper = "0.12"
+futures-preview = { version = "0.3.0-alpha.17" }
+hyper = { version = "0.13.0-a.0", git = "https://github.com/hyperium/hyper" }
 oauth1-request = { version = "0.2", path = "../oauth1-request" }
 oauth1-request-derive = { version = "0.2", path = "../oauth1-request-derive" }
 string = "0.2"
-tokio = { version = "0.1", features = ["async-await-preview"] }
+tokio = { version = "0.2", git = "https://github.com/tokio-rs/tokio" }
