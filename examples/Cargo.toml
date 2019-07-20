@@ -22,5 +22,5 @@ bytes = "0.4"
 hyper = "0.12"
 oauth1-request = { version = "0.2", path = "../oauth1-request" }
 oauth1-request-derive = { version = "0.2", path = "../oauth1-request-derive" }
-string = "0.1.2"
+string = "0.2"
 tokio = { version = "0.1", features = ["async-await-preview"] }
