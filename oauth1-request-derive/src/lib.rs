@@ -1,3 +1,5 @@
+#![warn(rust_2018_idioms)]
+
 //! This crate provides `#[derive(OAuth1Authorize)]` macro that implements
 //! `oauth1_request` crate's `OAuth1Authorize` trait for a struct with named fields.
 //!
@@ -9,12 +11,6 @@
 #![recursion_limit = "128"]
 
 extern crate proc_macro;
-extern crate proc_macro2;
-extern crate proc_macro_crate;
-#[macro_use]
-extern crate quote;
-#[macro_use]
-extern crate syn;
 
 mod ctxt;
 mod field;
@@ -22,8 +18,12 @@ mod method_body;
 mod util;
 
 use proc_macro2::{Span, TokenStream};
+use quote::quote;
 use syn::spanned::Spanned;
-use syn::{Data, DataStruct, DeriveInput, Fields, GenericParam, Generics, Ident};
+use syn::{
+    parse_macro_input, parse_quote, Data, DataStruct, DeriveInput, Fields, GenericParam, Generics,
+    Ident,
+};
 
 use ctxt::Ctxt;
 use field::Field;

@@ -1,9 +1,6 @@
-#[macro_use]
-extern crate oauth1_request_derive;
-
 use std::fmt::{self, Formatter};
 
-#[derive(OAuth1Authorize)]
+#[derive(oauth1_request_derive::OAuth1Authorize)]
 //~^ ERROR: mismatched types
 //~| expected u8, found ()
 //~^^^ ERROR: mismatched types

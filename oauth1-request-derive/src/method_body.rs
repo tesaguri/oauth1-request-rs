@@ -1,9 +1,9 @@
 use proc_macro2::TokenStream;
-use quote::ToTokens;
+use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 use syn::Ident;
 
-use field::Field;
+use crate::field::Field;
 
 pub struct MethodBody<'a> {
     fields: &'a [Field],

@@ -1,6 +1,5 @@
 #![deny(warnings)]
 
-extern crate oauth1_request as oauth;
 #[macro_use]
 extern crate oauth1_request_derive;
 
@@ -48,7 +47,7 @@ macro_rules! assert_expand {
 
             impl<$($lt,)* $($ty_param$(: $($bound)*)*),*> inner::$Name<$($lt,)* $($ty_param),*>
             where
-                $($ty_param: ::std::fmt::Display,)*
+                $($ty_param: std::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
             {
                 fn expected(&self, signer: Signer<Identity>, ck: &str, opts: Option<&Options>)
@@ -223,7 +222,7 @@ assert_expand! {
 
 assert_expand! {
     #[derive(OAuth1Authorize)]
-    struct Attrs['a][T: ('static + ::std::fmt::Debug)] {
+    struct Attrs['a][T: ('static + std::fmt::Debug)] {
         #[oauth1(encoded)]
         percent_encoded: T = "%20",
 
@@ -234,20 +233,20 @@ assert_expand! {
         #[oauth1(skip)]
         _marker: [*const (); 0],
 
-        #[oauth1(skip_if = "::std::option::Option::is_none", fmt = "super::fmt_option_str")]
-        some: ::std::option::Option<&'static str> = Some("option"),
+        #[oauth1(skip_if = "std::option::Option::is_none", fmt = "super::fmt_option_str")]
+        some: std::option::Option<&'static str> = Some("option"),
 
         #[oauth1(option)]
-        some_2: ::std::option::Option<&'static str> = Some("option"),
+        some_2: std::option::Option<&'static str> = Some("option"),
 
         #[oauth1(option)]
-        none: ::std::option::Option<T> = None,
+        none: std::option::Option<T> = None,
 
         #[oauth1(option, fmt = "super::fmt_ignore")]
-        option_fmt: ::std::option::Option<&'static str> = Some("option_fmt"),
+        option_fmt: std::option::Option<&'static str> = Some("option_fmt"),
 
-        #[oauth1(skip_if = "::std::any::Any::is::<&'static str>")]
-        #[oauth1(fmt = "::std::fmt::Debug::fmt")]
+        #[oauth1(skip_if = "std::any::Any::is::<&'static str>")]
+        #[oauth1(fmt = "std::fmt::Debug::fmt")]
         trait_item: T,
 
         #[oauth1(skip_if = "super::tautology", fmt = "super::fmt_ignore")]
@@ -272,7 +271,7 @@ assert_expand! {
 #[derive(OAuth1Authorize)]
 #[allow(nonstandard_style)]
 struct non_camel_case {
-    #[oauth1(skip_if = "Option::is_none", fmt = "::std::fmt::Debug::fmt")]
+    #[oauth1(skip_if = "Option::is_none", fmt = "std::fmt::Debug::fmt")]
     SHOUTING_SNAKE_CASE: Option<&'static str>,
 }
 

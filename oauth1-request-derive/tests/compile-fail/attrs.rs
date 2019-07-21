@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate oauth1_request_derive;
-
-#[derive(OAuth1Authorize)]
+#[derive(oauth1_request_derive::OAuth1Authorize)]
 struct Test {
     #[oauth1]
     //~^ ERROR: expected meta list

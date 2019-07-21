@@ -1,8 +1,8 @@
 use syn::spanned::Spanned;
 use syn::{Attribute, Ident, Lit, LitStr, Meta, NestedMeta, Path, Type};
 
-use ctxt::Ctxt;
-use util::ReSpanned;
+use crate::ctxt::Ctxt;
+use crate::util::ReSpanned;
 
 pub struct Field {
     pub ident: Ident,
@@ -127,8 +127,8 @@ pub trait FromLitStrExt: Sized {
 }
 
 impl Field {
-    pub fn new(field: ::syn::Field, cx: &mut Ctxt) -> Self {
-        let ::syn::Field {
+    pub fn new(field: syn::Field, cx: &mut Ctxt) -> Self {
+        let syn::Field {
             attrs, ident, ty, ..
         } = field;
         let meta = FieldMeta::new(&attrs, cx);
@@ -236,7 +236,7 @@ impl FromLitStrExt for UriSafe {
 impl FromLitStrExt for Path {
     fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
         let s = lit.value();
-        ::syn::parse_str(&s)
+        syn::parse_str(&s)
             .map_err(|_| cx.error(&format!("invalid path: \"{}\"", s), lit.span()))
             .ok()
     }

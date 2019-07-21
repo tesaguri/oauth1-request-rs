@@ -1,5 +1,6 @@
 [package]
 name = "oauth1-request-derive"
+edition = "2018"
 version = "0.2.2"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -20,6 +21,7 @@ quote = "0.6"
 syn = "0.15.10"
 
 [dev-dependencies]
-compiletest_rs = { version = "0.3", features = ["stable"] }
-oauth1-request = "0.2.1"
+compiletest = { version = "0.3", features = ["stable"], package = "compiletest_rs" }
+oauth = { version = "0.2.1", package = "oauth1-request" }
+rustversion = "0.1"
 version-sync = "0.8"

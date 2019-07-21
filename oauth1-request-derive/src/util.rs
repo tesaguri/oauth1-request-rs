@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use proc_macro2::{Span, TokenStream};
-use quote::ToTokens;
+use quote::{quote_spanned, ToTokens};
 
 pub struct ReSpanned<T> {
     tokens: T,

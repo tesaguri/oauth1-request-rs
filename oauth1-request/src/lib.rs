@@ -1,3 +1,5 @@
+#![warn(rust_2018_idioms)]
+
 //! Yet yet yet another OAuth 1 client library.
 //!
 //! # Usage
@@ -14,8 +16,9 @@
 //!
 //! ```rust
 //! extern crate oauth1_request as oauth;
-//! #[macro_use]
-//! extern crate oauth1_request_derive;
+//!
+//! use oauth::OAuth1Authorize;
+//! use oauth1_request_derive::OAuth1Authorize;
 //!
 //! #[derive(OAuth1Authorize)]
 //! struct SearchComments<'a> {
@@ -64,7 +67,7 @@
 //!
 //! ```rust
 //! # extern crate oauth1_request as oauth;
-//! # #[macro_use] extern crate oauth1_request_derive;
+//! # use oauth1_request_derive::OAuth1Authorize;
 //! # use oauth::OAuth1Authorize;
 //! #[derive(OAuth1Authorize)]
 //! struct CreateComment<'a> {
@@ -115,14 +118,6 @@
 //! See [`Signer`](struct.Signer.html).
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.5")]
-
-extern crate base64;
-#[macro_use]
-extern crate bitflags;
-#[macro_use]
-extern crate cfg_if;
-extern crate percent_encoding;
-extern crate rand;
 
 pub mod signature_method;
 
@@ -354,7 +349,7 @@ pub trait OAuth1Authorize {
         &self,
         signer: Signer<SM>,
         consumer_key: &str,
-        options: Option<&Options>,
+        options: Option<&Options<'_>>,
     ) -> Request
     where
         SM: SignatureMethod;
@@ -413,7 +408,7 @@ pub trait OAuth1Authorize {
 /// A version of `Signer` that uses the `PLAINTEXT` signature method.
 pub type PlaintextSigner<State = NotReady> = Signer<Plaintext, State>;
 
-cfg_if! {
+cfg_if::cfg_if! {
     if #[cfg(feature = "hmac-sha1")] {
         pub use signature_method::HmacSha1;
         /// A version of `Signer` that uses the `HMAC-SHA1` signature method.
@@ -431,7 +426,7 @@ struct Inner<S> {
     prev_key: String,
 }
 
-bitflags! {
+bitflags::bitflags! {
     struct Append: u8 {
         const QUESTION   = 0b001;
         const AMPERSAND  = 0b010;
@@ -597,7 +592,7 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
         self.oauth_parameters_(consumer_key, options)
     }
 
-    fn oauth_parameters_(mut self, ck: &str, opts: &Options) -> Signer<SM, Ready> {
+    fn oauth_parameters_(mut self, ck: &str, opts: &Options<'_>) -> Signer<SM, Ready> {
         macro_rules! append {
             (@inner $k:ident, $v:expr, $w:expr) => {{
                 let k = concat!("oauth_", stringify!($k));
@@ -998,7 +993,7 @@ fn gen_nonce() -> [u8; NONCE_LEN] {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use signature_method::Identity;
+    use crate::signature_method::Identity;
 
     // These values are taken from Twitter's document:
     // https://developer.twitter.com/en/docs/basics/authentication/guides/creating-a-signature.html

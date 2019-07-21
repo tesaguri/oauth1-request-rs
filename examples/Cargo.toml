@@ -5,10 +5,6 @@ version = "0.0.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 publish = false
 
-# Exclude this project from the parent workspace
-# to support Cargo versions that don't understand `edition`
-[workspace]
-
 [[bin]]
 name = "derive"
 path = "src/derive.rs"

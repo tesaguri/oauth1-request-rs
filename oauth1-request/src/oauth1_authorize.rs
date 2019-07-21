@@ -8,7 +8,7 @@ impl<'a, A: OAuth1Authorize + ?Sized> OAuth1Authorize for &'a A {
         &self,
         signer: Signer<SM>,
         consumer_key: &str,
-        options: Option<&Options>,
+        options: Option<&Options<'_>>,
     ) -> Request
     where
         SM: SignatureMethod,
@@ -22,7 +22,7 @@ impl<'a, A: OAuth1Authorize + ?Sized> OAuth1Authorize for &'a mut A {
         &self,
         signer: Signer<SM>,
         consumer_key: &str,
-        options: Option<&Options>,
+        options: Option<&Options<'_>>,
     ) -> Request
     where
         SM: SignatureMethod,
@@ -37,7 +37,7 @@ impl OAuth1Authorize for () {
         &self,
         signer: Signer<SM>,
         consumer_key: &str,
-        options: Option<&Options>,
+        options: Option<&Options<'_>>,
     ) -> Request
     where
         SM: SignatureMethod,
@@ -51,7 +51,7 @@ impl<K: Borrow<str>, V: Borrow<str>> OAuth1Authorize for BTreeSet<(K, V)> {
         &self,
         mut signer: Signer<SM>,
         consumer_key: &str,
-        options: Option<&Options>,
+        options: Option<&Options<'_>>,
     ) -> Request
     where
         SM: SignatureMethod,
@@ -83,7 +83,7 @@ impl<A: OAuth1Authorize> OAuth1Authorize for Option<A> {
         &self,
         signer: Signer<SM>,
         consumer_key: &str,
-        options: Option<&Options>,
+        options: Option<&Options<'_>>,
     ) -> Request
     where
         SM: SignatureMethod,

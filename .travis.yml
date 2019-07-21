@@ -7,11 +7,11 @@ rust:
   - stable
   - beta
   - nightly
-  - 1.28.0
+  - 1.31.0
 matrix:
   allow_failures:
-    - rust: nightly
-    - rust: 1.28.0
+    # - rust: nightly # compile-fail test requires Nightly rustc for now
+    - rust: 1.31.0
 script:
   - cargo build --verbose --all-features
   - if [ $TRAVIS_RUST_VERSION = stable ]; then cargo test --verbose --all-features; fi
