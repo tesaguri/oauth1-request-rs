@@ -1,11 +1,11 @@
 #![warn(rust_2018_idioms)]
 
-//! This crate provides `#[derive(OAuth1Authorize)]` macro that implements
-//! `oauth1_request` crate's `OAuth1Authorize` trait for a struct with named fields.
+//! This crate provides `#[derive(Authorize)]` macro that implements
+//! `oauth1_request` crate's `Authorize` trait for a struct with named fields.
 //!
-//! See [`oauth1_request::OAuth1Authorize`][OAuth1Authorize] for more information.
+//! See [`oauth1_request::Authorize`][Authorize] for more information.
 //!
-//! [OAuth1Authorize]: https://docs.rs/oauth1-request/^0.2.1/oauth1_request/trait.OAuth1Authorize.html
+//! [Authorize]: https://docs.rs/oauth1-request/0.3/oauth1_request/authorize/trait.Authorize.html
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.2.2")]
 #![recursion_limit = "128"]
@@ -30,7 +30,10 @@ use field::Field;
 use method_body::MethodBody;
 use util::error;
 
-#[proc_macro_derive(OAuth1Authorize, attributes(oauth1))]
+/// See [`oauth1_request::Authorize`][Authorize].
+///
+/// [Authorize]: https://docs.rs/oauth1-request/^0.3/oauth1_request/authorize/trait.Authorize.html
+#[proc_macro_derive(Authorize, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     expand_derive_oauth1_authorize(input).into()
@@ -116,7 +119,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                     #body
                 }
 
-                impl #impl_generics _oauth1_request::OAuth1Authorize for #name #ty_generics
+                impl #impl_generics _oauth1_request::Authorize for #name #ty_generics
                     #where_clause
                 {
                     fn authorize_with<SM>(

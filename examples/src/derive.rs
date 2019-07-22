@@ -1,7 +1,6 @@
 use bytes::Bytes;
 use futures::prelude::*;
 use hyper::client::{Client, ResponseFuture};
-use oauth1_request_derive::OAuth1Authorize;
 
 macro_rules! def_requests {
     ($(
@@ -11,7 +10,7 @@ macro_rules! def_requests {
             $($(#[$o_attr:meta])* $optional:ident: $o_ty:ty $(= $default:expr)*),* $(,)*
         }
     )*) => {$(
-        #[derive(OAuth1Authorize)]
+        #[derive(oauth::Authorize)]
         pub struct $Name<$($param)*> {
             $($(#[$r_attr])* $required: $r_ty,)*
             $($(#[$o_attr])* $optional: $o_ty,)*

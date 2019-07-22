@@ -6,21 +6,12 @@
 //!
 //! ## Using `#[derive]` (recommended)
 //!
-//! Add this to your `Cargo.toml`:
-//!
-//! ```toml
-//! oauth1-request-derive = "0.2"
-//! ```
-//!
 //! Creating a `GET` request:
 //!
 //! ```rust
 //! extern crate oauth1_request as oauth;
 //!
-//! use oauth::OAuth1Authorize;
-//! use oauth1_request_derive::OAuth1Authorize;
-//!
-//! #[derive(OAuth1Authorize)]
+//! #[derive(oauth::Authorize)]
 //! struct SearchComments<'a> {
 //!     article_id: u64,
 //!     text: &'a str,
@@ -67,9 +58,7 @@
 //!
 //! ```rust
 //! # extern crate oauth1_request as oauth;
-//! # use oauth1_request_derive::OAuth1Authorize;
-//! # use oauth::OAuth1Authorize;
-//! #[derive(OAuth1Authorize)]
+//! #[derive(oauth::Authorize)]
 //! struct CreateComment<'a> {
 //!     article_id: u64,
 //!     text: &'a str,
@@ -111,7 +100,7 @@
 //! # }
 //! ```
 //!
-//! See [`OAuth1Authorize`](trait.OAuth1Authorize.html) for more details on the custom derive macro.
+//! See [`Authorize`](trait.Authorize.html) for more details on the custom derive macro.
 //!
 //! # Using `Signer`
 //!
@@ -119,12 +108,16 @@
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.5")]
 
+pub mod authorize;
 pub mod signature_method;
 
-mod oauth1_authorize;
 #[macro_use]
 mod util;
 
+#[cfg(feature = "derive")]
+pub use oauth1_request_derive::Authorize;
+
+pub use authorize::Authorize;
 pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
@@ -299,111 +292,6 @@ pub struct NotReady(Never);
 /// Represents the state of a `Signer` after `oauth_parameters` method is called.
 #[derive(Clone, Debug)]
 pub struct Ready(Never);
-
-/// Types that can be made into a `Request` using given credentials.
-///
-/// ## `#[derive(OAuth1Authorize)]`
-///
-/// [`oauth1-request-derive`][derive] crate provides a custom derive macro for
-/// `OAuth1Authorize`trait.
-///
-/// The derive macro generates a code to create a query string using the struct's field names and
-/// `Display` implementation of the values.
-///
-/// You can customize the trait implementation produced by the derive macro with the following
-/// field attributes:
-///
-/// [derive]: https://crates.io/crates/oauth1-request-derive
-///
-/// - `#[oauth1(encoded)]`
-///
-/// Do not percent encode the value when appending it to query string.
-///
-/// - `#[oauth1(fmt = "path")]`
-///
-/// Format the value using the given function. The function must be callable as
-/// `fn(&T, &mut Formatter<'_>) -> fmt::Result` (same as `Display::fmt`).
-///
-/// - `#[oauth1(option)]`
-///
-/// Skip the field if the value is `None` or use the unwrapped value otherwise.
-/// The value's type must be `Option<T>`.
-///
-/// - `#[oauth1(rename = "name")]`
-///
-/// Use the given string as the key of the query pair. The given string must be URI-safe.
-///
-/// - `#[oauth1(skip)]`
-///
-/// Unconditionally skip the field.
-///
-/// - `#[oauth1(skip_if = "path")]`
-///
-/// Call the given function and skip the field if the function returns `true`.
-/// The function must be callable as `fn(&T) -> bool`.
-pub trait OAuth1Authorize {
-    /// Signs `self` using `signer`.
-    ///
-    /// Users of the trait should use `authorize` or `authorize_form` instead.
-    fn authorize_with<SM>(
-        &self,
-        signer: Signer<SM>,
-        consumer_key: &str,
-        options: Option<&Options<'_>>,
-    ) -> Request
-    where
-        SM: SignatureMethod;
-
-    /// Signs `self` using the given credentials and returns a `Request` with a URI with query
-    /// string.
-    fn authorize<'a, SM>(
-        &self,
-        method: &str,
-        uri: impl Display,
-        consumer_key: &str,
-        consumer_secret: &str,
-        token_secret: impl Into<Option<&'a str>>,
-        signature_method: SM,
-        options: impl Into<Option<&'a Options<'a>>>,
-    ) -> Request
-    where
-        SM: SignatureMethod,
-    {
-        let signer = Signer::with_signature_method(
-            signature_method,
-            method,
-            uri,
-            consumer_secret,
-            token_secret,
-        );
-        self.authorize_with(signer, consumer_key, options.into())
-    }
-
-    /// Signs `self` using the given credentials and returns a `Request` with
-    /// an `x-www-form-urlencoded` string.
-    fn authorize_form<'a, SM>(
-        &self,
-        method: &str,
-        uri: impl Display,
-        consumer_key: &str,
-        consumer_secret: &str,
-        token_secret: impl Into<Option<&'a str>>,
-        signature_method: SM,
-        options: impl Into<Option<&'a Options<'a>>>,
-    ) -> Request
-    where
-        SM: SignatureMethod,
-    {
-        let signer = Signer::form_with_signature_method(
-            signature_method,
-            method,
-            uri,
-            consumer_secret,
-            token_secret,
-        );
-        self.authorize_with(signer, consumer_key, options.into())
-    }
-}
 
 /// A version of `Signer` that uses the `PLAINTEXT` signature method.
 pub type PlaintextSigner<State = NotReady> = Signer<Plaintext, State>;
@@ -843,82 +731,77 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self
     }
 
-    pub fn get<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn get<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build("GET", uri, request)
     }
 
-    pub fn put_form<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn put_form<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build_form("PUT", uri, request)
     }
 
-    pub fn post_form<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn post_form<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build_form("POST", uri, request)
     }
 
-    pub fn delete<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn delete<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build("DELETE", uri, request)
     }
 
-    pub fn options<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn options<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build("OPTIONS", uri, request)
     }
 
-    pub fn head<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn head<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build("HEAD", uri, request)
     }
 
-    pub fn connect<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn connect<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build("CONNECT", uri, request)
     }
 
-    pub fn patch_form<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn patch_form<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build_form("PATCH", uri, request)
     }
 
-    pub fn trace<U: Display, A: OAuth1Authorize>(&self, uri: U, request: A) -> Request
+    pub fn trace<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build("TRACE", uri, request)
     }
 
-    pub fn build<U: Display, A: OAuth1Authorize>(&self, method: &str, uri: U, request: A) -> Request
+    pub fn build<U: Display, A: Authorize>(&self, method: &str, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
         self.build_(method, uri, request, true)
     }
 
-    pub fn build_form<U: Display, A: OAuth1Authorize>(
-        &self,
-        method: &str,
-        uri: U,
-        request: A,
-    ) -> Request
+    pub fn build_form<U: Display, A: Authorize>(&self, method: &str, uri: U, request: A) -> Request
     where
         SM: Copy,
     {
@@ -929,7 +812,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     where
         SM: Copy,
         U: Display,
-        A: OAuth1Authorize,
+        A: Authorize,
     {
         let mut options;
         let (options, token_secret) = if let Some(ref token) = self.token {

@@ -1,4 +1,4 @@
-#[derive(oauth1_request_derive::OAuth1Authorize)]
+#[derive(oauth1_request_derive::Authorize)]
 struct Test {
     #[oauth1]
     //~^ ERROR: expected meta list
