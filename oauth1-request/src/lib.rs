@@ -133,7 +133,6 @@ mod util;
 pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
-use std::collections::BTreeSet;
 use std::fmt::{Display, Write};
 use std::marker::PhantomData;
 use std::num::NonZeroU64;
@@ -780,92 +779,6 @@ impl<SM: SignatureMethod> Signer<SM, Ready> {
 }
 
 impl Request {
-    /// Convenience method for creating a `Request` using `Signer::new`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// extern crate oauth1_request as oauth;
-    ///
-    /// let oauth::Request { authorization, data } = oauth::Request::new(
-    ///     "GET",
-    ///     "https://example.com/api/v1/get.json",
-    ///     "consumer_key",
-    ///     "consumer_secret",
-    ///     "token_secret",
-    ///     oauth::HmacSha1,
-    ///     &*oauth::Options::new().token("token"),
-    ///     Some(&[("key", "value")].iter().cloned().collect()),
-    /// );
-    /// ```
-    #[deprecated(
-        since = "0.2.1",
-        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize` instead"
-    )]
-    pub fn new<'a, SM: SignatureMethod>(
-        method: &str,
-        uri: impl Display,
-        consumer_key: &str,
-        consumer_secret: &str,
-        token_secret: impl Into<Option<&'a str>>,
-        signature_method: SM,
-        options: impl Into<Option<&'a Options<'a>>>,
-        params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
-    ) -> Self {
-        params.authorize(
-            method,
-            uri,
-            consumer_key,
-            consumer_secret,
-            token_secret,
-            signature_method,
-            options,
-        )
-    }
-
-    /// Convenience method for creating a `Request` using `Signer::new_form`.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// extern crate oauth1_request as oauth;
-    ///
-    /// let oauth::Request { authorization, data } = oauth::Request::new(
-    ///     "POST",
-    ///     "https://example.com/api/v1/post.json",
-    ///     "consumer_key",
-    ///     "consumer_secret",
-    ///     "token_secret",
-    ///     oauth::HmacSha1,
-    ///     &*oauth::Options::new().token("token"),
-    ///     Some(&[("key", "value")].iter().cloned().collect()),
-    /// );
-    /// ```
-    #[deprecated(
-        since = "0.2.1",
-        note = "Use `<Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>> as OAuth1Authorize>::authorize_form` instead"
-    )]
-    pub fn new_form<'a, SM: SignatureMethod>(
-        method: &str,
-        uri: impl Display,
-        consumer_key: &str,
-        consumer_secret: &str,
-        token_secret: impl Into<Option<&'a str>>,
-        signature_method: SM,
-        options: impl Into<Option<&'a Options<'a>>>,
-        params: Option<&BTreeSet<(impl Borrow<str>, impl Borrow<str>)>>,
-    ) -> Self {
-        params.authorize_form(
-            method,
-            uri,
-            consumer_key,
-            consumer_secret,
-            token_secret,
-            signature_method,
-            options,
-        )
-    }
-
     /// Alias of `Signer::with_signature_method` for convenience.
     pub fn signer<'a, SM: SignatureMethod>(
         method: &str,
