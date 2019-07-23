@@ -109,7 +109,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                 fn #dummy #fn_generics(
                     mut #dummy: (
                         &#name #ty_generics,
-                        _oauth1_request::Signer<#dummy>,
+                        _oauth1_request::signer::Signer<#dummy>,
                         &str,
                         ::std::option::Option<&_oauth1_request::Options>,
                     ),
@@ -124,7 +124,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                 {
                     fn authorize_with<SM>(
                         &self,
-                        signer: _oauth1_request::Signer<SM>,
+                        signer: _oauth1_request::signer::Signer<SM>,
                         ck: &str,
                         opts: ::std::option::Option<&_oauth1_request::Options>,
                     ) -> _oauth1_request::Request

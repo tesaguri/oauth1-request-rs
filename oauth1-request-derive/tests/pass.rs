@@ -20,7 +20,8 @@ macro_rules! assert_expand {
         #[test]
         fn $Name() {
             use oauth::signature_method::Identity;
-            use oauth::{Options, Request, Signer, Authorize};
+            use oauth::{Options, Request, Authorize};
+            use oauth::signer::Signer;
 
             mod inner {
                 // Shadow items imported via the prelude:

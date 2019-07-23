@@ -2,7 +2,8 @@ use std::borrow::Borrow;
 use std::collections::BTreeSet;
 use std::fmt::Display;
 
-use super::{Options, Request, SignatureMethod, Signer};
+use crate::signer::Signer;
+use crate::{Options, Request, SignatureMethod};
 
 /// Types that can be made into a `Request` using given credentials.
 ///
