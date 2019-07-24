@@ -44,15 +44,14 @@ macro_rules! def_requests {
                 $($optional: $o_ty,)*
             }
 
-            pub fn send<C, B>(
+            pub fn send<T, C, B>(
                 &self,
-                consumer_key: &str,
-                consumer_secret: &str,
-                token: &str,
-                token_secret: &str,
-                client: &::hyper::Client<C, B>,
+                client: &::oauth::Credentials<T>,
+                token: &::oauth::Credentials<T>,
+                http: &::hyper::Client<C, B>,
             ) -> ::hyper::client::ResponseFuture
             where
+                T: ::std::borrow::Borrow<str>,
                 C: ::hyper::client::connect::Connect + Sync + 'static,
                 C::Transport: 'static,
                 C::Future: 'static,
@@ -65,23 +64,17 @@ macro_rules! def_requests {
 
                 let is_post = stringify!($method) == "POST";
 
+                let mut builder = oauth::Builder::new(client.as_ref(), oauth::HmacSha1);
+                builder.token(token.as_ref());
+
                 let oauth::Request {
                     authorization,
                     data,
                 } = if is_post {
-                    oauth::OAuth1Authorize::authorize_form
+                    builder.build_form(stringify!($method), $uri, self)
                 } else {
-                    oauth::OAuth1Authorize::authorize
-                }(
-                    self,
-                    stringify!($method),
-                    $uri,
-                    consumer_key,
-                    consumer_secret,
-                    token_secret,
-                    oauth::HmacSha1,
-                    &*oauth::Options::new().token(token),
-                );
+                    builder.build(stringify!($method), $uri, self)
+                };
 
                 let mut req = Request::builder();
                 req.method(Method::$method)
@@ -99,7 +92,7 @@ macro_rules! def_requests {
                     req.uri(data).body(Default::default()).unwrap()
                 };
 
-                client.request(req)
+                http.request(req)
             }
         }
     )*};
@@ -132,16 +125,15 @@ def_requests! {
 
 #[tokio::main]
 async fn main() {
-    let client = Client::new();
+    let client = oauth::Credentials::new("key", "secret");
+    let token = oauth::Credentials::new("accesskey", "accesssecret");
 
-    let res1 = GetEcho::new("hello").send("key", "secret", "accesskey", "accesssecret", &client);
-    let res2 = PostEcho::new("hello").note("world").send(
-        "key",
-        "secret",
-        "accesskey",
-        "accesssecret",
-        &client,
-    );
+    let http = Client::new();
+
+    let res1 = GetEcho::new("hello").send(&client, &token, &http);
+    let res2 = PostEcho::new("hello")
+        .note("world")
+        .send(&client, &token, &http);
 
     let (res1, res2) = future::join(to_string(res1), to_string(res2)).await;
     println!("{}", res1);
