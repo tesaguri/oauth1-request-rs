@@ -2,7 +2,6 @@ use std::fmt::{self, Display, Formatter, Write};
 use std::str;
 
 use percent_encoding::{EncodeSet as EncodeSet_, PercentEncode as PercentEncode_};
-use rand::prelude::*;
 
 macro_rules! options {
     ($(
@@ -75,8 +74,6 @@ pub struct EncodeSet;
 pub enum Never {}
 
 pub struct PercentEncode<D>(pub D);
-
-pub struct UrlSafe;
 
 impl<D: Display> Display for DoublePercentEncode<D> {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
@@ -171,13 +168,6 @@ impl<D: Display> Display for PercentEncode<D> {
             }
         }
         write!(Adapter(f), "{}", self.0)
-    }
-}
-
-impl Distribution<u8> for UrlSafe {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> u8 {
-        const MAP: &[u8; 64] = b"-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
-        MAP[(rng.next_u32() >> (32 - 6)) as usize]
     }
 }
 

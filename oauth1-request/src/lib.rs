@@ -116,6 +116,7 @@
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.1")]
 
+extern crate base64;
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
@@ -139,8 +140,7 @@ use std::num::NonZeroU64;
 use std::str;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rand::distributions::Distribution;
-use rand::thread_rng;
+use rand::prelude::*;
 
 use signature_method::{Sign, SignatureMethod};
 use util::*;
@@ -620,15 +620,11 @@ impl<SM: SignatureMethod> Signer<SM, NotReady> {
         }
         append!(consumer_key, ck);
         if self.inner.sign.use_nonce() {
-            let mut nonce_buf = [0; 32];
+            let nonce_buf;
             let nonce = if let Some(n) = opts.nonce {
                 n
             } else {
-                let mut rng = thread_rng();
-                for b in &mut nonce_buf {
-                    *b = UrlSafe.sample(&mut rng);
-                }
-                debug_assert!(nonce_buf.is_ascii());
+                nonce_buf = gen_nonce();
                 unsafe { str::from_utf8_unchecked(&nonce_buf) }
             };
             append!(nonce, nonce);
@@ -1061,6 +1057,21 @@ impl<T: Borrow<str>> Credentials<T> {
             secret: self.identifier.borrow(),
         }
     }
+}
+
+const NONCE_LEN: usize = 32;
+
+fn gen_nonce() -> [u8; NONCE_LEN] {
+    let mut ret = [0u8; NONCE_LEN];
+
+    let mut rng = thread_rng();
+    let mut rand = [0u8; NONCE_LEN * 6 / 8];
+    rng.fill_bytes(&mut rand);
+
+    let config = base64::Config::new(base64::CharacterSet::UrlSafe, false);
+    base64::encode_config_slice(&rand, config, &mut ret);
+
+    ret
 }
 
 #[cfg(test)]

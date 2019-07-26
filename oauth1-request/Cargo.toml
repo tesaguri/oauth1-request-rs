@@ -14,11 +14,11 @@ Yet yet yet another OAuth 1 client library.
 """
 
 [dependencies]
+base64 = "0.10"
 bitflags = "1"
 cfg-if = "0.1"
 percent-encoding = "1"
 rand = "0.7"
-base64 = { version = "0.10", optional = true }
 either = { version = "1", optional = true }
 hmac = { version = "0.7", optional = true }
 sha-1 = { version = "0.8", optional = true }
@@ -31,4 +31,4 @@ version-sync = "0.8"
 
 [features]
 default = ["hmac-sha1"]
-hmac-sha1 = ["base64", "hmac", "sha-1"]
+hmac-sha1 = ["hmac", "sha-1"]
