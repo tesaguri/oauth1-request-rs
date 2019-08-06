@@ -266,7 +266,7 @@ pub struct Builder<'a, SM, T = String> {
 /// - Client credentials (consumer key and secrets)
 /// - Temporary credentials (request token and secret)
 /// - Token credentials (access token and secret)
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 pub struct Credentials<T = String> {
     pub identifier: T,
     pub secret: T,
