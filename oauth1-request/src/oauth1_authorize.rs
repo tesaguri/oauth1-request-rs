@@ -3,7 +3,7 @@ use std::collections::BTreeSet;
 
 use super::{OAuth1Authorize, Options, Request, SignatureMethod, Signer};
 
-impl<'a, A: OAuth1Authorize> OAuth1Authorize for &'a A {
+impl<'a, A: OAuth1Authorize + ?Sized> OAuth1Authorize for &'a A {
     fn authorize_with<SM>(
         &self,
         signer: Signer<SM>,
@@ -17,7 +17,7 @@ impl<'a, A: OAuth1Authorize> OAuth1Authorize for &'a A {
     }
 }
 
-impl<'a, A: OAuth1Authorize> OAuth1Authorize for &'a mut A {
+impl<'a, A: OAuth1Authorize + ?Sized> OAuth1Authorize for &'a mut A {
     fn authorize_with<SM>(
         &self,
         signer: Signer<SM>,
