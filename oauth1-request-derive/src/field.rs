@@ -33,9 +33,17 @@ macro_rules! def_meta {
                     cx: &'a mut Ctxt,
                 }
 
+                let path = meta.path();
+                let name = if let Some(ident) = path_as_ident(path) {
+                    ident
+                } else {
+                    cx.error("expected identifier", path.span());
+                    return;
+                };
+
                 let args = Args {
                     this: self,
-                    name: meta.name(),
+                    name,
                     meta,
                     set_state,
                     cx,
@@ -67,11 +75,11 @@ macro_rules! add_meta_impl {
         add_meta_impl! { $args; $($rest)* }
     };
     ($args:expr; @matches $name:ident: bool, $($rest:tt)*) => {
-        if let Meta::Word(ref ident) = $args.meta {
+        if let Meta::Path(ref path) = $args.meta {
             if $args.this.$name {
                 $args.cx.error(
                     concat!("duplicate attribute `", stringify!($name), "`"),
-                    ident.span(),
+                    path.span(),
                 );
             } else {
                 $args.this.$name = true;
@@ -180,7 +188,7 @@ impl FieldMeta {
             for nested in list.nested {
                 let meta = match nested {
                     NestedMeta::Meta(meta) => meta,
-                    NestedMeta::Literal(lit) => {
+                    NestedMeta::Lit(lit) => {
                         cx.error("expected meta item", lit.span());
                         continue;
                     }
@@ -240,4 +248,15 @@ impl FromLitStrExt for Path {
             .map_err(|_| cx.error(&format!("invalid path: \"{}\"", s), lit.span()))
             .ok()
     }
+}
+
+fn path_as_ident(path: &Path) -> Option<Ident> {
+    if path.leading_colon.is_none() && path.segments.len() == 1 {
+        let s = &path.segments[0];
+        if let syn::PathArguments::None = s.arguments {
+            return Some(s.ident.clone());
+        }
+    }
+
+    None
 }

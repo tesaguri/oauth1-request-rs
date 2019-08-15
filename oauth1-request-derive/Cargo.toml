@@ -15,10 +15,10 @@ A derive macro for `oauth1_request::Authorize` trait.
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "0.4"
+proc-macro2 = "1"
 proc-macro-crate = "0.1"
-quote = "0.6"
-syn = "0.15.10"
+quote = "1"
+syn = "1"
 
 [dev-dependencies]
 compiletest = { version = "0.3", features = ["stable"], package = "compiletest_rs" }
