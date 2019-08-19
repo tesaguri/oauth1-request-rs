@@ -108,14 +108,14 @@ macro_rules! def_setters {
 }
 
 def_requests! {
-    GET "http://oauthbin.com/v1/echo";
+    GET "http://term.ie/oauth/example/echo_api.php";
     pub struct GetEcho['a] {
         text: &'a str;
         #[oauth1(skip_if = "str::is_empty")]
         note: &'a str,
     }
 
-    POST "http://oauthbin.com/v1/echo";
+    POST "http://term.ie/oauth/example/echo_api.php";
     pub struct PostEcho['a] {
         text: &'a str;
         #[oauth1(skip_if = "str::is_empty")]
