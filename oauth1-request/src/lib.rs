@@ -1062,7 +1062,7 @@ impl<T: Borrow<str>> Credentials<T> {
     pub fn as_ref(&self) -> Credentials<&str> {
         Credentials {
             identifier: self.identifier.borrow(),
-            secret: self.identifier.borrow(),
+            secret: self.secret.borrow(),
         }
     }
 }
