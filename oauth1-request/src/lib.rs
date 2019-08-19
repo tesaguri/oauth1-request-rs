@@ -114,7 +114,7 @@
 //!
 //! See [`Signer`](struct.Signer.html).
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.4")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.5")]
 
 extern crate base64;
 #[macro_use]
