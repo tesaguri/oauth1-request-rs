@@ -1,10 +1,3 @@
-#![feature(async_await)]
-
-extern crate futures;
-extern crate hyper;
-extern crate oauth1_request as oauth;
-extern crate tokio;
-
 use std::str;
 
 use futures::prelude::*;

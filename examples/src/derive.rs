@@ -1,13 +1,3 @@
-#![feature(async_await)]
-
-extern crate bytes;
-extern crate futures;
-extern crate hyper;
-extern crate oauth1_request as oauth;
-extern crate oauth1_request_derive;
-extern crate string;
-extern crate tokio;
-
 use bytes::Bytes;
 use futures::prelude::*;
 use hyper::client::{Client, ResponseFuture};
@@ -46,17 +36,17 @@ macro_rules! def_requests {
 
             pub fn send<T, C, B>(
                 &self,
-                client: &::oauth::Credentials<T>,
-                token: &::oauth::Credentials<T>,
-                http: &::hyper::Client<C, B>,
-            ) -> ::hyper::client::ResponseFuture
+                client: &oauth::Credentials<T>,
+                token: &oauth::Credentials<T>,
+                http: &hyper::Client<C, B>,
+            ) -> hyper::client::ResponseFuture
             where
-                T: ::std::borrow::Borrow<str>,
-                C: ::hyper::client::connect::Connect + Sync + 'static,
+                T: std::borrow::Borrow<str>,
+                C: hyper::client::connect::Connect + Sync + 'static,
                 C::Transport: 'static,
                 C::Future: 'static,
-                B: ::hyper::body::Payload + Default + From<Vec<u8>> + ::std::marker::Unpin + Send + 'static,
-                B::Data: Send,
+                B: hyper::body::Payload + Default + From<Vec<u8>> + std::marker::Unpin + Send + 'static,
+                B::Data: std::marker::Unpin + Send,
             {
                 use hyper::header::{HeaderValue, AUTHORIZATION, CONTENT_TYPE};
                 use hyper::{Method, Request, Uri};
