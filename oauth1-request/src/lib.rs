@@ -121,6 +121,7 @@ extern crate base64;
 extern crate bitflags;
 #[macro_use]
 extern crate cfg_if;
+extern crate oauth1_request;
 extern crate percent_encoding;
 extern crate rand;
 
@@ -129,6 +130,8 @@ pub mod signature_method;
 mod oauth1_authorize;
 #[macro_use]
 mod util;
+
+pub use oauth1_request::Credentials;
 
 pub use signature_method::Plaintext;
 
@@ -255,21 +258,6 @@ pub struct Builder<'a, SM, T = String> {
     client: Credentials<T>,
     token: Option<Credentials<T>>,
     options: Options<'a>,
-}
-
-/// The "credentials" pair defined in [RFC 5849 section 1.1][rfc].
-///
-/// [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
-///
-/// This type represents:
-///
-/// - Client credentials (consumer key and secrets)
-/// - Temporary credentials (request token and secret)
-/// - Token credentials (access token and secret)
-#[derive(Clone, Copy, Debug)]
-pub struct Credentials<T = String> {
-    pub identifier: T,
-    pub secret: T,
 }
 
 options! {
@@ -1043,27 +1031,6 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         );
 
         request.authorize_with(signer, self.client.identifier.borrow(), Some(options))
-    }
-}
-
-impl<T: Borrow<str>> Credentials<T> {
-    pub fn new(identifier: T, secret: T) -> Self {
-        Credentials { identifier, secret }
-    }
-
-    pub fn identifier(&self) -> &str {
-        self.identifier.borrow()
-    }
-
-    pub fn secret(&self) -> &str {
-        self.secret.borrow()
-    }
-
-    pub fn as_ref(&self) -> Credentials<&str> {
-        Credentials {
-            identifier: self.identifier.borrow(),
-            secret: self.secret.borrow(),
-        }
     }
 }
 
