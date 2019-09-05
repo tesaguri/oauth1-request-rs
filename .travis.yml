@@ -14,5 +14,6 @@ matrix:
     - rust: 1.28.0
 script:
   - cargo build --verbose --all-features
-  - if [ $TRAVIS_RUST_VERSION = stable ]; then cargo test --verbose --all-features; fi
+  # https://github.com/dtolnay/semver-trick/issues/4
+  # - if [ $TRAVIS_RUST_VERSION = stable ]; then cargo test --verbose --all-features; fi
   - cargo check --verbose --all-features --release
