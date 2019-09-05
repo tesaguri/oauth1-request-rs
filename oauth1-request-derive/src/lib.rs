@@ -1,20 +1,15 @@
-//! This crate provides `#[derive(OAuth1Authorize)]` macro that implements
-//! `oauth1_request` crate's `OAuth1Authorize` trait for a struct with named fields.
+#![warn(rust_2018_idioms)]
+
+//! This crate provides `#[derive(Authorize)]` macro that implements
+//! `oauth1_request` crate's `Authorize` trait for a struct with named fields.
 //!
-//! See [`oauth1_request::OAuth1Authorize`][OAuth1Authorize] for more information.
+//! See [`oauth1_request::Authorize`][Authorize] for more information.
 //!
-//! [OAuth1Authorize]: https://docs.rs/oauth1-request/^0.2.1/oauth1_request/trait.OAuth1Authorize.html
+//! [Authorize]: https://docs.rs/oauth1-request/0.3/oauth1_request/authorize/trait.Authorize.html
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.2.2")]
-#![recursion_limit = "128"]
 
 extern crate proc_macro;
-extern crate proc_macro2;
-extern crate proc_macro_crate;
-#[macro_use]
-extern crate quote;
-#[macro_use]
-extern crate syn;
 
 mod ctxt;
 mod field;
@@ -22,15 +17,22 @@ mod method_body;
 mod util;
 
 use proc_macro2::{Span, TokenStream};
+use quote::quote;
 use syn::spanned::Spanned;
-use syn::{Data, DataStruct, DeriveInput, Fields, GenericParam, Generics, Ident};
+use syn::{
+    parse_macro_input, parse_quote, Data, DataStruct, DeriveInput, Fields, GenericParam, Generics,
+    Ident,
+};
 
 use ctxt::Ctxt;
 use field::Field;
 use method_body::MethodBody;
 use util::error;
 
-#[proc_macro_derive(OAuth1Authorize, attributes(oauth1))]
+/// See [`oauth1_request::Authorize`][Authorize].
+///
+/// [Authorize]: https://docs.rs/oauth1-request/^0.3/oauth1_request/authorize/trait.Authorize.html
+#[proc_macro_derive(Authorize, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     expand_derive_oauth1_authorize(input).into()
@@ -106,7 +108,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                 fn #dummy #fn_generics(
                     mut #dummy: (
                         &#name #ty_generics,
-                        _oauth1_request::Signer<#dummy>,
+                        _oauth1_request::signer::Signer<#dummy>,
                         &str,
                         ::std::option::Option<&_oauth1_request::Options>,
                     ),
@@ -116,12 +118,12 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                     #body
                 }
 
-                impl #impl_generics _oauth1_request::OAuth1Authorize for #name #ty_generics
+                impl #impl_generics _oauth1_request::Authorize for #name #ty_generics
                     #where_clause
                 {
                     fn authorize_with<SM>(
                         &self,
-                        signer: _oauth1_request::Signer<SM>,
+                        signer: _oauth1_request::signer::Signer<SM>,
                         ck: &str,
                         opts: ::std::option::Option<&_oauth1_request::Options>,
                     ) -> _oauth1_request::Request

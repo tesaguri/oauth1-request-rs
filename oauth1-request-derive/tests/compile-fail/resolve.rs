@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate oauth1_request_derive;
-
-#[derive(OAuth1Authorize)]
+#[derive(oauth1_request_derive::Authorize)]
 struct Test {
     #[oauth1(fmt = "missing_fmt")]
     //~^ ERROR: cannot find value `missing_fmt` in this scope

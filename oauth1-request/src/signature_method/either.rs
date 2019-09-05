@@ -1,6 +1,4 @@
-extern crate either;
-
-use self::either::Either;
+use ::either::Either;
 
 use super::*;
 

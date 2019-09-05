@@ -1,7 +1,4 @@
-#[macro_use]
-extern crate oauth1_request_derive;
-
-#[derive(OAuth1Authorize)]
+#[derive(oauth1_request_derive::Authorize)]
 struct Test {
     #[oauth1]
     //~^ ERROR: expected meta list
@@ -64,6 +61,10 @@ struct Test {
     #[oauth1(rename = "d")]
     //~^ ERROR: duplicate attribute `rename`
     duplicate_name_value_2: u8,
+
+    #[oauth1(option = "FALSE")]
+    //~^ ERROR: expected boolean literal
+    invalid_boolean: u8,
 
     #[oauth1(fmt = "|_, _| Ok(())")]
     //~^ ERROR: invalid path: "|_, _| Ok(())"

@@ -2,6 +2,7 @@
 members = [
   "oauth1-request",
   "oauth1-request-derive",
+  "examples",
 ]
 
 [patch.crates-io]

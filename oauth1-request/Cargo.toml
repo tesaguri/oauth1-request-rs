@@ -1,6 +1,7 @@
 [package]
 name = "oauth1-request"
 version = "0.2.5"
+edition = "2018"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
 readme = "../README.md"
@@ -19,6 +20,11 @@ bitflags = "1"
 cfg-if = "0.1"
 percent-encoding = "1"
 rand = "0.7"
+
+# `derive` feature
+oauth1-request-derive = { version = "0.2", path = "../oauth1-request-derive", optional = true }
+
+# `hmac-sha1` feature
 either = { version = "1", optional = true }
 hmac = { version = "0.7", optional = true }
 sha-1 = { version = "0.8", optional = true }
@@ -26,9 +32,9 @@ sha-1 = { version = "0.8", optional = true }
 [dev-dependencies]
 # Trick to make `proc-macro-crate` work in doctests.
 oauth1-request = { version = "0.2", path = "" }
-oauth1-request-derive = "0.2"
 version-sync = "0.8"
 
 [features]
-default = ["hmac-sha1"]
+default = ["derive", "hmac-sha1"]
+derive = ["oauth1-request-derive"]
 hmac-sha1 = ["hmac", "sha-1"]

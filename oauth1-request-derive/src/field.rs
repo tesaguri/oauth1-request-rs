@@ -1,8 +1,8 @@
 use syn::spanned::Spanned;
-use syn::{Attribute, Ident, Lit, LitStr, Meta, NestedMeta, Path, Type};
+use syn::{Attribute, Ident, Lit, LitBool, LitStr, Meta, NestedMeta, Path, Type};
 
-use ctxt::Ctxt;
-use util::ReSpanned;
+use crate::ctxt::Ctxt;
+use crate::util::ReSpanned;
 
 pub struct Field {
     pub ident: Ident,
@@ -33,9 +33,17 @@ macro_rules! def_meta {
                     cx: &'a mut Ctxt,
                 }
 
+                let path = meta.path();
+                let name = if let Some(ident) = path_as_ident(path) {
+                    ident
+                } else {
+                    cx.error("expected identifier", path.span());
+                    return;
+                };
+
                 let args = Args {
                     this: self,
-                    name: meta.name(),
+                    name,
                     meta,
                     set_state,
                     cx,
@@ -67,11 +75,11 @@ macro_rules! add_meta_impl {
         add_meta_impl! { $args; $($rest)* }
     };
     ($args:expr; @matches $name:ident: bool, $($rest:tt)*) => {
-        if let Meta::Word(ref ident) = $args.meta {
+        if let Meta::Path(ref path) = $args.meta {
             if $args.this.$name {
                 $args.cx.error(
                     concat!("duplicate attribute `", stringify!($name), "`"),
-                    ident.span(),
+                    path.span(),
                 );
             } else {
                 $args.this.$name = true;
@@ -109,7 +117,7 @@ def_meta! {
     pub struct FieldMeta {
         pub encoded: bool,
         pub fmt: MetaValue<Path>,
-        pub option: bool,
+        pub option: MetaValue<bool>,
         pub rename: MetaValue<UriSafe>,
         pub skip: bool,
         pub skip_if: MetaValue<Path>,
@@ -127,8 +135,8 @@ pub trait FromLitStrExt: Sized {
 }
 
 impl Field {
-    pub fn new(field: ::syn::Field, cx: &mut Ctxt) -> Self {
-        let ::syn::Field {
+    pub fn new(field: syn::Field, cx: &mut Ctxt) -> Self {
+        let syn::Field {
             attrs, ident, ty, ..
         } = field;
         let meta = FieldMeta::new(&attrs, cx);
@@ -180,7 +188,7 @@ impl FieldMeta {
             for nested in list.nested {
                 let meta = match nested {
                     NestedMeta::Meta(meta) => meta,
-                    NestedMeta::Literal(lit) => {
+                    NestedMeta::Lit(lit) => {
                         cx.error("expected meta item", lit.span());
                         continue;
                     }
@@ -217,6 +225,15 @@ impl AsRef<str> for UriSafe {
     }
 }
 
+impl FromLitStrExt for bool {
+    fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
+        syn::parse_str::<LitBool>(&lit.value())
+            .map(|b| b.value)
+            .map_err(|_| cx.error(&format!("expected boolean literal"), lit.span()))
+            .ok()
+    }
+}
+
 impl FromLitStrExt for UriSafe {
     fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
         let s = lit.value();
@@ -236,8 +253,19 @@ impl FromLitStrExt for UriSafe {
 impl FromLitStrExt for Path {
     fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
         let s = lit.value();
-        ::syn::parse_str(&s)
+        syn::parse_str(&s)
             .map_err(|_| cx.error(&format!("invalid path: \"{}\"", s), lit.span()))
             .ok()
     }
+}
+
+fn path_as_ident(path: &Path) -> Option<Ident> {
+    if path.leading_colon.is_none() && path.segments.len() == 1 {
+        let s = &path.segments[0];
+        if let syn::PathArguments::None = s.arguments {
+            return Some(s.ident.clone());
+        }
+    }
+
+    None
 }

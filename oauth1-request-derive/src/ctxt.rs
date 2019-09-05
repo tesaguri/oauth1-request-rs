@@ -3,7 +3,7 @@ use std::mem;
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 
-use util::error;
+use crate::util::error;
 
 pub struct Ctxt {
     errors: TokenStream,
@@ -33,7 +33,7 @@ impl Ctxt {
 
 impl Drop for Ctxt {
     fn drop(&mut self) {
-        if !::std::thread::panicking() {
+        if !std::thread::panicking() {
             panic!("must call `Ctxt::emit_errors`");
         }
     }

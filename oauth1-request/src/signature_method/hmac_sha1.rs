@@ -4,21 +4,17 @@
 //!
 //! This module is only available when `hmac-sha1` feature is activated.
 
-extern crate base64;
-extern crate hmac;
-extern crate sha1;
-
 use std::fmt::{self, Formatter};
 
-use self::base64::display::Base64Display;
-use self::hmac::{Hmac, Mac};
-use self::sha1::digest::generic_array::sequence::GenericSequence;
-use self::sha1::digest::generic_array::{ArrayLength, GenericArray};
-use self::sha1::digest::{BlockInput, FixedOutput, Input, Reset};
-use self::sha1::Sha1;
+use base64::display::Base64Display;
+use hmac::{Hmac, Mac};
+use sha1::digest::generic_array::sequence::GenericSequence;
+use sha1::digest::generic_array::{ArrayLength, GenericArray};
+use sha1::digest::{BlockInput, FixedOutput, Input, Reset};
+use sha1::Sha1;
 
 use super::*;
-use util::PercentEncode;
+use crate::util::PercentEncode;
 
 /// The `HMAC-SHA1` signature method.
 #[derive(Copy, Clone, Debug, Default)]
@@ -35,7 +31,7 @@ pub struct HmacSha1Signature {
     signature: GenericArray<u8, <Sha1 as FixedOutput>::OutputSize>,
 }
 
-struct MacWrite<'a, M: 'a>(&'a mut M);
+struct MacWrite<'a, M>(&'a mut M);
 
 #[derive(Clone)]
 enum SigningKey<D: BlockInput> {
@@ -96,7 +92,7 @@ impl Sign for HmacSha1Sign {
 }
 
 impl Display for HmacSha1Signature {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let d = PercentEncode(Base64Display::with_config(&self.signature, base64::STANDARD));
         Display::fmt(&d, f)
     }
@@ -166,7 +162,8 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::hmac::crypto_mac::generic_array::typenum::Unsigned;
+    use hmac::crypto_mac::generic_array::typenum::Unsigned;
+
     use super::*;
 
     #[test]

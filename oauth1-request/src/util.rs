@@ -69,15 +69,15 @@ pub struct DoublePercentEncode<D>(pub D);
 pub struct EncodeSet;
 
 // TODO: Use `!` type once it's stable and we've bumped minimum supported Rust version.
-#[cfg_attr(feature = "cargo-clippy", allow(empty_enum))]
+#[allow(clippy::empty_enum)]
 #[derive(Clone, Debug)]
 pub enum Never {}
 
 pub struct PercentEncode<D>(pub D);
 
 impl<D: Display> Display for DoublePercentEncode<D> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        struct Adapter<'a, 'b: 'a>(&'a mut Formatter<'b>);
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        struct Adapter<'a, 'b>(&'a mut Formatter<'b>);
 
         impl<'a, 'b: 'a> Write for Adapter<'a, 'b> {
             fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -119,7 +119,7 @@ impl<D: Display> Display for DoublePercentEncode<D> {
 impl EncodeSet_ for EncodeSet {
     fn contains(&self, b: u8) -> bool {
         // https://tools.ietf.org/html/rfc3986#section-2.1
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         const ENCODE_MAP: [bool; 0x100] = [
              true,  true,  true,  true,  true,  true,  true,  true,
              true,  true,  true,  true,  true,  true,  true,  true,
@@ -160,8 +160,8 @@ impl EncodeSet_ for EncodeSet {
 }
 
 impl<D: Display> Display for PercentEncode<D> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        struct Adapter<'a, 'b: 'a>(&'a mut Formatter<'b>);
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        struct Adapter<'a, 'b>(&'a mut Formatter<'b>);
         impl<'a, 'b: 'a> Write for Adapter<'a, 'b> {
             fn write_str(&mut self, s: &str) -> fmt::Result {
                 Display::fmt(&percent_encode(s), self.0)
@@ -194,8 +194,8 @@ fn double_encode_byte(b: u8) -> &'static str {
     unsafe { str::from_utf8_unchecked(&ENCODE[b * 5..(b + 1) * 5]) }
 }
 
-pub fn percent_encode(input: &str) -> PercentEncode_<EncodeSet> {
-    ::percent_encoding::utf8_percent_encode(input, EncodeSet)
+pub fn percent_encode(input: &str) -> PercentEncode_<'_, EncodeSet> {
+    percent_encoding::utf8_percent_encode(input, EncodeSet)
 }
 
 #[cfg(test)]
@@ -218,7 +218,7 @@ mod tests {
     fn encode_set() {
         for b in 0u8..=0xFF {
             let expected = match b {
-                b'0'...b'9' | b'A'...b'Z' | b'a'...b'z' | b'-' | b'.' | b'_' | b'~' => false,
+                b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'-' | b'.' | b'_' | b'~' => false,
                 _ => true,
             };
             assert_eq!(

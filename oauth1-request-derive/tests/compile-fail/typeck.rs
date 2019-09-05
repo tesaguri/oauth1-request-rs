@@ -1,9 +1,6 @@
-#[macro_use]
-extern crate oauth1_request_derive;
-
 use std::fmt::{self, Formatter};
 
-#[derive(OAuth1Authorize)]
+#[derive(oauth1_request_derive::Authorize)]
 //~^ ERROR: mismatched types
 //~| expected u8, found ()
 //~^^^ ERROR: mismatched types
@@ -41,7 +38,7 @@ struct Test {
     //~| expected fn pointer, found ()
     fmt_not_fn: (),
 
-    #[oauth1(option)]
+    #[oauth1(option = "true")]
     option_not_option: u8,
     //~^ ERROR: mismatched types
     //~| expected enum `std::option::Option`, found u8

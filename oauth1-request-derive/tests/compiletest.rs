@@ -1,13 +1,18 @@
-extern crate compiletest_rs as compiletest;
-
-use std::fs;
 use std::process::Command;
+use std::{env, fs};
 
 fn run_mode(mode: &'static str) {
     let mut config = compiletest::Config::default();
 
     config.mode = mode.parse().expect("invalid mode");
-    config.target_rustcflags = Some("-L test-deps/target/debug/deps".to_owned());
+    config.target_rustcflags = Some(String::from(
+        "\
+         --edition=2018 \
+         -Z unstable-options \
+         --extern oauth1_request_derive \
+         -L test-deps/target/debug/deps \
+         ",
+    ));
     config.src_base = format!("tests/{}", mode).into();
 
     let deps = "test-deps/target/debug/deps";
@@ -37,9 +42,12 @@ fn run_mode(mode: &'static str) {
         panic!("failed to build test dependencies");
     }
 
+    env::set_var("CARGO_MANIFEST_DIR", "test-deps");
+
     compiletest::run_tests(&config);
 }
 
+#[rustversion::attr(not(nightly), ignore)]
 #[test]
 fn compile_test() {
     run_mode("compile-fail");
