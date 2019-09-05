@@ -16,8 +16,7 @@ use crate::{Options, Request};
 /// Creating a `GET` request:
 ///
 /// ```rust
-/// extern crate oauth1_request as oauth;
-///
+/// # extern crate oauth1_request as oauth;
 /// use oauth::signer;
 ///
 /// let mut sign = signer::HmacSha1Signer::new(

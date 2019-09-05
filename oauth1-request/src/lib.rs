@@ -4,11 +4,19 @@
 //!
 //! # Usage
 //!
+//! Add this to your `Cargo.toml`:
+//!
+//! ```toml
+//! [dependencies]
+//! oauth = { version = "0.2", package = "oauth1-request" }
+//! ```
+//!
+//! For brevity we refer to the crate name as `oauth` throughout the documentation.
+//
 //! ## Create a `GET` request
 //!
 //! ```rust
-//! extern crate oauth1_request as oauth;
-//!
+//! # extern crate oauth1_request as oauth;
 //! #[derive(oauth::Authorize)]
 //! struct SearchComments<'a> {
 //!     article_id: u64,

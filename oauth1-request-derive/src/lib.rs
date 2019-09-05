@@ -3,6 +3,10 @@
 //! This crate provides `#[derive(Authorize)]` macro that implements
 //! `oauth1_request` crate's `Authorize` trait for a struct with named fields.
 //!
+//! `oauth1_request` crate re-exports the derive macro if the `derive` feature of that crate
+//! is enabled (which is on by default).
+//! You should use the re-export instead of depend on this crate directly.
+//!
 //! See [`oauth1_request::Authorize`][Authorize] for more information.
 //!
 //! [Authorize]: https://docs.rs/oauth1-request/0.3/oauth1_request/authorize/trait.Authorize.html

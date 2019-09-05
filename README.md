@@ -12,13 +12,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oauth1-request = "0.2"
-```
-
-and this to your crate root:
-
-```rust
-extern crate oauth1_request;
+oauth = { version = "0.2", package = "oauth1-request" }
 ```
 
 ## Pros
