@@ -7,5 +7,5 @@ publish = false
 [workspace]
 
 [dependencies]
-oauth1-request = { version = "0.2", path = "../../oauth1-request", default-features = false }
-oauth1-request-derive = { version = "0.2", path = "../../oauth1-request-derive" }
+oauth1-request = { version = "0.3", path = "../../oauth1-request", default-features = false }
+oauth1-request-derive = { version = "0.3", path = "../../oauth1-request-derive" }

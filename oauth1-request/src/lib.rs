@@ -108,7 +108,7 @@
 //!
 //! See [`Authorize`](trait.Authorize.html) for more details on the custom derive macro.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.2.5")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.0")]
 
 pub mod authorize;
 pub mod signature_method;
