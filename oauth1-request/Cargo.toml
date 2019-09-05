@@ -22,7 +22,7 @@ percent-encoding = "1"
 rand = "0.7"
 
 # `derive` feature
-oauth1-request-derive = { version = "0.3", path = "../oauth1-request-derive", optional = true }
+oauth1-request-derive = { version = "0.3", optional = true }
 
 # `hmac-sha1` feature
 either = { version = "1", optional = true }
