@@ -38,7 +38,7 @@ struct Test {
     //~| expected fn pointer, found ()
     fmt_not_fn: (),
 
-    #[oauth1(option)]
+    #[oauth1(option = "true")]
     option_not_option: u8,
     //~^ ERROR: mismatched types
     //~| expected enum `std::option::Option`, found u8

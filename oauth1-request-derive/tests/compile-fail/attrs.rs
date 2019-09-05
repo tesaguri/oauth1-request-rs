@@ -62,6 +62,10 @@ struct Test {
     //~^ ERROR: duplicate attribute `rename`
     duplicate_name_value_2: u8,
 
+    #[oauth1(option = "FALSE")]
+    //~^ ERROR: expected boolean literal
+    invalid_boolean: u8,
+
     #[oauth1(fmt = "|_, _| Ok(())")]
     //~^ ERROR: invalid path: "|_, _| Ok(())"
     invalid_path: u8,

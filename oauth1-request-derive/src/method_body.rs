@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
-use syn::Ident;
+use syn::{Ident, PathArguments, Type};
 
 use crate::field::Field;
 
@@ -46,7 +46,22 @@ impl<'a> ToTokens for MethodBody<'a> {
                     ready = true;
                 }
 
-                let value = if f.meta.option {
+                let ty_is_option = f.meta.option.get().map(|v| **v).unwrap_or_else(|| {
+                    if let Type::Path(ref ty_path) = f.ty {
+                        let path = &ty_path.path;
+                        path.leading_colon.is_none()
+                            && path.segments.len() == 1
+                            && path.segments[0].ident == "Option"
+                            && match path.segments[0].arguments {
+                                PathArguments::AngleBracketed(ref args) => args.args.len() == 1,
+                                PathArguments::None | PathArguments::Parenthesized(_) => false,
+                            }
+                    } else {
+                        false
+                    }
+                });
+
+                let value = if ty_is_option {
                     quote_spanned! {f.ty.span()=> {
                         let value = &#this.#ident;
                         ::std::option::Option::as_ref(value).unwrap()
@@ -115,7 +130,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                         }
                     };
                 }
-                if f.meta.option {
+                if ty_is_option {
                     stmt = quote_spanned! {f.ty.span()=>
                         if {
                             let value = &#this.#ident;

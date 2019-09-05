@@ -237,13 +237,13 @@ assert_expand! {
         #[oauth1(skip_if = "std::option::Option::is_none", fmt = "super::fmt_option_str")]
         some: std::option::Option<&'static str> = Some("option"),
 
-        #[oauth1(option)]
+        #[oauth1(option = "true")]
         some_2: std::option::Option<&'static str> = Some("option"),
 
-        #[oauth1(option)]
+        #[oauth1(option = "true")]
         none: std::option::Option<T> = None,
 
-        #[oauth1(option, fmt = "super::fmt_ignore")]
+        #[oauth1(option = "true", fmt = "super::fmt_ignore")]
         option_fmt: std::option::Option<&'static str> = Some("option_fmt"),
 
         #[oauth1(skip_if = "std::any::Any::is::<&'static str>")]
@@ -272,7 +272,7 @@ assert_expand! {
 #[derive(Authorize)]
 #[allow(nonstandard_style)]
 struct non_camel_case {
-    #[oauth1(skip_if = "Option::is_none", fmt = "std::fmt::Debug::fmt")]
+    #[oauth1(skip_if = "str::is_empty", fmt = "std::fmt::Debug::fmt")]
     SHOUTING_SNAKE_CASE: Option<&'static str>,
 }
 

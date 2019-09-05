@@ -26,10 +26,13 @@ use crate::{Options, Request, SignatureMethod};
 /// Format the value using the given function. The function must be callable as
 /// `fn(&T, &mut Formatter<'_>) -> fmt::Result` (same as `Display::fmt`).
 ///
-/// - `#[oauth1(option)]`
+/// - `#[oauth1(option = "true")]` (or `#[oauth1(option = "false")]`)
 ///
-/// Skip the field if the value is `None` or use the unwrapped value otherwise.
-/// The value's type must be `Option<T>`.
+/// If set to "true", skip the field when the value is `None` or use the unwrapped value otherwise.
+/// The value's type must be `Option<T>` in that case.
+///
+/// When the field's type name is `Option<_>`, the attribute is implicitly set to `"true"`.
+/// Use `#[oauth1(option = "false")]` if you need to opt out of that behavior.
 ///
 /// - `#[oauth1(rename = "name")]`
 ///
