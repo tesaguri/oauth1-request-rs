@@ -6,22 +6,22 @@ use quote::ToTokens;
 use util::error;
 
 pub struct Ctxt {
-    errors: TokenStream,
+    errors: Option<TokenStream>,
 }
 
 impl Ctxt {
     pub fn new() -> Self {
         Self {
-            errors: TokenStream::new(),
+            errors: Some(TokenStream::new()),
         }
     }
 
     pub fn error(&mut self, msg: &str, span: Span) {
-        error(msg, span).to_tokens(&mut self.errors);
+        error(msg, span).to_tokens(self.errors.as_mut().unwrap());
     }
 
     pub fn emit_errors(mut self) -> Option<TokenStream> {
-        let errors = mem::replace(&mut self.errors, TokenStream::new());
+        let errors = self.errors.take().unwrap();
         mem::forget(self);
         if errors.is_empty() {
             None
