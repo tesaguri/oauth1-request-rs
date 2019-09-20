@@ -11,7 +11,7 @@
 //!
 //! [Authorize]: https://docs.rs/oauth1-request/0.3/oauth1_request/authorize/trait.Authorize.html
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.3.1")]
 
 extern crate proc_macro;
 
