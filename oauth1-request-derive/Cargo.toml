@@ -1,11 +1,11 @@
 [package]
 name = "oauth1-request-derive"
-version = "0.2.2"
+version = "0.2.3"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
 homepage = "https://github.com/tesaguri/oauth1-request-rs"
 repository = "https://github.com/tesaguri/oauth1-request-rs"
-documentation = "https://docs.rs/oauth1-request-derive/0.2.2/oauth1_request_derive/"
+documentation = "https://docs.rs/oauth1-request-derive/0.2.3/oauth1_request_derive/"
 description = """
 A custom derive macro for `oauth1_request::OAuth1Authorize` trait.
 """
