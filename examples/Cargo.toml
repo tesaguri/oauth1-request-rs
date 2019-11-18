@@ -15,8 +15,8 @@ path = "src/signer.rs"
 
 [dependencies]
 bytes = "0.4"
-futures-preview = { version = "0.3.0-alpha.17" }
-hyper = "0.13.0-alpha.1"
+futures-preview = { version = "=0.3.0-alpha.19" }
+hyper = { version = "=0.13.0-alpha.4", features = ["unstable-stream"] }
 oauth = { version = "0.3", package = "oauth1-request" }
 string = "0.2"
-tokio = "0.2.0-alpha.1"
+tokio = "=0.2.0-alpha.6"
