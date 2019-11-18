@@ -93,7 +93,10 @@ impl Sign for HmacSha1Sign {
 
 impl Display for HmacSha1Signature {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let d = PercentEncode(Base64Display::with_config(&self.signature, base64::STANDARD));
+        let d = PercentEncode(Base64Display::with_config(
+            &self.signature,
+            base64::STANDARD,
+        ));
         Display::fmt(&d, f)
     }
 }
@@ -123,16 +126,18 @@ where
             SigningKey::Key {
                 ref mut buf,
                 ref mut pos,
-            } => if input.len() > buf.len() - *pos {
-                let mut digest = D::default();
-                digest.input(&buf[..*pos]);
-                digest.input(input);
-                SigningKey::Digest(digest)
-            } else {
-                buf[*pos..(*pos + input.len())].copy_from_slice(input);
-                *pos += input.len();
-                return;
-            },
+            } => {
+                if input.len() > buf.len() - *pos {
+                    let mut digest = D::default();
+                    digest.input(&buf[..*pos]);
+                    digest.input(input);
+                    SigningKey::Digest(digest)
+                } else {
+                    buf[*pos..(*pos + input.len())].copy_from_slice(input);
+                    *pos += input.len();
+                    return;
+                }
+            }
             SigningKey::Digest(ref mut digest) => {
                 digest.input(input);
                 return;
