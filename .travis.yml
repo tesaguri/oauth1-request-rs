@@ -4,13 +4,13 @@ branches:
   - /^v\d+\.\d+\.x$/
 language: rust
 rust:
-  # - stable
-  # - beta
-  - nightly-2019-09-05
+  - stable
+  - beta
+  - nightly
   - 1.31.0
 matrix:
   allow_failures:
-    # - rust: nightly # compile-fail test requires Nightly rustc for now
+    - rust: nightly
     - rust: 1.31.0
 script:
   - cargo build --verbose --all-features

@@ -8,7 +8,6 @@ fn run_mode(mode: &'static str) {
     config.target_rustcflags = Some(String::from(
         "\
          --edition=2018 \
-         -Z unstable-options \
          --extern oauth1_request_derive \
          -L test-deps/target/debug/deps \
          ",
@@ -47,7 +46,6 @@ fn run_mode(mode: &'static str) {
     compiletest::run_tests(&config);
 }
 
-#[rustversion::attr(not(nightly), ignore)]
 #[test]
 fn compile_test() {
     run_mode("compile-fail");
