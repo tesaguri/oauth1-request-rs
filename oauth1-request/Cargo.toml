@@ -18,6 +18,7 @@ Yet yet yet another OAuth 1 client library.
 base64 = "0.13"
 bitflags = "1"
 cfg-if = "1"
+oauth-credentials = "0.1"
 percent-encoding = "2"
 rand = "0.7"
 

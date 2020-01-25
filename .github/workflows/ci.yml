@@ -111,3 +111,45 @@ jobs:
         with:
           command: test
           args: --verbose --manifest-path oauth1-request-derive/Cargo.toml
+  credentials-msrv:
+    name: Build `oauth-credentials` on MSRV
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain:
+          - '1.0.0'
+          - '1.6.0'
+        include:
+          - toolchain: '1.0.0'
+            features: std
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          profile: minimal
+          override: true
+        id: toolchain
+      - name: Cache Cargo registry
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-credentials-msrv-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
+          restore-keys: |
+            cargo-registry-credentials-msrv-${{ runner.os }}-${{ matrix.features }}-
+            cargo-registry-credentials-msrv-${{ runner.os }}-
+      - name: Cache Cargo build
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
+          restore-keys: |
+            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
+            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
+            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - name: Build `oauth-credentials`
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}

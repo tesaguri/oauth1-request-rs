@@ -103,6 +103,8 @@ mod request;
 #[cfg(feature = "derive")]
 #[doc(inline)]
 pub use oauth1_request_derive::Request;
+#[doc(no_inline)]
+pub use oauth_credentials::Credentials;
 
 pub use request::Request;
 #[cfg(feature = "hmac-sha1")]
@@ -110,7 +112,7 @@ pub use signature_method::HmacSha1;
 pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
-use std::fmt::{self, Debug, Display, Formatter};
+use std::fmt::{Debug, Display};
 use std::num::NonZeroU64;
 use std::str;
 
@@ -125,23 +127,6 @@ pub struct Builder<'a, SM, C = String, T = C> {
     client: Credentials<C>,
     token: Option<Credentials<T>>,
     options: auth::Options<'a>,
-}
-
-/// The "credentials" pair defined in [RFC 5849 section 1.1][rfc].
-///
-/// [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
-///
-/// This type represents:
-///
-/// - Client credentials (consumer key and secrets)
-/// - Temporary credentials (request token and secret)
-/// - Token credentials (access token and secret)
-#[derive(Clone, Copy)]
-pub struct Credentials<T = String> {
-    /// The unique identifier part of the credentials pair.
-    pub identifier: T,
-    /// The shared secret part of the credentials pair.
-    pub secret: T,
 }
 
 impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C, T> {
@@ -337,48 +322,6 @@ impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C,
         );
 
         request.serialize(serializer)
-    }
-}
-
-impl<T: Borrow<str>> Credentials<T> {
-    /// Creates a `Credentials` with the specified identifier and secret.
-    pub fn new(identifier: T, secret: T) -> Self {
-        Credentials { identifier, secret }
-    }
-
-    /// Returns the unique identifier part of the credentials pair.
-    pub fn identifier(&self) -> &str {
-        self.identifier.borrow()
-    }
-
-    /// Returns the shared secret part of the credentials pair.
-    pub fn secret(&self) -> &str {
-        self.secret.borrow()
-    }
-
-    /// Borrows the identifier and secret strings from `self`
-    /// and creates a new `Credentials` with them.
-    pub fn as_ref(&self) -> Credentials<&str> {
-        Credentials {
-            identifier: self.identifier.borrow(),
-            secret: self.secret.borrow(),
-        }
-    }
-}
-
-impl<T: Debug> Debug for Credentials<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        struct Dummy;
-        impl Debug for Dummy {
-            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-                f.write_str("<hidden>")
-            }
-        }
-
-        f.debug_struct("Credentials")
-            .field("identifier", &self.identifier)
-            .field("secret", &Dummy)
-            .finish()
     }
 }
 
