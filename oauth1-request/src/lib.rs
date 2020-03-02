@@ -106,7 +106,7 @@
 //! # }
 //! ```
 //!
-//! See [`Authorize`](trait.Authorize.html) for more details on the custom derive macro.
+//! See [`Authorize`](authorize/trait.Authorize.html) for more details on the custom derive macro.
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.0")]
 
