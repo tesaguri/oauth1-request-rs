@@ -7,3 +7,5 @@ struct Test {
     //~^ ERROR: cannot find value `missing_skip_if` in this scope
     missing_skip_if: u8,
 }
+
+fn main() {}
