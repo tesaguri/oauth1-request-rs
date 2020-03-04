@@ -13,6 +13,7 @@
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.3.1")]
 
+#[allow(unused_extern_crates)]
 extern crate proc_macro;
 
 mod ctxt;
