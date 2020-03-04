@@ -5,10 +5,13 @@ use std::fmt::{self, Formatter};
 //~| expected u8, found ()
 //~^^^ ERROR: mismatched types
 //~| expected (), found u8
-// FIXME: move these errors to (1) and (2) respectively
+//~^^^^^ ERROR: `()` doesn't implement `std::fmt::Display`
+//~^^^^^^ ERROR: the trait bound `(): std::convert::AsRef<str>` is not satisfied
+//~^^^^^^^ ERROR: the trait bound `u8: std::convert::AsRef<str>` is not satisfied
+// FIXME: move these errors to (1) to (5) respectively
 struct Test {
     not_display: (),
-    //~^ ERROR: `()` doesn't implement `std::fmt::Display`
+    //^ (3)
 
     #[oauth1(fmt = "fmt_missing_arg")]
     //~^ ERROR: mismatched types
@@ -25,7 +28,7 @@ struct Test {
     fmt_arg_mismatch: (),
 
     #[oauth1(fmt = "fmt_trait_bound_unsatisfied")]
-    //~^ ERROR: the trait bound `(): std::convert::AsRef<str>` is not satisfied
+    //^ (4)
     fmt_trait_bound_unsatisfied: (),
 
     #[oauth1(fmt = "fmt_ret_mismatch")]
@@ -58,7 +61,7 @@ struct Test {
     skip_if_arg_mismatch: u8,
 
     #[oauth1(skip_if = "skip_if_trait_bound_unsatisfied")]
-    //~^ ERROR: the trait bound `u8: std::convert::AsRef<str>` is not satisfied
+    //- (5)
     skip_if_trait_bound_unsatisfied: u8,
 
     #[oauth1(skip_if = "skip_if_ret_mismatch")]
