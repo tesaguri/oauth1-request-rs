@@ -23,4 +23,5 @@ syn = "1"
 [dev-dependencies]
 compiletest = { version = "0.4", package = "compiletest_rs" }
 oauth = { version = "0.3.0", package = "oauth1-request" }
+rustversion = "0.1"
 version-sync = "0.8"
