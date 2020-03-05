@@ -1,5 +1,5 @@
 use syn::spanned::Spanned;
-use syn::{Attribute, Ident, Lit, LitBool, LitStr, Meta, NestedMeta, Path, Type};
+use syn::{Attribute, ExprPath, Ident, Lit, LitBool, LitStr, Meta, NestedMeta, Path, Type};
 
 use crate::ctxt::Ctxt;
 use crate::util::ReSpanned;
@@ -116,11 +116,11 @@ def_meta! {
     #[derive(Default)]
     pub struct FieldMeta {
         pub encoded: bool,
-        pub fmt: MetaValue<Path>,
+        pub fmt: MetaValue<ExprPath>,
         pub option: MetaValue<bool>,
         pub rename: MetaValue<UriSafe>,
         pub skip: bool,
-        pub skip_if: MetaValue<Path>,
+        pub skip_if: MetaValue<ExprPath>,
     }
 }
 
@@ -250,7 +250,7 @@ impl FromLitStrExt for UriSafe {
     }
 }
 
-impl FromLitStrExt for Path {
+impl FromLitStrExt for ExprPath {
     fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
         let s = lit.value();
         syn::parse_str(&s)
