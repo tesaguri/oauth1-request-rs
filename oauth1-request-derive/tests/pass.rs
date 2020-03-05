@@ -250,6 +250,10 @@ assert_expand! {
         #[oauth1(fmt = "std::fmt::Debug::fmt")]
         trait_item: T,
 
+        #[oauth1(skip_if = "<[u8]>::is_empty")]
+        #[oauth1(fmt = "std::fmt::Debug::fmt")]
+        qualified_path: &'static [u8],
+
         #[oauth1(skip_if = "super::tautology", fmt = "super::fmt_ignore")]
         ty_param: T,
 
