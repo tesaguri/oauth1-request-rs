@@ -329,6 +329,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     where
         SM: Copy,
     {
+        #[allow(deprecated)]
         self.build_(method, uri, request, true)
     }
 
@@ -337,9 +338,12 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     where
         SM: Copy,
     {
+        #[allow(deprecated)]
         self.build_(method, uri, request, false)
     }
 
+    #[deprecated(since = "0.3.1", note = "This method was made public by mistake")]
+    #[doc(hidden)]
     pub fn build_<U, A>(&self, method: &str, uri: U, request: A, q: bool) -> Request
     where
         SM: Copy,
