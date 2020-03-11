@@ -1,5 +1,3 @@
-#![warn(rust_2018_idioms)]
-
 //! Yet yet yet another OAuth 1 client library.
 //!
 //! # Usage
@@ -8,7 +6,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! oauth = { version = "0.2", package = "oauth1-request" }
+//! oauth = { version = "0.3", package = "oauth1-request" }
 //! ```
 //!
 //! For brevity we refer to the crate name as `oauth` throughout the documentation.
@@ -109,6 +107,8 @@
 //! See [`Authorize`](authorize/trait.Authorize.html) for more details on the custom derive macro.
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.0")]
+#![deny(intra_doc_link_resolution_failure)]
+#![warn(missing_docs, rust_2018_idioms)]
 
 pub mod authorize;
 pub mod signature_method;
@@ -142,7 +142,7 @@ pub struct Request {
     pub data: String,
 }
 
-/// A builder for `Request`.
+/// An OAuth `Request` builder.
 #[derive(Clone, Debug)]
 pub struct Builder<'a, SM, T = String> {
     signature_method: SM,
@@ -162,7 +162,9 @@ pub struct Builder<'a, SM, T = String> {
 /// - Token credentials (access token and secret)
 #[derive(Clone, Copy, Debug)]
 pub struct Credentials<T = String> {
+    /// The unique identifier part of the credentials pair.
     pub identifier: T,
+    /// The shared secret part of the credentials pair.
     pub secret: T,
 }
 
@@ -193,6 +195,8 @@ options! {
 }
 
 impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
+    /// Creates a `Builder` that signs requests using the specified client credentials
+    /// and signature method.
     pub fn new(client: Credentials<T>, signature_method: SM) -> Self {
         Builder {
             signature_method,
@@ -202,36 +206,53 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         }
     }
 
+    /// Sets/unsets the token credentials pair to sign requests with.
     pub fn token(&mut self, token: impl Into<Option<Credentials<T>>>) -> &mut Self {
         self.token = token.into();
         self
     }
 
+    /// Sets/unsets the `oauth_callback` URI.
     pub fn callback(&mut self, callback: impl Into<Option<&'a str>>) -> &mut Self {
         self.options.callback(callback);
         self
     }
 
+    /// Sets/unsets the `oauth_nonce` value.
+    ///
+    /// By default, `Builder` generates a random nonce for each request.
+    /// This method overrides that behavior and forces the `Builder` to use the specified nonce.
+    ///
+    /// This method is for debugging/testing purpose only and should not be used in production.
     pub fn nonce(&mut self, nonce: impl Into<Option<&'a str>>) -> &mut Self {
         self.options.nonce(nonce);
         self
     }
 
+    /// Sets/unsets the `oauth_timestamp` value.
+    ///
+    /// By default, `Builder` uses the timestamp of the time when `build`(-like) method is called.
+    /// This method overrides that behavior and forces the `Builder` to use the specified timestamp.
+    ///
+    /// This method is for debugging/testing purpose only and should not be used in production.
     pub fn timestamp(&mut self, timestamp: impl Into<Option<u64>>) -> &mut Self {
         self.options.timestamp(timestamp);
         self
     }
 
+    /// Sets/unsets the `oauth_verifier` value.
     pub fn verifier(&mut self, verifier: impl Into<Option<&'a str>>) -> &mut Self {
         self.options.verifier(verifier);
         self
     }
 
+    /// Sets whether to include the `oauth_version` value in requests.
     pub fn version(&mut self, version: bool) -> &mut Self {
         self.options.version(version);
         self
     }
 
+    /// Signs a `GET` request to `uri`.
     pub fn get<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -239,6 +260,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("GET", uri, request)
     }
 
+    /// Signs an `x-www-form-urlencoded` `PUT` request to `uri`.
     pub fn put_form<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -246,6 +268,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build_form("PUT", uri, request)
     }
 
+    /// Signs an `x-www-form-urlencoded` `POST` request to `uri`.
     pub fn post_form<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -253,6 +276,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build_form("POST", uri, request)
     }
 
+    /// Signs a `DELETE` request to `uri`.
     pub fn delete<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -260,6 +284,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("DELETE", uri, request)
     }
 
+    /// Signs an `OPTIONS` request to `uri`.
     pub fn options<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -267,6 +292,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("OPTIONS", uri, request)
     }
 
+    /// Signs a `HEAD` request to `uri`.
     pub fn head<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -274,6 +300,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("HEAD", uri, request)
     }
 
+    /// Signs a `CONNECT` request to `uri`.
     pub fn connect<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -281,6 +308,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("CONNECT", uri, request)
     }
 
+    /// Signs an `x-www-form-urlencoded` `PATCH` request to `uri`.
     pub fn patch_form<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -288,6 +316,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build_form("PATCH", uri, request)
     }
 
+    /// Signs a `TRACE` request to `uri`.
     pub fn trace<U: Display, A: Authorize>(&self, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -295,6 +324,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("TRACE", uri, request)
     }
 
+    /// Signs a request to `uri` with a custom HTTP request method.
     pub fn build<U: Display, A: Authorize>(&self, method: &str, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -302,6 +332,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build_(method, uri, request, true)
     }
 
+    /// Signs an `x-www-form-urlencoded` request to `uri` with a custom HTTP request method.
     pub fn build_form<U: Display, A: Authorize>(&self, method: &str, uri: U, request: A) -> Request
     where
         SM: Copy,
@@ -339,18 +370,23 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
 }
 
 impl<T: Borrow<str>> Credentials<T> {
+    /// Creates a `Credentials` with the specified identifier and secret.
     pub fn new(identifier: T, secret: T) -> Self {
         Credentials { identifier, secret }
     }
 
+    /// Returns the unique identifier part of the credentials pair.
     pub fn identifier(&self) -> &str {
         self.identifier.borrow()
     }
 
+    /// Returns the shared secret part of the credentials pair.
     pub fn secret(&self) -> &str {
         self.secret.borrow()
     }
 
+    /// Borrows the identifier and secret strings from `self`
+    /// and creates a new `Credentials` with them.
     pub fn as_ref(&self) -> Credentials<&str> {
         Credentials {
             identifier: self.identifier.borrow(),

@@ -1,3 +1,5 @@
+//! A low-level type for signing requests with OAuth.
+
 use std::fmt::{Display, Write};
 use std::marker::PhantomData;
 use std::str;

@@ -1,3 +1,5 @@
+//! A trait representing requests that can be signed with OAuth.
+
 use std::borrow::Borrow;
 use std::collections::BTreeSet;
 use std::fmt::Display;
