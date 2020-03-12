@@ -1,5 +1,3 @@
-use std::str;
-
 use futures::prelude::*;
 use hyper::header::AUTHORIZATION;
 use hyper::{Client, Request, Uri};
@@ -7,6 +5,8 @@ use hyper::{Client, Request, Uri};
 #[tokio::main]
 async fn main() {
     let uri = Uri::from_static("http://oauthbin.com/v1/echo");
+
+    let client = Client::new();
 
     let mut signer =
         oauth::signer::PlaintextSigner::new_form("POST", &uri, "secret", "accesssecret");
@@ -23,14 +23,18 @@ async fn main() {
         .body(data.into())
         .unwrap();
 
-    let client = Client::new();
     let body = client
         .request(req)
         .await
         .unwrap()
         .into_body()
-        .try_concat()
+        .try_fold(Vec::new(), |mut vec, chunk| {
+            vec.extend(&*chunk);
+            async { Ok(vec) }
+        })
         .await
         .unwrap();
-    println!("{}", str::from_utf8(&body).unwrap());
+    let body = String::from_utf8(body).unwrap();
+
+    println!("{}", body);
 }
