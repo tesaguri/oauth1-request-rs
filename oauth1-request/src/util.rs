@@ -1,7 +1,7 @@
 use std::fmt::{self, Display, Formatter, Write};
 use std::str;
 
-use percent_encoding::{EncodeSet as EncodeSet_, PercentEncode as PercentEncode_};
+use percent_encoding::AsciiSet;
 
 macro_rules! options {
     ($(
@@ -65,15 +65,59 @@ macro_rules! impl_setters {
 
 pub struct DoublePercentEncode<D>(pub D);
 
-#[derive(Clone)]
-pub struct EncodeSet;
-
 // TODO: Use `!` type once it's stable and we've bumped minimum supported Rust version.
 #[allow(clippy::empty_enum)]
 #[derive(Clone, Debug)]
 pub enum Never {}
 
 pub struct PercentEncode<D>(pub D);
+
+/// A map from ASCII character byte to a bool representing if the character
+/// should be percent encoded.
+///
+/// Every character that is not an "unreserved character" in RFC 3986 should be encoded.
+/// https://tools.ietf.org/html/rfc3986#section-2.3
+#[rustfmt::skip]
+const ENCODE_MAP: [bool; 0x100] = [
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true, false, false,  true,
+    false, false, false, false, false, false, false, false,
+    false, false,  true,  true,  true,  true,  true,  true,
+     true, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false,  true,  true,  true,  true, false,
+     true, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false, false, false, false, false, false,
+    false, false, false,  true,  true,  true, false,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+     true,  true,  true,  true,  true,  true,  true,  true,
+];
+
+const RESERVED: &AsciiSet = &percent_encoding::NON_ALPHANUMERIC
+    .remove(b'-')
+    .remove(b'.')
+    .remove(b'_')
+    .remove(b'~');
 
 impl<D: Display> Display for DoublePercentEncode<D> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
@@ -83,7 +127,7 @@ impl<D: Display> Display for DoublePercentEncode<D> {
             fn write_str(&mut self, s: &str) -> fmt::Result {
                 let mut bytes = s.as_bytes();
                 while let Some((&b, rem)) = bytes.split_first() {
-                    if EncodeSet.contains(b) {
+                    if ENCODE_MAP[b as usize] {
                         self.0.write_str(double_encode_byte(b))?;
                         bytes = rem;
                         continue;
@@ -94,7 +138,7 @@ impl<D: Display> Display for DoublePercentEncode<D> {
                         .iter()
                         .enumerate()
                         .skip(1)
-                        .find(|&(_, &b)| EncodeSet.contains(b))
+                        .find(|&(_, &b)| ENCODE_MAP[b as usize])
                     {
                         let rem = &bytes[i + 1..];
                         let s = &bytes[..i];
@@ -113,49 +157,6 @@ impl<D: Display> Display for DoublePercentEncode<D> {
         }
 
         write!(Adapter(f), "{}", self.0)
-    }
-}
-
-impl EncodeSet_ for EncodeSet {
-    fn contains(&self, b: u8) -> bool {
-        // https://tools.ietf.org/html/rfc3986#section-2.1
-        #[rustfmt::skip]
-        const ENCODE_MAP: [bool; 0x100] = [
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true, false, false,  true,
-            false, false, false, false, false, false, false, false,
-            false, false,  true,  true,  true,  true,  true,  true,
-             true, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false,
-            false, false, false,  true,  true,  true,  true, false,
-             true, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false,
-            false, false, false, false, false, false, false, false,
-            false, false, false,  true,  true,  true, false,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-             true,  true,  true,  true,  true,  true,  true,  true,
-        ];
-
-        ENCODE_MAP[usize::from(b)]
     }
 }
 
@@ -194,8 +195,8 @@ fn double_encode_byte(b: u8) -> &'static str {
     unsafe { str::from_utf8_unchecked(&ENCODE[b * 5..(b + 1) * 5]) }
 }
 
-pub fn percent_encode(input: &str) -> PercentEncode_<'_, EncodeSet> {
-    percent_encoding::utf8_percent_encode(input, EncodeSet)
+pub fn percent_encode(input: &str) -> percent_encoding::PercentEncode<'_> {
+    percent_encoding::utf8_percent_encode(input, RESERVED)
 }
 
 #[cfg(test)]
@@ -218,11 +219,12 @@ mod tests {
     fn encode_set() {
         for b in 0u8..=0xFF {
             let expected = match b {
+                // Unreserved characters
                 b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'-' | b'.' | b'_' | b'~' => false,
                 _ => true,
             };
             assert_eq!(
-                EncodeSet.contains(b),
+                ENCODE_MAP[b as usize],
                 expected,
                 "byte = {} ({:?})",
                 b,

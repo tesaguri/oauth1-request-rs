@@ -15,10 +15,10 @@ Yet yet yet another OAuth 1 client library.
 """
 
 [dependencies]
-base64 = "0.10"
+base64 = "0.12"
 bitflags = "1"
 cfg-if = "0.1"
-percent-encoding = "1"
+percent-encoding = "2"
 rand = "0.7"
 
 # `derive` feature
