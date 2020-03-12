@@ -126,7 +126,7 @@ pub use signature_method::HmacSha1;
 pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
-use std::fmt::Display;
+use std::fmt::{self, Debug, Display, Formatter};
 use std::num::NonZeroU64;
 use std::str;
 
@@ -160,7 +160,7 @@ pub struct Builder<'a, SM, T = String> {
 /// - Client credentials (consumer key and secrets)
 /// - Temporary credentials (request token and secret)
 /// - Token credentials (access token and secret)
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Credentials<T = String> {
     /// The unique identifier part of the credentials pair.
     pub identifier: T,
@@ -396,5 +396,21 @@ impl<T: Borrow<str>> Credentials<T> {
             identifier: self.identifier.borrow(),
             secret: self.secret.borrow(),
         }
+    }
+}
+
+impl<T: Debug> Debug for Credentials<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        struct Dummy;
+        impl Debug for Dummy {
+            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+                f.write_str("<hidden>")
+            }
+        }
+
+        f.debug_struct("Credentials")
+            .field("identifier", &self.identifier)
+            .field("secret", &Dummy)
+            .finish()
     }
 }
