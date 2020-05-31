@@ -47,7 +47,11 @@ impl<'a> ToTokens for MethodBody<'a> {
                 }
 
                 let ty_is_option = f.meta.option.get().map(|v| **v).unwrap_or_else(|| {
-                    if let Type::Path(ref ty_path) = f.ty {
+                    let mut ty = &f.ty;
+                    while let Type::Group(g) = ty {
+                        ty = &g.elem;
+                    }
+                    if let Type::Path(ref ty_path) = ty {
                         let path = &ty_path.path;
                         path.leading_colon.is_none()
                             && path.segments.len() == 1
