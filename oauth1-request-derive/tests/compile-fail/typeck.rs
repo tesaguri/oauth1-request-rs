@@ -2,13 +2,11 @@ use std::fmt::{self, Formatter};
 
 #[derive(oauth1_request_derive::Authorize)]
 //~^ ERROR: mismatched types
-//~| expected u8, found ()
+//~| expected `u8`, found `()`
 //~^^^ ERROR: mismatched types
-//~| expected (), found u8
+//~| expected `()`, found `u8`
 //~^^^^^ ERROR: `()` doesn't implement `std::fmt::Display`
-//~^^^^^^ ERROR: the trait bound `(): std::convert::AsRef<str>` is not satisfied
-//~^^^^^^^ ERROR: the trait bound `u8: std::convert::AsRef<str>` is not satisfied
-// FIXME: move these errors to (1) to (5) respectively
+// FIXME: move these errors to (1) to (3) respectively
 struct Test {
     not_display: (),
     //^ (3)
@@ -20,7 +18,7 @@ struct Test {
 
     #[oauth1(fmt = "fmt_arg_not_ref")]
     //~^ ERROR: mismatched types
-    //~| expected reference, found ()
+    //~| expected reference, found `()`
     fmt_arg_not_ref: (),
 
     #[oauth1(fmt = "fmt_arg_mismatch")]
@@ -28,23 +26,23 @@ struct Test {
     fmt_arg_mismatch: (),
 
     #[oauth1(fmt = "fmt_trait_bound_unsatisfied")]
-    //^ (4)
+    //~^ ERROR: the trait bound `(): std::convert::AsRef<str>` is not satisfied
     fmt_trait_bound_unsatisfied: (),
 
     #[oauth1(fmt = "fmt_ret_mismatch")]
     //~^ ERROR: mismatched types
-    //~| expected struct `std::fmt::Error`, found ()
+    //~| expected struct `std::fmt::Error`, found `()`
     fmt_ret_mismatch: (),
 
     #[oauth1(fmt = "NOT_FN")]
     //~^ ERROR: mismatched types
-    //~| expected fn pointer, found ()
+    //~| expected fn pointer, found `()`
     fmt_not_fn: (),
 
     #[oauth1(option = "true")]
     option_not_option: u8,
     //~^ ERROR: mismatched types
-    //~| expected enum `std::option::Option`, found u8
+    //~| expected enum `std::option::Option`, found `u8`
 
     #[oauth1(skip_if = "skip_if_too_many_args")]
     //~^ ERROR: mismatched types
@@ -53,7 +51,7 @@ struct Test {
 
     #[oauth1(skip_if = "skip_if_arg_not_ref")]
     //~^ ERROR: mismatched types
-    //~| expected reference, found u8
+    //~| expected reference, found `u8`
     skip_if_arg_not_ref: u8,
 
     #[oauth1(skip_if = "skip_if_arg_mismatch")]
@@ -61,17 +59,17 @@ struct Test {
     skip_if_arg_mismatch: u8,
 
     #[oauth1(skip_if = "skip_if_trait_bound_unsatisfied")]
-    //- (5)
+    //~^ ERROR: the trait bound `u8: std::convert::AsRef<str>` is not satisfied
     skip_if_trait_bound_unsatisfied: u8,
 
     #[oauth1(skip_if = "skip_if_ret_mismatch")]
     //~^ ERROR: mismatched types
-    //~| expected bool, found enum `std::option::Option`
+    //~| expected `bool`, found enum `std::option::Option`
     skip_if_ret_mismatch: u8,
 
     #[oauth1(skip_if = "NOT_FN")]
     //~^ ERROR: mismatched types
-    //~| expected fn pointer, found ()
+    //~| expected fn pointer, found `()`
     skip_if_not_fn: u8,
 }
 
