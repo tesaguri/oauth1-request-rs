@@ -1,0 +1,12 @@
+// https://github.com/tesaguri/oauth1-request-rs/pull/3
+
+macro_rules! def_foo {
+    ($t:ty) => {
+        #[derive(oauth::Authorize)]
+        pub struct Foo {
+            field: $t,
+        }
+    };
+}
+
+def_foo!(Option<u64>);
