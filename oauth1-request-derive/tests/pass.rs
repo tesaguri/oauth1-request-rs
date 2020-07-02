@@ -5,6 +5,8 @@ extern crate oauth;
 
 use std::fmt::{self, Display, Formatter};
 
+use oauth::Serializer;
+
 macro_rules! assert_expand {
     (
         $(#[$attr:meta])* struct $Name:ident
@@ -19,9 +21,9 @@ macro_rules! assert_expand {
         #[allow(non_snake_case)]
         #[test]
         fn $Name() {
+            use oauth::serializer::auth::{self, Authorizer};
             use oauth::signature_method::Identity;
-            use oauth::{Options, Request, Authorize};
-            use oauth::signer::Signer;
+            use oauth::{Credentials, Request};
 
             mod inner {
                 // Shadow items imported via the prelude:
@@ -51,11 +53,9 @@ macro_rules! assert_expand {
                 $($ty_param: std::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
             {
-                fn expected(&self, signer: Signer<Identity>, ck: &str, opts: Option<&Options>)
-                    -> Request
-                {
-                    let expand_to: fn(&Self, Signer<Identity>, _, _) -> _ = $expand_to;
-                    expand_to(self, signer, ck, opts)
+                fn expected(&self, auth: Authorizer<Identity>) -> String {
+                    let expand_to: fn(&Self, Authorizer<Identity>) -> _ = $expand_to;
+                    expand_to(self, auth)
                 }
             }
 
@@ -68,103 +68,109 @@ macro_rules! assert_expand {
                 $($field: this_or_default!($($value)*),)*
             };
 
-            let signer = Signer::<Identity>::new("GET", "https://example.com/get", "", None);
-            let mut opts = Options::new();
+            let client = Credentials::new("", "");
+            let mut opts = auth::Options::new();
             opts.nonce("nonce").timestamp(9999999999);
-            let req = Authorize::authorize_with(&x, signer.clone(), "", Some(&opts));
-            let expected = x.expected(signer, "", Some(&opts));
+            let auth = Authorizer::<Identity>::new("GET", "https://example.com/get", client, None, &opts);
+            let authorization = Request::serialize(&x, auth.clone());
+            let expected = x.expected(auth);
 
-            assert_eq!(req, expected);
+            assert_eq!(authorization, expected);
         }
     };
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct OneBeforeOAuth[][] {
         foo: u64,
     }
-    |this, mut signer, ck, opts| {
-        signer.parameter("foo", this.foo);
-        signer.finish(ck, opts)
+    |this, mut ser| {
+        ser.serialize_parameter("foo", this.foo);
+        ser.serialize_oauth_parameters();
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct MultipleBeforeOAuth[][] {
         foo: u64,
         bar: bool,
     }
-    |this, mut signer, ck, opts| {
-        signer.parameter("bar", this.bar);
-        signer.parameter("foo", this.foo);
-        signer.finish(ck, opts)
+    |this, mut ser| {
+        ser.serialize_parameter("bar", this.bar);
+        ser.serialize_parameter("foo", this.foo);
+        ser.serialize_oauth_parameters();
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct OneBeforeAndAfterOAuth[][] {
         baz: char,
         qux: f64,
     }
-    |this, mut signer, ck, opts| {
-        signer.parameter("baz", this.baz);
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("qux", this.qux);
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_parameter("baz", this.baz);
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("qux", this.qux);
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct OneBeforeAndAfterOAuthRev[][] {
         qux: f64,
         baz: char,
     }
-    |this, mut signer, ck, opts| {
-        signer.parameter("baz", this.baz);
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("qux", this.qux);
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_parameter("baz", this.baz);
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("qux", this.qux);
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct OneAfterOAuth[][] {
         qux: f64,
     }
-    |this, signer, ck, opts| {
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("qux", this.qux);
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("qux", this.qux);
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct MultipleAfterOAuth[][] {
         qux: f64,
         quux: String = "quux".to_owned(),
     }
-    |this, signer, ck, opts| {
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("quux", &this.quux);
-        signer.parameter("qux", this.qux);
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("quux", &this.quux);
+        ser.serialize_parameter("qux", this.qux);
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct Empty[][] {}
-    |_this, signer, ck, opts| signer.finish(ck, opts)
+    |_this, mut ser| {
+        ser.serialize_oauth_parameters();
+        ser.end()
+    }
 }
 
 // Just checking that this compiles.
-#[derive(Authorize)]
+#[derive(Request)]
 struct Unsized {
     a: u64,
     c: u64,
@@ -172,57 +178,58 @@ struct Unsized {
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct TyParam[][T = u64] {
         t: T,
     }
-    |this, signer, ck, opts| {
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("t", &this.t);
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("t", &this.t);
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct Bound[][T: (AsRef<str>)] {
         t: T = "bound",
     }
-    |this, signer, ck, opts| {
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("t", this.t.as_ref());
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("t", this.t.as_ref());
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct Where[][T]
     where
         T: (AsRef<str>),
     {
         t: T = "where",
     }
-    |this, signer, ck, opts| {
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("t", this.t.as_ref());
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("t", this.t.as_ref());
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct Lifetime['a][] {
         a: &'a str,
     }
-    |this, mut signer, ck, opts| {
-        signer.parameter("a", &this.a);
-        signer.finish(ck, opts)
+    |this, mut ser| {
+        ser.serialize_parameter("a", &this.a);
+        ser.serialize_oauth_parameters();
+        ser.end()
     }
 }
 
 assert_expand! {
-    #[derive(Authorize)]
+    #[derive(Request)]
     struct Attrs['a][T: ('static + std::fmt::Debug)] {
         #[oauth1(encoded)]
         percent_encoded: T = "%20",
@@ -261,19 +268,19 @@ assert_expand! {
         #[oauth1(fmt = "super::fmt_str")]
         deref_arg: &'a Box<String> = &Box::new(String::new()),
     }
-    |this, mut signer, ck, opts| {
-        signer.parameter("FLAG", this.flag);
-        let mut signer = signer.oauth_parameters(ck, opts);
-        signer.parameter("option_fmt", "");
-        signer.parameter_encoded("percent_encoded", &this.percent_encoded);
-        signer.parameter("some", "option");
-        signer.parameter("some_2", "option");
-        signer.finish()
+    |this, mut ser| {
+        ser.serialize_parameter("FLAG", this.flag);
+        ser.serialize_oauth_parameters();
+        ser.serialize_parameter("option_fmt", "");
+        ser.serialize_parameter_encoded("percent_encoded", &this.percent_encoded);
+        ser.serialize_parameter("some", "option");
+        ser.serialize_parameter("some_2", "option");
+        ser.end()
     }
 }
 
 // Just checking that this produces no warnings.
-#[derive(Authorize)]
+#[derive(Request)]
 #[allow(nonstandard_style)]
 struct non_camel_case {
     #[oauth1(skip_if = "str::is_empty", fmt = "std::fmt::Debug::fmt")]

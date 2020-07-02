@@ -13,11 +13,7 @@ pub struct IdentitySign(pub String);
 impl SignatureMethod for Identity {
     type Sign = IdentitySign;
 
-    fn sign_with(
-        self,
-        _consumer_secret: impl Display,
-        _token_secret: Option<impl Display>,
-    ) -> IdentitySign {
+    fn sign_with<C, T>(self, _consumer_secret: C, _token_secret: Option<T>) -> IdentitySign {
         IdentitySign(String::new())
     }
 }
@@ -34,12 +30,12 @@ impl Sign for IdentitySign {
         self.0.push('&');
     }
 
-    fn uri(&mut self, uri: impl Display) {
+    fn uri<T: Display>(&mut self, uri: T) {
         write!(self.0, "{}", uri).unwrap();
         self.0.push('&');
     }
 
-    fn parameter(&mut self, key: &str, value: impl Display) {
+    fn parameter<V: Display>(&mut self, key: &str, value: V) {
         self.0.push_str(key);
         self.0.push_str("%3D"); // '='
         write!(self.0, "{}", value).unwrap();
@@ -49,7 +45,7 @@ impl Sign for IdentitySign {
         self.0.push_str("%26"); // '&'
     }
 
-    fn finish(self) -> String {
+    fn end(self) -> String {
         self.0
     }
 }

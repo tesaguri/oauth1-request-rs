@@ -8,7 +8,7 @@ homepage = "https://github.com/tesaguri/oauth1-request-rs"
 repository = "https://github.com/tesaguri/oauth1-request-rs"
 documentation = "https://docs.rs/oauth1-request-derive/0.3.3/oauth1_request_derive/"
 description = """
-A derive macro for `oauth1_request::Authorize` trait.
+A derive macro for `oauth1_request::Request` trait.
 """
 
 [lib]
@@ -18,7 +18,7 @@ proc-macro = true
 proc-macro2 = "1"
 proc-macro-crate = "0.1"
 quote = "1"
-syn = "1"
+syn = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 compiletest = { version = "0.5", package = "compiletest_rs" }

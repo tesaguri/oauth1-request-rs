@@ -45,11 +45,11 @@ enum SigningKey<D: BlockInput> {
 impl SignatureMethod for HmacSha1 {
     type Sign = HmacSha1Sign;
 
-    fn sign_with(
-        self,
-        consumer_secret: impl Display,
-        token_secret: Option<impl Display>,
-    ) -> HmacSha1Sign {
+    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> HmacSha1Sign
+    where
+        C: Display,
+        T: Display,
+    {
         let mut key = SigningKey::new();
         write_signing_key(&mut key, consumer_secret, token_secret);
         HmacSha1Sign {
@@ -70,11 +70,11 @@ impl Sign for HmacSha1Sign {
         self.mac.update(b"&");
     }
 
-    fn uri(&mut self, uri: impl Display) {
+    fn uri<T: Display>(&mut self, uri: T) {
         write!(MacWrite(&mut self.mac), "{}&", uri).unwrap();
     }
 
-    fn parameter(&mut self, key: &str, value: impl Display) {
+    fn parameter<V: Display>(&mut self, key: &str, value: V) {
         self.mac.update(key.as_bytes());
         self.mac.update(b"%3D"); // '='
         write!(MacWrite(&mut self.mac), "{}", value).unwrap();
@@ -84,7 +84,7 @@ impl Sign for HmacSha1Sign {
         self.mac.update(b"%26"); // '&'
     }
 
-    fn finish(self) -> HmacSha1Signature {
+    fn end(self) -> HmacSha1Signature {
         HmacSha1Signature {
             signature: self.mac.finalize().into_bytes(),
         }

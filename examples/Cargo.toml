@@ -9,10 +9,6 @@ publish = false
 name = "derive"
 path = "src/derive.rs"
 
-[[bin]]
-name = "signer"
-path = "src/signer.rs"
-
 [dependencies]
 futures = { version = "=0.3" }
 http = "0.2"

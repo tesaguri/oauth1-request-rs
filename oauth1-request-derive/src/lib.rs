@@ -1,15 +1,15 @@
 #![warn(rust_2018_idioms)]
 
-//! This crate provides `#[derive(Authorize)]` macro that implements
-//! `oauth1_request` crate's `Authorize` trait for a struct with named fields.
+//! This crate provides `#[derive(Request)]` macro that implements
+//! `oauth1_request` crate's `Request` trait for a struct with named fields.
 //!
 //! `oauth1_request` crate re-exports the derive macro if the `derive` feature of that crate
 //! is enabled (which is on by default).
 //! You should use the re-export instead of depend on this crate directly.
 //!
-//! See [`oauth1_request::Authorize`][Authorize] for more information.
+//! See [`oauth1_request::Request`][Request] for more information.
 //!
-//! [Authorize]: https://docs.rs/oauth1-request/0.3/oauth1_request/authorize/trait.Authorize.html
+//! [Request]: https://docs.rs/oauth1-request/0.3/oauth1_request/request/trait.Request.html
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.3.3")]
 
@@ -34,10 +34,10 @@ use field::Field;
 use method_body::MethodBody;
 use util::error;
 
-/// See [`oauth1_request::Authorize`][Authorize].
+/// See [`oauth1_request::Request`][Request].
 ///
-/// [Authorize]: https://docs.rs/oauth1-request/^0.3/oauth1_request/authorize/trait.Authorize.html
-#[proc_macro_derive(Authorize, attributes(oauth1))]
+/// [Request]: https://docs.rs/oauth1-request/^0.3/oauth1_request/request/trait.Request.html
+#[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     expand_derive_oauth1_authorize(input).into()
@@ -95,7 +95,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
 
     let mut fn_generics = generics.clone();
     fn_generics.params.push(parse_quote! {
-        #dummy: _oauth1_request::signature_method::SignatureMethod
+        #dummy: _oauth1_request::Serializer
     });
     let (fn_generics, _, _) = fn_generics.split_for_impl();
 
@@ -110,32 +110,23 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                 extern crate #krate as _oauth1_request;
 
                 #[allow(nonstandard_style)]
-                fn #dummy #fn_generics(
-                    mut #dummy: (
-                        &#name #ty_generics,
-                        _oauth1_request::signer::Signer<#dummy>,
-                        &str,
-                        ::std::option::Option<&_oauth1_request::Options>,
-                    ),
-                ) -> _oauth1_request::Request
+                fn #dummy #fn_generics(mut #dummy: (&#name #ty_generics, #dummy)) -> #dummy::Output
                 #where_clause
                 {
                     #body
                 }
 
-                impl #impl_generics _oauth1_request::Authorize for #name #ty_generics
+                impl #impl_generics _oauth1_request::Request for #name #ty_generics
                     #where_clause
                 {
-                    fn authorize_with<SM>(
+                    fn serialize<S>(
                         &self,
-                        signer: _oauth1_request::signer::Signer<SM>,
-                        ck: &str,
-                        opts: ::std::option::Option<&_oauth1_request::Options>,
-                    ) -> _oauth1_request::Request
+                        serializer: S
+                    ) -> S::Output
                     where
-                        SM: _oauth1_request::signature_method::SignatureMethod,
+                        S: _oauth1_request::Serializer
                     {
-                        #dummy((self, signer, ck, opts))
+                        #dummy((self, serializer))
                     }
                 }
             }

@@ -17,11 +17,11 @@ pub struct PlaintextSign(String);
 impl SignatureMethod for Plaintext {
     type Sign = PlaintextSign;
 
-    fn sign_with(
-        self,
-        consumer_secret: impl Display,
-        token_secret: Option<impl Display>,
-    ) -> PlaintextSign {
+    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> PlaintextSign
+    where
+        C: Display,
+        T: Display,
+    {
         let mut key = String::with_capacity(128);
         write_signing_key(&mut key, consumer_secret, token_secret);
         PlaintextSign(key)
@@ -37,13 +37,13 @@ impl Sign for PlaintextSign {
 
     fn request_method(&mut self, _method: &str) {}
 
-    fn uri(&mut self, _uri: impl Display) {}
+    fn uri<T>(&mut self, _uri: T) {}
 
-    fn parameter(&mut self, _key: &str, _value: impl Display) {}
+    fn parameter<V>(&mut self, _key: &str, _value: V) {}
 
     fn delimiter(&mut self) {}
 
-    fn finish(self) -> String {
+    fn end(self) -> String {
         self.0
     }
 

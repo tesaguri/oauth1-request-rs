@@ -8,11 +8,11 @@ use super::*;
 impl<L: SignatureMethod, R: SignatureMethod> SignatureMethod for Either<L, R> {
     type Sign = Either<L::Sign, R::Sign>;
 
-    fn sign_with(
-        self,
-        consumer_secret: impl Display,
-        token_secret: Option<impl Display>,
-    ) -> Self::Sign {
+    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> Self::Sign
+    where
+        C: Display,
+        T: Display,
+    {
         match self {
             Either::Left(l) => Either::Left(l.sign_with(consumer_secret, token_secret)),
             Either::Right(r) => Either::Right(r.sign_with(consumer_secret, token_secret)),
@@ -21,14 +21,20 @@ impl<L: SignatureMethod, R: SignatureMethod> SignatureMethod for Either<L, R> {
 }
 
 macro_rules! delegate {
-    (fn $method:ident(&mut self $(, $arg:ident: $typ:ty)*) $(-> $ret:ty)*; $($rest:tt)*) => {
-        fn $method(&mut self $(, $arg: $typ)*) $(-> $ret)* {
+    (
+        fn $method:ident$([$($tp:tt)*])?(&mut self $(, $arg:ident: $typ:ty)*) $(-> $ret:ty)*;
+        $($rest:tt)*
+    ) => {
+        fn $method$(<$($tp)*>)?(&mut self $(, $arg: $typ)*) $(-> $ret)* {
             delegate! { @body $method(self.as_mut(), $($arg),*); }
         }
         delegate! { $($rest)* }
     };
-    (fn $method:ident(&self $(, $arg:ident: $typ:ty)*) $(-> $ret:ty)*; $($rest:tt)*) => {
-        fn $method(&self $(, $arg: $typ)*) $(-> $ret)* {
+    (
+        fn $method:ident$([$($tp:tt)*])?(&self $(, $arg:ident: $typ:ty)*) $(-> $ret:ty)*;
+        $($rest:tt)*
+    ) => {
+        fn $method$(<$($tp)*>)?(&self $(, $arg: $typ)*) $(-> $ret)* {
             delegate! { @body $method(self.as_ref(), $($arg),*); }
         }
         delegate! { $($rest)* }
@@ -49,24 +55,24 @@ impl<L: Sign, R: Sign> Sign for Either<L, R> {
     delegate! {
         fn get_signature_method_name(&self) -> &'static str;
         fn request_method(&mut self, method: &str);
-        fn uri(&mut self, uri: impl Display);
-        fn parameter(&mut self, key: &str, value: impl Display);
+        fn uri[T: Display](&mut self, uri: T);
+        fn parameter[V: Display](&mut self, key: &str, value: V);
         fn delimiter(&mut self);
     }
 
-    fn finish(self) -> Self::Signature {
-        self.map_left(L::finish).map_right(R::finish)
+    fn end(self) -> Self::Signature {
+        self.map_left(L::end).map_right(R::end)
     }
 
     delegate! {
-        fn callback(&mut self, default_value: &'static str, value: impl Display);
-        fn nonce(&mut self, default_key: &'static str, value: impl Display);
+        fn callback[V: Display](&mut self, default_value: &'static str, value: V);
+        fn nonce[V: Display](&mut self, default_key: &'static str, value: V);
         fn use_nonce(&self) -> bool;
         fn signature_method(&mut self, default_key: &'static str, default_value: &'static str);
         fn timestamp(&mut self, default_key: &'static str, value: u64);
         fn use_timestamp(&self) -> bool;
-        fn token(&mut self, default_key: &'static str, value: impl Display);
-        fn verifier(&mut self, default_key: &'static str, value: impl Display);
+        fn token[V: Display](&mut self, default_key: &'static str, value: V);
+        fn verifier[V: Display](&mut self, default_key: &'static str, value: V);
         fn version(&mut self, default_key: &'static str, default_value: &'static str);
     }
 }

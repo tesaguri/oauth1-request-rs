@@ -9,7 +9,7 @@ macro_rules! def_requests {
             $($(#[$o_attr:meta])* $optional:ident: $o_ty:ty $(= $default:expr)*),* $(,)*
         }
     )*) => {$(
-        #[derive(oauth::Authorize)]
+        #[derive(oauth::Request)]
         pub struct $Name<$($param)*> {
             $($(#[$r_attr])* $required: $r_ty,)*
             $($(#[$o_attr])* $optional: $o_ty,)*
@@ -112,10 +112,10 @@ async fn to_string(res: ResponseFuture) -> String {
     String::from_utf8(body).unwrap()
 }
 
-fn send_request<A: oauth::Authorize, S, B>(
+fn send_request<R: oauth::Request, S, B>(
     method: http::Method,
     uri: &http::Uri,
-    request: A,
+    request: R,
     client: oauth::Credentials<&str>,
     token: oauth::Credentials<&str>,
     mut http: S,
@@ -131,29 +131,24 @@ where
     let mut builder = oauth::Builder::new(client, oauth::HmacSha1);
     builder.token(token);
 
-    let oauth::Request {
-        authorization,
-        data,
-    } = if is_post {
-        builder.build_form(method.as_str(), uri, request)
-    } else {
-        builder.build(method.as_str(), uri, request)
-    };
+    let authorization = builder.build(method.as_str(), uri, &request);
 
     let req = http::Request::builder()
         .method(method)
         .header(AUTHORIZATION, authorization);
 
     let req = if is_post {
+        let data = oauth::to_form_urlencoded(&request).into_bytes();
         req.uri(uri)
             .header(
                 CONTENT_TYPE,
                 HeaderValue::from_static("application/x-www-form-urlencoded"),
             )
-            .body(data.into_bytes().into())
+            .body(data.into())
             .unwrap()
     } else {
-        req.uri(data).body(Default::default()).unwrap()
+        let uri = oauth::to_uri_query(uri.to_string(), &request);
+        req.uri(uri).body(Default::default()).unwrap()
     };
 
     http.call(req)

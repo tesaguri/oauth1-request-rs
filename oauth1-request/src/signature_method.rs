@@ -32,17 +32,16 @@ pub trait SignatureMethod {
     type Sign: Sign;
 
     /// Creates a `Self::Sign` that signs a signature base string with the given client credentials.
-    fn sign_with(
-        self,
-        consumer_secret: impl Display,
-        token_secret: Option<impl Display>,
-    ) -> Self::Sign;
+    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> Self::Sign
+    where
+        C: Display,
+        T: Display;
 }
 
 macro_rules! provide {
     ($(#[doc = $doc:expr])+ $name:ident, $($rest:tt)*) => {
         $(#[doc = $doc])+
-        fn $name(&mut self, default_key: &'static str, value: impl Display) {
+        fn $name<V: Display>(&mut self, default_key: &'static str, value: V) {
             self.parameter(default_key, value);
         }
         provide! { $($rest)* }
@@ -67,7 +66,7 @@ The default implementation forwards to the `parameter` method."
 ///
 /// [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.1
 ///
-/// The type will be incrementally passed a signature base string by a `Signer`. For example,
+/// The type will be incrementally passed a signature base string by a `Serializer`. For example,
 /// a signature base string like the following (line breaks are for display purposes only):
 ///
 /// ```text
@@ -112,7 +111,7 @@ The default implementation forwards to the `parameter` method."
 /// sign.token("oauth_token", "kkk9d7dh3k39sjv7");
 /// sign.delimiter();
 /// sign.parameter("z", "");
-/// let _ = sign.finish();
+/// let _ = sign.end();
 /// ```
 pub trait Sign {
     /// The representation of `oauth_signature` string the algorithm produces.
@@ -126,19 +125,19 @@ pub trait Sign {
     fn request_method(&mut self, method: &str);
 
     /// Feeds `self` with the base string URI part of the signature base string.
-    fn uri(&mut self, uri: impl Display);
+    fn uri<T: Display>(&mut self, uri: T);
 
     /// Feeds `self` with a key-value parameter pair of the signature base string.
     ///
     /// Implementors can reproduce the part of the signature base string the arguments represent
     /// by `format!("{}%3D{}", key, value)`.
-    fn parameter(&mut self, key: &str, value: impl Display);
+    fn parameter<V: Display>(&mut self, key: &str, value: V);
 
     /// Feeds `self` with the delimiter (`%26`) between parameters.
     fn delimiter(&mut self);
 
     /// Finalizes the signing process and returns the resulting signature.
-    fn finish(self) -> Self::Signature;
+    fn end(self) -> Self::Signature;
 
     provide! { callback, consumer_key, nonce, }
 

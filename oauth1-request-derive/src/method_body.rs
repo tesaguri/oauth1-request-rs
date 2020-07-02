@@ -19,12 +19,7 @@ impl<'a> MethodBody<'a> {
 impl<'a> ToTokens for MethodBody<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let dummy = &self.dummy;
-        let (this, signer, ck, opts) = (
-            quote! { #dummy.0 },
-            quote! { #dummy.1 },
-            quote! { #dummy.2 },
-            quote! { #dummy.3 },
-        );
+        let (this, ser) = (quote! { #dummy.0 }, quote! { #dummy.1 });
 
         let mut ready = false;
         for f in self.fields {
@@ -37,10 +32,7 @@ impl<'a> ToTokens for MethodBody<'a> {
 
                 if **name > *"oauth_" && !ready {
                     quote!(
-                        let mut #dummy = (
-                            #this,
-                            #signer.oauth_parameters(#ck, #opts),
-                        );
+                        #ser.serialize_oauth_parameters();
                     )
                     .to_tokens(tokens);
                     ready = true;
@@ -99,11 +91,11 @@ impl<'a> ToTokens for MethodBody<'a> {
 
                 let mut stmt = if f.meta.encoded {
                     quote_spanned! {f.ty.span()=>
-                        #signer.parameter_encoded(#name, #display);
+                        #ser.serialize_parameter_encoded(#name, #display);
                     }
                 } else {
                     quote_spanned! {f.ty.span()=>
-                        #signer.parameter(#name, #display);
+                        #ser.serialize_parameter(#name, #display);
                     }
                 };
                 if let Some(skip_if) = f.meta.skip_if.get() {
@@ -132,11 +124,12 @@ impl<'a> ToTokens for MethodBody<'a> {
         }
         if ready {
             quote! {
-                #signer.finish()
+                #ser.end()
             }
         } else {
             quote! {
-                #signer.finish(#ck, #opts)
+                #ser.serialize_oauth_parameters();
+                #ser.end()
             }
         }
         .to_tokens(tokens);
