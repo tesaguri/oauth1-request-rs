@@ -7,10 +7,10 @@
 use std::fmt::{self, Formatter};
 
 use base64::display::Base64Display;
-use hmac::{Hmac, Mac};
+use hmac::{Hmac, Mac, NewMac};
 use sha1::digest::generic_array::sequence::GenericSequence;
 use sha1::digest::generic_array::{ArrayLength, GenericArray};
-use sha1::digest::{BlockInput, FixedOutput, Input, Reset};
+use sha1::digest::{BlockInput, FixedOutput, Reset, Update};
 use sha1::Sha1;
 
 use super::*;
@@ -66,8 +66,8 @@ impl Sign for HmacSha1Sign {
     }
 
     fn request_method(&mut self, method: &str) {
-        self.mac.input(method.as_bytes());
-        self.mac.input(b"&");
+        self.mac.update(method.as_bytes());
+        self.mac.update(b"&");
     }
 
     fn uri(&mut self, uri: impl Display) {
@@ -75,18 +75,18 @@ impl Sign for HmacSha1Sign {
     }
 
     fn parameter(&mut self, key: &str, value: impl Display) {
-        self.mac.input(key.as_bytes());
-        self.mac.input(b"%3D"); // '='
+        self.mac.update(key.as_bytes());
+        self.mac.update(b"%3D"); // '='
         write!(MacWrite(&mut self.mac), "{}", value).unwrap();
     }
 
     fn delimiter(&mut self) {
-        self.mac.input(b"%26"); // '&'
+        self.mac.update(b"%26"); // '&'
     }
 
     fn finish(self) -> HmacSha1Signature {
         HmacSha1Signature {
-            signature: self.mac.result().code(),
+            signature: self.mac.finalize().into_bytes(),
         }
     }
 }
@@ -103,14 +103,14 @@ impl Display for HmacSha1Signature {
 
 impl<'a, M: Mac> Write for MacWrite<'a, M> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.0.input(s.as_bytes());
+        self.0.update(s.as_bytes());
         Ok(())
     }
 }
 
 impl<D> SigningKey<D>
 where
-    D: Input + BlockInput + FixedOutput + Reset + Default + Clone,
+    D: BlockInput + FixedOutput + Reset + Update + Default + Clone,
     D::BlockSize: ArrayLength<u8> + Clone,
     D::OutputSize: ArrayLength<u8>,
 {
@@ -129,8 +129,8 @@ where
             } => {
                 if input.len() > buf.len() - *pos {
                     let mut digest = D::default();
-                    digest.input(&buf[..*pos]);
-                    digest.input(input);
+                    digest.update(&buf[..*pos]);
+                    digest.update(input);
                     SigningKey::Digest(digest)
                 } else {
                     buf[*pos..(*pos + input.len())].copy_from_slice(input);
@@ -139,7 +139,7 @@ where
                 }
             }
             SigningKey::Digest(ref mut digest) => {
-                digest.input(input);
+                digest.update(input);
                 return;
             }
         };
@@ -148,14 +148,14 @@ where
     fn into_hmac(self) -> Hmac<D> {
         match self {
             SigningKey::Key { ref buf, pos } => Hmac::new_varkey(&buf[..pos]).unwrap(),
-            SigningKey::Digest(digest) => Hmac::new_varkey(&digest.fixed_result()).unwrap(),
+            SigningKey::Digest(digest) => Hmac::new_varkey(&digest.finalize_fixed()).unwrap(),
         }
     }
 }
 
 impl<D> Write for SigningKey<D>
 where
-    D: Input + BlockInput + FixedOutput + Reset + Default + Clone,
+    D: BlockInput + FixedOutput + Reset + Update + Default + Clone,
     D::BlockSize: ArrayLength<u8> + Clone,
     D::OutputSize: ArrayLength<u8>,
 {
@@ -182,10 +182,10 @@ mod tests {
 
             let mut skm = sk.clone().into_hmac();
             let mut m = Hmac::<Sha1>::new_varkey(&k).unwrap();
-            skm.input(b"test");
-            m.input(b"test");
+            skm.update(b"test");
+            m.update(b"test");
 
-            assert_eq!(skm.result().code(), m.result().code());
+            assert_eq!(skm.finalize().into_bytes(), m.finalize().into_bytes());
         }
     }
 }
