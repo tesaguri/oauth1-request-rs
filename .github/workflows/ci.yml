@@ -12,7 +12,7 @@ jobs:
           - stable
           - beta
           - nightly
-          - '1.39.0'
+          - '1.41.0'
         features:
           -
           - derive
@@ -55,7 +55,7 @@ jobs:
           command: build
           args: --verbose --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Build `examples`
-        if: ${{ matrix.toolchain != '1.39.0' }}
+        # if: ${{ matrix.toolchain != '1.41.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: build
