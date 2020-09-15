@@ -70,13 +70,6 @@ struct Test {
     //~^ ERROR: invalid path: "|_, _| Ok(())"
     invalid_path: u8,
 
-    oauth_prefix: u8,
-    //~^ ERROR: paramter name must not start with "oauth_"
-
-    #[oauth1(rename = "oauth_")]
-    //~^ ERROR: paramter name must not start with "oauth_"
-    prefix_renamed: u8,
-
     duplicate: u8,
     #[oauth1(rename = "duplicate")]
     //~^ ERROR: duplicate parameter "duplicate"

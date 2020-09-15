@@ -1,7 +1,13 @@
+mod oauth_parameter;
+
+pub use oauth_parameter::OAuthParameter;
+
 use std::fmt::{self, Display, Formatter, Write};
 use std::str;
 
 use percent_encoding::AsciiSet;
+
+use crate::Serializer;
 
 macro_rules! options {
     ($(
@@ -69,7 +75,21 @@ pub struct DoublePercentEncode<D>(pub D);
 #[allow(clippy::empty_enum)]
 #[derive(Clone, Debug)]
 pub enum Never {}
-
+impl OAuthParameter {
+    pub fn serialize<S: Serializer>(self, serializer: &mut S) {
+        match self {
+            OAuthParameter::Callback => serializer.serialize_oauth_callback(),
+            OAuthParameter::ConsumerKey => serializer.serialize_oauth_consumer_key(),
+            OAuthParameter::Nonce => serializer.serialize_oauth_nonce(),
+            OAuthParameter::SignatureMethod => serializer.serialize_oauth_signature_method(),
+            OAuthParameter::Timestamp => serializer.serialize_oauth_timestamp(),
+            OAuthParameter::Token => serializer.serialize_oauth_token(),
+            OAuthParameter::Verifier => serializer.serialize_oauth_verifier(),
+            OAuthParameter::Version => serializer.serialize_oauth_version(),
+            OAuthParameter::None => panic!("called `serialize` on a `OAuthParameter::None`"),
+        }
+    }
+}
 pub struct PercentEncode<D>(pub D);
 
 /// A map from ASCII character byte to a bool representing if the character

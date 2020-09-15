@@ -142,11 +142,6 @@ impl Field {
         let meta = FieldMeta::new(&attrs, cx);
         let ident = ident.unwrap();
         let ret = Self { ident, ty, meta };
-        ret.with_renamed(|name| {
-            if name.starts_with("oauth_") {
-                cx.error("paramter name must not start with \"oauth_\"", name.span());
-            }
-        });
         ret
     }
 

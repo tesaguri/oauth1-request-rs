@@ -8,6 +8,28 @@ pub use urlencode::Urlencoder;
 
 use std::fmt::Display;
 
+/// Helper macro for implementors of `Serializer` which generates blank implementation of
+/// `serialize_oauth_*` methods.
+///
+/// This is useful for implementing a `Serializer` that does not involve to OAuth authorization
+/// process (e.g. [`Urlencoder`]).
+#[macro_export]
+macro_rules! skip_serialize_oauth_parameters {
+    () => {
+        fn serialize_oauth_callback(&mut self) {}
+        fn serialize_oauth_consumer_key(&mut self) {}
+        fn serialize_oauth_nonce(&mut self) {}
+        fn serialize_oauth_signature_method(&mut self) {}
+        fn serialize_oauth_timestamp(&mut self) {}
+        fn serialize_oauth_token(&mut self) {}
+        fn serialize_oauth_verifier(&mut self) {}
+        fn serialize_oauth_version(&mut self) {}
+    };
+}
+
+#[doc(inline)]
+pub use skip_serialize_oauth_parameters;
+
 /// A `Serializer` will be fed with the key-value pairs of a request
 /// and produces a single value from them.
 ///
@@ -21,7 +43,7 @@ use std::fmt::Display;
 /// ```
 /// # extern crate oauth1_request as oauth;
 /// use oauth::serializer::auth::{self, HmacSha1Authorizer};
-/// use oauth::Serializer;
+/// use oauth::serializer::{Serializer, SerializerExt};
 ///
 /// // Create an OAuth 1.0 `Authorization` header serializer.
 /// let client = oauth::Credentials::new("consumer_key", "consumer_secret");
@@ -88,13 +110,67 @@ pub trait Serializer {
     where
         V: Display;
 
-    /// Appends `oauth_*` parameters to the signing key.
+    /// Appends `oauth_callback` parameter to the `Authorization` header.
     ///
     /// This must be called exactly once in a serialization process.
-    fn serialize_oauth_parameters(&mut self);
+    fn serialize_oauth_callback(&mut self);
+
+    /// Appends `oauth_consumer_key` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_consumer_key(&mut self);
+
+    /// Appends `oauth_nonce` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_nonce(&mut self);
+
+    /// Appends `oauth_signature_method` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_signature_method(&mut self);
+
+    /// Appends `oauth_timestamp` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_timestamp(&mut self);
+
+    /// Appends `oauth_token` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_token(&mut self);
+
+    /// Appends `oauth_verifier` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_verifier(&mut self);
+
+    /// Appends `oauth_version` parameter to the `Authorization` header.
+    ///
+    /// This must be called exactly once in a serialization process.
+    fn serialize_oauth_version(&mut self);
 
     /// Finalizes the serialization and returns the serialized value.
     fn end(self) -> Self::Output;
+}
+
+/// An extension trait for `Serializer` that provides convenience methods.
+pub trait SerializerExt: Serializer {
+    /// Appends all `oauth_*` parameter to the `Authorization` header.
+    fn serialize_oauth_parameters(&mut self);
+}
+
+impl<S: Serializer> SerializerExt for S {
+    fn serialize_oauth_parameters(&mut self) {
+        self.serialize_oauth_callback();
+        self.serialize_oauth_consumer_key();
+        self.serialize_oauth_nonce();
+        self.serialize_oauth_signature_method();
+        self.serialize_oauth_timestamp();
+        self.serialize_oauth_token();
+        self.serialize_oauth_verifier();
+        self.serialize_oauth_version();
+    }
 }
 
 #[cfg(test)]

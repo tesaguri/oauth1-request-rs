@@ -65,7 +65,7 @@ impl Serializer for Urlencoder {
         write!(self.data, "{}={}", k, v).unwrap();
     }
 
-    fn serialize_oauth_parameters(&mut self) {}
+    super::skip_serialize_oauth_parameters!();
 
     fn end(self) -> Self::Output {
         self.data

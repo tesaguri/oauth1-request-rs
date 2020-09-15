@@ -4,6 +4,7 @@ use syn::spanned::Spanned;
 use syn::{Ident, PathArguments, Type};
 
 use crate::field::Field;
+use crate::util::OAuthParameter;
 
 pub struct MethodBody<'a> {
     fields: &'a [Field],
@@ -21,7 +22,7 @@ impl<'a> ToTokens for MethodBody<'a> {
         let dummy = &self.dummy;
         let (this, ser) = (quote! { #dummy.0 }, quote! { #dummy.1 });
 
-        let mut ready = false;
+        let mut next_param = OAuthParameter::default();
         for f in self.fields {
             let ident = &f.ident;
 
@@ -30,12 +31,12 @@ impl<'a> ToTokens for MethodBody<'a> {
                     return;
                 }
 
-                if **name > *"oauth_" && !ready {
+                while next_param < **name {
                     quote!(
-                        #ser.serialize_oauth_parameters();
+                        #ser.#next_param();
                     )
                     .to_tokens(tokens);
-                    ready = true;
+                    next_param = next_param.next();
                 }
 
                 let ty_is_option = f.meta.option.get().map_or(false, |v| **v) || is_option(&f.ty);
@@ -122,16 +123,17 @@ impl<'a> ToTokens for MethodBody<'a> {
                 stmt.to_tokens(tokens);
             });
         }
-        if ready {
-            quote! {
-                #ser.end()
-            }
-        } else {
-            quote! {
-                #ser.serialize_oauth_parameters();
-                #ser.end()
-            }
+
+        while next_param != OAuthParameter::None {
+            quote!(
+                #ser.#next_param();
+            )
+            .to_tokens(tokens);
+            next_param = next_param.next();
         }
+        quote! (
+            #ser.end()
+        )
         .to_tokens(tokens);
     }
 }

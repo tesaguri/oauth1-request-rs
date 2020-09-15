@@ -5,7 +5,7 @@ extern crate oauth;
 
 use std::fmt::{self, Display, Formatter};
 
-use oauth::Serializer;
+use oauth::serializer::{Serializer, SerializerExt};
 
 macro_rules! assert_expand {
     (
@@ -130,6 +130,25 @@ assert_expand! {
         ser.serialize_parameter("baz", this.baz);
         ser.serialize_oauth_parameters();
         ser.serialize_parameter("qux", this.qux);
+        ser.end()
+    }
+}
+
+assert_expand! {
+    #[derive(Request)]
+    struct OAuthPrefix[][] {
+        oauth_prefix: u64,
+    }
+    |this, mut ser| {
+        ser.serialize_oauth_callback();
+        ser.serialize_oauth_consumer_key();
+        ser.serialize_oauth_nonce();
+        ser.serialize_parameter("oauth_prefix", this.oauth_prefix);
+        ser.serialize_oauth_signature_method();
+        ser.serialize_oauth_timestamp();
+        ser.serialize_oauth_token();
+        ser.serialize_oauth_verifier();
+        ser.serialize_oauth_version();
         ser.end()
     }
 }

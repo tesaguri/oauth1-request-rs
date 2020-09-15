@@ -20,7 +20,7 @@ pub struct Authorizer<'a, SM: SignatureMethod> {
     options: &'a Options<'a>,
     authorization: String,
     sign: SM::Sign,
-    append_delim: bool,
+    append_delim_to_sign: bool,
     #[cfg(debug_assertions)]
     prev_key: String,
 }
@@ -120,7 +120,7 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
                     options,
                     authorization,
                     sign,
-                    append_delim: false,
+                    append_delim_to_sign: false,
                     prev_key: String::new(),
                 }
             }
@@ -132,37 +132,20 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
                     options,
                     authorization,
                     sign,
-                    append_delim: false,
+                    append_delim_to_sign: false,
                 }
             }
         }
     }
-
-    fn append_to_header_encoded(&mut self, k: &str, v: impl Display) {
-        self.check_dictionary_order(k);
-        write!(self.authorization, r#"{}="{}","#, k, v).unwrap();
-    }
 }
 
 impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
-    fn append_to_signature(&mut self, k: &str, v: impl Display) {
-        self.append_to_signature_encoded(k, DoublePercentEncode(v));
-    }
-
-    fn append_to_signature_encoded(&mut self, k: &str, v: impl Display) {
-        self.append_to_signature_with(Sign::parameter, k, v);
-    }
-
-    fn append_to_signature_with<K, V, F>(&mut self, f: F, k: K, v: V)
-    where
-        F: FnOnce(&mut SM::Sign, K, V),
-    {
-        if self.append_delim {
+    fn sign_delimiter(&mut self) {
+        if self.append_delim_to_sign {
             self.sign.delimiter();
         } else {
-            self.append_delim = true;
+            self.append_delim_to_sign = true;
         }
-        f(&mut self.sign, k, v);
     }
 
     fn check_dictionary_order(&mut self, _k: &str) {
@@ -182,40 +165,51 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     }
 }
 
+macro_rules! append_to_header {
+    (@inner $self:expr, $k:ident, $v:expr, $w:expr) => {{
+        let this = $self;
+        let k = concat!("oauth_", stringify!($k));
+        this.check_dictionary_order(k);
+        write!(this.authorization, r#"{}="{}","#, k, $v).unwrap();
+        this.sign_delimiter();
+        this.sign.$k(k, $w);
+    }};
+    ($self:expr, encoded $k:ident, $v:expr) => {{
+        let v = $v;
+        append_to_header!(@inner $self, $k, v, v);
+    }};
+    ($self:expr, $k:ident, $v:expr) => {{
+        let v = $v;
+        append_to_header!(@inner $self, $k, percent_encode(v), DoublePercentEncode(v));
+    }};
+}
+
 impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
     type Output = String;
 
     fn serialize_parameter<V: Display>(&mut self, k: &str, v: V) {
         self.check_dictionary_order(k);
-        self.append_to_signature(k, v);
+        self.sign_delimiter();
+        self.sign.parameter(k, DoublePercentEncode(v));
     }
 
     fn serialize_parameter_encoded<V: Display>(&mut self, k: &str, v: V) {
         self.check_dictionary_order(k);
-        self.append_to_signature_encoded(k, PercentEncode(v));
+        self.sign_delimiter();
+        self.sign.parameter(k, PercentEncode(v));
     }
 
-    fn serialize_oauth_parameters(&mut self) {
-        macro_rules! append {
-            (@inner $k:ident, $v:expr, $w:expr) => {{
-                let k = concat!("oauth_", stringify!($k));
-                self.append_to_header_encoded(k, $v);
-                self.append_to_signature_with(Sign::$k, k, $w);
-            }};
-            (encoded $k:ident, $v:expr) => {{
-                let v = $v;
-                append!(@inner $k, v, v);
-            }};
-            ($k:ident, $v:expr) => {{
-                let v = $v;
-                append!(@inner $k, percent_encode(v), DoublePercentEncode(v));
-            }};
-        }
-
+    fn serialize_oauth_callback(&mut self) {
         if let Some(c) = self.options.callback {
-            append!(callback, c);
+            append_to_header!(self, callback, c);
         }
-        append!(consumer_key, self.consumer_key);
+    }
+
+    fn serialize_oauth_consumer_key(&mut self) {
+        append_to_header!(self, consumer_key, self.consumer_key);
+    }
+
+    fn serialize_oauth_nonce(&mut self) {
         if self.sign.use_nonce() {
             let nonce_buf;
             let nonce = if let Some(n) = self.options.nonce {
@@ -224,9 +218,15 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
                 nonce_buf = gen_nonce();
                 unsafe { str::from_utf8_unchecked(&nonce_buf) }
             };
-            append!(nonce, nonce);
+            append_to_header!(self, nonce, nonce);
         }
-        append!(encoded signature_method, self.sign.get_signature_method_name());
+    }
+
+    fn serialize_oauth_signature_method(&mut self) {
+        append_to_header!(self, encoded signature_method, self.sign.get_signature_method_name());
+    }
+
+    fn serialize_oauth_timestamp(&mut self) {
         if self.sign.use_timestamp() {
             let t = if let Some(t) = self.options.timestamp {
                 t.get()
@@ -237,16 +237,25 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
                     Err(_) => 1,
                 }
             };
-            append!(encoded timestamp, t);
+            append_to_header!(self, encoded timestamp, t);
         }
+    }
+
+    fn serialize_oauth_token(&mut self) {
         if let Some(t) = self.token {
-            append!(token, t);
+            append_to_header!(self, token, t);
         }
+    }
+
+    fn serialize_oauth_verifier(&mut self) {
         if let Some(v) = self.options.verifier {
-            append!(verifier, v);
+            append_to_header!(self, verifier, v);
         }
+    }
+
+    fn serialize_oauth_version(&mut self) {
         if self.options.version {
-            append!(encoded version, "1.0");
+            append_to_header!(self, encoded version, "1.0");
         }
     }
 

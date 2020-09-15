@@ -3,7 +3,8 @@
 use std::borrow::Borrow;
 use std::collections::BTreeSet;
 
-use crate::serializer::Serializer;
+use crate::serializer::{Serializer, SerializerExt};
+use crate::util::OAuthParameter;
 
 /// Types that represent an HTTP request to be authorized with OAuth.
 ///
@@ -95,19 +96,20 @@ impl<K: Borrow<str>, V: Borrow<str>> Request for BTreeSet<(K, V)> {
     where
         S: Serializer,
     {
-        let mut appended_oauth_params = false;
+        let mut next_param = OAuthParameter::default();
 
         for (k, v) in self {
             let (k, v) = (k.borrow(), v.borrow());
-            if !appended_oauth_params && k > "oauth_" {
-                serializer.serialize_oauth_parameters();
-                appended_oauth_params = true;
+            while next_param < *k {
+                next_param.serialize(&mut serializer);
+                next_param = next_param.next();
             }
             serializer.serialize_parameter(k, v);
         }
 
-        if !appended_oauth_params {
-            serializer.serialize_oauth_parameters();
+        while next_param != OAuthParameter::None {
+            next_param.serialize(&mut serializer);
+            next_param = next_param.next();
         }
 
         serializer.end()
