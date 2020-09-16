@@ -141,11 +141,11 @@ impl<'a> ToTokens for MethodBody<'a> {
 fn is_option(mut ty: &Type) -> bool {
     // Types that are interpolated through `macro_rules!` may be enclosed in a `Group`.
     // <https://github.com/rust-lang/rust/pull/72388>
-    while let &Type::Group(ref g) = ty {
+    while let Type::Group(ref g) = *ty {
         ty = &g.elem;
     }
 
-    if let &Type::Path(ref ty_path) = ty {
+    if let Type::Path(ref ty_path) = *ty {
         let path = &ty_path.path;
         path.leading_colon.is_none()
             && path.segments.len() == 1

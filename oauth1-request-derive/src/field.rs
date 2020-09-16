@@ -141,8 +141,7 @@ impl Field {
         } = field;
         let meta = FieldMeta::new(&attrs, cx);
         let ident = ident.unwrap();
-        let ret = Self { ident, ty, meta };
-        ret
+        Self { ident, ty, meta }
     }
 
     /// Executes the closure with a string token representing the (`rename`-ed) field name.
@@ -224,7 +223,7 @@ impl FromLitStrExt for bool {
     fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
         syn::parse_str::<LitBool>(&lit.value())
             .map(|b| b.value)
-            .map_err(|_| cx.error(&format!("expected boolean literal"), lit.span()))
+            .map_err(|_| cx.error("expected boolean literal", lit.span()))
             .ok()
     }
 }
