@@ -66,7 +66,6 @@ jobs:
           command: test
           args: --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Test `oauth1-request-derive`
-        if: matrix.toolchain == 'nightly'
         uses: actions-rs/cargo@v1
         with:
           command: test

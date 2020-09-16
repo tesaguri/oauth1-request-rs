@@ -23,5 +23,4 @@ syn = { version = "1", features = ["derive"] }
 [dev-dependencies]
 compiletest = { version = "0.5", package = "compiletest_rs" }
 oauth = { version = "0.3.0", package = "oauth1-request" }
-rustversion = "1"
 version-sync = "0.9"
