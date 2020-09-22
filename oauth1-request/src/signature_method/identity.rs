@@ -13,7 +13,7 @@ pub struct IdentitySign(pub String);
 impl SignatureMethod for Identity {
     type Sign = IdentitySign;
 
-    fn sign_with<C, T>(self, _consumer_secret: C, _token_secret: Option<T>) -> IdentitySign {
+    fn sign_with<C, T>(self, _client_secret: C, _token_secret: Option<T>) -> IdentitySign {
         IdentitySign(String::new())
     }
 }

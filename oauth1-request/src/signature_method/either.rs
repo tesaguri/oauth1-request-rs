@@ -8,14 +8,14 @@ use super::*;
 impl<L: SignatureMethod, R: SignatureMethod> SignatureMethod for Either<L, R> {
     type Sign = Either<L::Sign, R::Sign>;
 
-    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> Self::Sign
+    fn sign_with<C, T>(self, client_secret: C, token_secret: Option<T>) -> Self::Sign
     where
         C: Display,
         T: Display,
     {
         match self {
-            Either::Left(l) => Either::Left(l.sign_with(consumer_secret, token_secret)),
-            Either::Right(r) => Either::Right(r.sign_with(consumer_secret, token_secret)),
+            Either::Left(l) => Either::Left(l.sign_with(client_secret, token_secret)),
+            Either::Right(r) => Either::Right(r.sign_with(client_secret, token_secret)),
         }
     }
 }

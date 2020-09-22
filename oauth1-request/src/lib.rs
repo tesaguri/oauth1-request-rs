@@ -10,7 +10,7 @@
 //! ```
 //!
 //! For brevity we refer to the crate name as `oauth` throughout the documentation.
-//
+//!
 //! ## Create a request
 //!
 //! ```
@@ -49,7 +49,7 @@
 //!          oauth_signature=\"bbhEIrjfisdDBrZkKnEXKa4ykE4%3D\"",
 //! );
 //!
-//! // You can create a x-www-form-urlencoded or a URI with query pairs from the request.
+//! // You can create an x-www-form-urlencoded or a URI with query pairs from the request.
 //!
 //! let form = oauth::to_form_urlencoded(&request);
 //! assert_eq!(
@@ -190,7 +190,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("GET", uri, request)
     }
 
-    /// Authorizes an `PUT` request to `uri`.
+    /// Authorizes a `PUT` request to `uri`.
     pub fn put<U: Display, R: Request>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -198,7 +198,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("PUT", uri, request)
     }
 
-    /// Authorizes an `POST` request to `uri`.
+    /// Authorizes a `POST` request to `uri`.
     pub fn post<U: Display, R: Request>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -238,7 +238,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self.build("CONNECT", uri, request)
     }
 
-    /// Authorizes an `PATCH` request to `uri`.
+    /// Authorizes a `PATCH` request to `uri`.
     pub fn patch<U: Display, R: Request>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -404,7 +404,7 @@ where
     builder.consume("DELETE", uri, request)
 }
 
-/// Authorizes a `OPTIONS` request to `uri` using the given credentials.
+/// Authorizes an `OPTIONS` request to `uri` using the given credentials.
 pub fn options<SM, U, R>(
     signature_method: SM,
     uri: U,

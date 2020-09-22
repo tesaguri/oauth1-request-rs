@@ -72,7 +72,7 @@ macro_rules! add_meta_impl {
         }}
     };
     (@accum ($self:expr, $meta:expr) {} -> { $($arms:tt)* }) => {{
-        let name = if let Some(name) = path_as_ident(&$meta.path) {
+        let name = if let Some(name) = $meta.path.get_ident() {
             name
         } else {
             let path = $meta.path.to_token_stream().to_string().replace(' ', "");
@@ -130,7 +130,7 @@ impl Field {
         let syn::Field {
             attrs, ident, ty, ..
         } = field;
-        let meta = FieldMeta::new(&attrs);
+        let meta = FieldMeta::new(attrs);
         let ident = ident.unwrap();
         Self { ident, ty, meta }
     }
@@ -146,11 +146,12 @@ impl Field {
 }
 
 impl FieldMeta {
-    pub fn new(attrs: &[Attribute]) -> Self {
+    pub fn new(attrs: Vec<Attribute>) -> Self {
         let mut ret = Self::default();
 
         for attr in attrs {
-            if attr.path.segments.len() != 1 || attr.path.segments[0].ident != "oauth1" {
+            let path = attr.path;
+            if path.get_ident().map_or(true, |ident| ident != "oauth1") {
                 continue;
             }
 
@@ -159,13 +160,13 @@ impl FieldMeta {
                     // Manually create an error to work around `syn::parenthesized`'s behavior
                     // to span the error at call site in this case.
                     let message = "expected parentheses after `oauth1`";
-                    return Err(syn::Error::new(attr.path.span(), message));
+                    return Err(syn::Error::new(path.span(), message));
                 }
                 let content;
                 syn::parenthesized!(content in input);
                 content.parse_terminated::<_, Token![,]>(Meta::parse)
             };
-            let meta_list = match parser.parse2(attr.tokens.clone()) {
+            let meta_list = match parser.parse2(attr.tokens) {
                 Ok(list) => list,
                 Err(e) => {
                     emit_error!(e);
@@ -256,17 +257,6 @@ impl FromExprExt for UriSafe {
         }
         Ok(UriSafe(s))
     }
-}
-
-fn path_as_ident(path: &Path) -> Option<Ident> {
-    if path.leading_colon.is_none() && path.segments.len() == 1 {
-        let s = &path.segments[0];
-        if let syn::PathArguments::None = s.arguments {
-            return Some(s.ident.clone());
-        }
-    }
-
-    None
 }
 
 /// Joins two `Span`s or returns the first one if failed.

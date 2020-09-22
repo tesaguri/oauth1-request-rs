@@ -25,7 +25,7 @@ impl OAuthParameter {
             OAuthParameter::Verifier => OAuthParameter::Version,
             OAuthParameter::Version => OAuthParameter::None,
             OAuthParameter::None => {
-                debug_assert!(false, "called `next` on a `OAuthParameter::None`");
+                debug_assert!(false, "called `next` on an `OAuthParameter::None`");
                 OAuthParameter::Callback
             }
         }

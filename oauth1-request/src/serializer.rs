@@ -11,7 +11,7 @@ use std::fmt::Display;
 /// Helper macro for implementors of `Serializer` which generates blank implementation of
 /// `serialize_oauth_*` methods.
 ///
-/// This is useful for implementing a `Serializer` that does not involve to OAuth authorization
+/// This is useful for implementing a `Serializer` that does not involve OAuth authorization
 /// process (e.g. [`Urlencoder`]).
 #[macro_export]
 macro_rules! skip_serialize_oauth_parameters {
@@ -197,10 +197,17 @@ mod tests {
     impl<SM: SignatureMethod> SignatureMethod for Inspect<SM> {
         type Sign = InspectSign<SM::Sign>;
 
-        fn sign_with<C: Display, T: Display>(self, cs: C, ts: Option<T>) -> Self::Sign {
-            println!("cs: {:?}", cs.to_string());
-            println!("ts: {:?}", ts.as_ref().map(ToString::to_string));
-            InspectSign(self.0.sign_with(cs, ts))
+        fn sign_with<C: Display, T: Display>(
+            self,
+            client_secret: C,
+            token_secret: Option<T>,
+        ) -> Self::Sign {
+            println!("client_secret: {:?}", client_secret.to_string());
+            println!(
+                "token_secret: {:?}",
+                token_secret.as_ref().map(ToString::to_string)
+            );
+            InspectSign(self.0.sign_with(client_secret, token_secret))
         }
     }
 

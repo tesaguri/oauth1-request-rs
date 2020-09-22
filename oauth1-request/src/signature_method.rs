@@ -31,8 +31,8 @@ pub trait SignatureMethod {
     /// The algorithm used by this signature method to sign a signature base string.
     type Sign: Sign;
 
-    /// Creates a `Self::Sign` that signs a signature base string with the given client credentials.
-    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> Self::Sign
+    /// Creates a `Self::Sign` that signs a signature base string with the given shared-secrets.
+    fn sign_with<C, T>(self, client_secret: C, token_secret: Option<T>) -> Self::Sign
     where
         C: Display,
         T: Display;
@@ -193,9 +193,13 @@ pub trait Sign {
     }
 }
 
-fn write_signing_key<W: Write>(w: &mut W, cs: impl Display, ts: Option<impl Display>) {
-    write!(w, "{}&", cs).unwrap();
-    if let Some(ts) = ts {
-        write!(w, "{}", ts).unwrap();
+fn write_signing_key<W: Write>(
+    dst: &mut W,
+    client_secret: impl Display,
+    token_secret: Option<impl Display>,
+) {
+    write!(dst, "{}&", client_secret).unwrap();
+    if let Some(ts) = token_secret {
+        write!(dst, "{}", ts).unwrap();
     }
 }

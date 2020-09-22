@@ -45,13 +45,13 @@ enum SigningKey<D: BlockInput> {
 impl SignatureMethod for HmacSha1 {
     type Sign = HmacSha1Sign;
 
-    fn sign_with<C, T>(self, consumer_secret: C, token_secret: Option<T>) -> HmacSha1Sign
+    fn sign_with<C, T>(self, client_secret: C, token_secret: Option<T>) -> HmacSha1Sign
     where
         C: Display,
         T: Display,
     {
         let mut key = SigningKey::new();
-        write_signing_key(&mut key, consumer_secret, token_secret);
+        write_signing_key(&mut key, client_secret, token_secret);
         HmacSha1Sign {
             mac: key.into_hmac(),
         }
