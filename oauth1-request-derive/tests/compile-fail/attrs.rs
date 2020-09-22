@@ -1,4 +1,4 @@
-#[derive(oauth1_request_derive::Request)]
+#[derive(oauth1_request::Request)]
 struct Test {
     #[oauth1(rename = 0)]
     //~^ ERROR: expected string literal

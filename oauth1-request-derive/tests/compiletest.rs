@@ -8,7 +8,7 @@ fn run_mode(mode: &'static str) {
     config.target_rustcflags = Some(String::from(
         "\
          --edition=2018 \
-         --extern oauth1_request_derive \
+         --extern oauth1_request \
          -L test-deps/target/debug/deps \
          ",
     ));

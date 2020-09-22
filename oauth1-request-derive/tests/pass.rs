@@ -1,6 +1,5 @@
 #![deny(warnings)]
 
-#[macro_use]
 extern crate oauth;
 
 use std::fmt::{self, Display, Formatter};
@@ -23,7 +22,7 @@ macro_rules! assert_expand {
         fn $Name() {
             use oauth::serializer::auth::{self, Authorizer};
             use oauth::signature_method::Identity;
-            use oauth::{Credentials, Request};
+            use oauth::Credentials;
 
             mod inner {
                 // Shadow items imported via the prelude:
@@ -72,7 +71,7 @@ macro_rules! assert_expand {
             let mut opts = auth::Options::new();
             opts.nonce("nonce").timestamp(9999999999);
             let auth = Authorizer::<Identity>::new("GET", "https://example.com/get", client, None, &opts);
-            let authorization = Request::serialize(&x, auth.clone());
+            let authorization = oauth::Request::serialize(&x, auth.clone());
             let expected = x.expected(auth);
 
             assert_eq!(authorization, expected);
@@ -81,7 +80,7 @@ macro_rules! assert_expand {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct OneBeforeOAuth[][] {
         foo: u64,
     }
@@ -93,7 +92,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct MultipleBeforeOAuth[][] {
         foo: u64,
         bar: bool,
@@ -107,7 +106,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct OneBeforeAndAfterOAuth[][] {
         baz: char,
         qux: f64,
@@ -121,7 +120,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct OneBeforeAndAfterOAuthRev[][] {
         qux: f64,
         baz: char,
@@ -135,7 +134,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct OAuthPrefix[][] {
         oauth_prefix: u64,
     }
@@ -154,7 +153,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct OneAfterOAuth[][] {
         qux: f64,
     }
@@ -166,7 +165,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct MultipleAfterOAuth[][] {
         qux: f64,
         quux: String = "quux".to_owned(),
@@ -180,7 +179,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct Empty[][] {}
     |_this, mut ser| {
         ser.serialize_oauth_parameters();
@@ -189,7 +188,7 @@ assert_expand! {
 }
 
 // Just checking that this compiles.
-#[derive(Request)]
+#[derive(oauth::Request)]
 struct Unsized {
     a: u64,
     c: u64,
@@ -197,7 +196,7 @@ struct Unsized {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct TyParam[][T = u64] {
         t: T,
     }
@@ -209,7 +208,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct Bound[][T: (AsRef<str>)] {
         t: T = "bound",
     }
@@ -221,7 +220,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct Where[][T]
     where
         T: (AsRef<str>),
@@ -236,7 +235,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct Lifetime['a][] {
         a: &'a str,
     }
@@ -248,7 +247,7 @@ assert_expand! {
 }
 
 assert_expand! {
-    #[derive(Request)]
+    #[derive(oauth::Request)]
     struct Attrs['a][T: ('static + std::fmt::Debug)] {
         #[oauth1(encoded)]
         percent_encoded: T = "%20",
@@ -299,14 +298,14 @@ assert_expand! {
 }
 
 // Just checking that this produces no warnings.
-#[derive(Request)]
+#[derive(oauth::Request)]
 #[allow(nonstandard_style)]
 struct non_camel_case {
     #[oauth1(skip_if = str::is_empty, fmt = std::fmt::Debug::fmt)]
     SHOUTING_SNAKE_CASE: Option<&'static str>,
 }
 
-#[derive(Request)]
+#[derive(oauth::Request)]
 struct WeirdAttrs {
     #[rustfmt::skip]
     #[oauth1(skip,)]

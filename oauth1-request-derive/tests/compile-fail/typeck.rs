@@ -1,6 +1,6 @@
 use std::fmt::{self, Formatter};
 
-#[derive(oauth1_request_derive::Request)]
+#[derive(oauth1_request::Request)]
 //~^ ERROR: mismatched types
 //~| expected `u8`, found `()`
 //~^^^ ERROR: mismatched types

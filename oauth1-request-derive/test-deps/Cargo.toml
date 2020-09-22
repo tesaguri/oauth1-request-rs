@@ -7,5 +7,8 @@ publish = false
 [workspace]
 
 [dependencies]
-oauth1-request = { version = "0.3", path = "../../oauth1-request", default-features = false }
-oauth1-request-derive = { version = "0.3", path = "../../oauth1-request-derive" }
+oauth1-request = { version = "0.3", default-features = false, features = ["derive"] }
+
+[patch.crates-io]
+oauth1-request = { path = "../../oauth1-request" }
+oauth1-request-derive = { path = "../../oauth1-request-derive" }

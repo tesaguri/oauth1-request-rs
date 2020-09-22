@@ -1,4 +1,4 @@
-#[derive(oauth1_request_derive::Request)]
+#[derive(oauth1_request::Request)]
 struct Test {
     #[oauth1(fmt = missing_fmt)]
     //~^ ERROR: cannot find value `missing_fmt` in this scope
