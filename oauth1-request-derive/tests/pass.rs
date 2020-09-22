@@ -260,31 +260,31 @@ assert_expand! {
         #[oauth1(skip)]
         _marker: [*const (); 0],
 
-        #[oauth1(skip_if = "std::option::Option::is_none", fmt = "super::fmt_option_str")]
+        #[oauth1(skip_if = std::option::Option::is_none, fmt = super::fmt_option_str)]
         some: std::option::Option<&'static str> = Some("option"),
 
-        #[oauth1(option = "true")]
+        #[oauth1(option = true)]
         some_2: std::option::Option<&'static str> = Some("option"),
 
-        #[oauth1(option = "true")]
+        #[oauth1(option = true)]
         none: std::option::Option<T> = None,
 
-        #[oauth1(option = "true", fmt = "super::fmt_ignore")]
+        #[oauth1(option = true, fmt = super::fmt_ignore)]
         option_fmt: std::option::Option<&'static str> = Some("option_fmt"),
 
-        #[oauth1(skip_if = "std::any::Any::is::<&'static str>")]
-        #[oauth1(fmt = "std::fmt::Debug::fmt")]
+        #[oauth1(skip_if = std::any::Any::is::<&'static str>)]
+        #[oauth1(fmt = std::fmt::Debug::fmt)]
         trait_item: T,
 
-        #[oauth1(skip_if = "<[u8]>::is_empty")]
-        #[oauth1(fmt = "std::fmt::Debug::fmt")]
+        #[oauth1(skip_if = <[u8]>::is_empty)]
+        #[oauth1(fmt = std::fmt::Debug::fmt)]
         qualified_path: &'static [u8],
 
-        #[oauth1(skip_if = "super::tautology", fmt = "super::fmt_ignore")]
+        #[oauth1(skip_if = super::tautology, fmt = super::fmt_ignore)]
         ty_param: T,
 
-        #[oauth1(skip_if = "str::is_empty")]
-        #[oauth1(fmt = "super::fmt_str")]
+        #[oauth1(skip_if = str::is_empty)]
+        #[oauth1(fmt = super::fmt_str)]
         deref_arg: &'a Box<String> = &Box::new(String::new()),
     }
     |this, mut ser| {
@@ -302,8 +302,15 @@ assert_expand! {
 #[derive(Request)]
 #[allow(nonstandard_style)]
 struct non_camel_case {
-    #[oauth1(skip_if = "str::is_empty", fmt = "std::fmt::Debug::fmt")]
+    #[oauth1(skip_if = str::is_empty, fmt = std::fmt::Debug::fmt)]
     SHOUTING_SNAKE_CASE: Option<&'static str>,
+}
+
+#[derive(Request)]
+struct WeirdAttrs {
+    #[rustfmt::skip]
+    #[oauth1(skip,)]
+    _trailing_comma: (),
 }
 
 fn fmt_option_str(s: &Option<&str>, f: &mut Formatter<'_>) -> fmt::Result {

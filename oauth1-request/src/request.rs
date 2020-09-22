@@ -23,17 +23,17 @@ use crate::util::OAuthParameter;
 ///
 /// Do not percent encode the value when serializing it.
 ///
-/// - `#[oauth1(fmt = "path")]`
+/// - `#[oauth1(fmt = path)]`
 ///
-/// Format the value using the given function. The function must be callable as
+/// Format the value using the function at `path`. The function must be callable as
 /// `fn(&T, &mut Formatter<'_>) -> fmt::Result` (same as `Display::fmt`).
 ///
-/// - `#[oauth1(option = "true")]` (or `#[oauth1(option = "false")]`)
+/// - `#[oauth1(option = true)]` (or `#[oauth1(option = false)]`)
 ///
-/// If set to "true", skip the field when the value is `None` or use the unwrapped value otherwise.
+/// If set to `true`, skip the field when the value is `None` or use the unwrapped value otherwise.
 /// The value's type must be `Option<T>` in that case.
 ///
-/// When the field's type name is `Option<_>`, the attribute is implicitly set to `"true"`.
+/// When the field's type name is `Option<_>`, the attribute is implicitly set to `true`.
 /// Use `#[oauth1(option = "false")]` if you need to opt out of that behavior.
 ///
 /// - `#[oauth1(rename = "name")]`
@@ -44,9 +44,9 @@ use crate::util::OAuthParameter;
 ///
 /// Unconditionally skip the field.
 ///
-/// - `#[oauth1(skip_if = "path")]`
+/// - `#[oauth1(skip_if = path)]`
 ///
-/// Call the given function and skip the field if the function returns `true`.
+/// Call the function at `path` and skip the field if the function returns `true`.
 /// The function must be callable as `fn(&T) -> bool`.
 pub trait Request {
     /// Feeds a [`Serializer`] implementation with the key-value pair of the request

@@ -69,14 +69,14 @@ def_requests! {
     GET "http://term.ie/oauth/example/echo_api.php";
     pub struct GetEcho['a] {
         text: &'a str;
-        #[oauth1(skip_if = "str::is_empty")]
+        #[oauth1(skip_if = str::is_empty)]
         note: &'a str,
     }
 
     POST "http://term.ie/oauth/example/echo_api.php";
     pub struct PostEcho['a] {
         text: &'a str;
-        #[oauth1(skip_if = "str::is_empty")]
+        #[oauth1(skip_if = str::is_empty)]
         note: &'a str,
     }
 }

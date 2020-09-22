@@ -66,13 +66,13 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
         .map(|f| Field::new(f, &mut cx))
         .collect();
 
-    fields.sort_by(|f, g| f.with_renamed(|a| g.with_renamed(|b| a.cmp(&b))));
+    fields.sort_by(|f, g| f.with_renamed(|a| g.with_renamed(|b| a.value().cmp(&b.value()))));
     for w in fields.windows(2) {
         let (f, g) = (&w[0], &w[1]);
         f.with_renamed(|a| {
             g.with_renamed(|b| {
-                if *a == *b {
-                    cx.error(&format!("duplicate parameter \"{}\"", *b), b.span());
+                if a.value() == b.value() {
+                    cx.error(&format!("duplicate parameter \"{}\"", b.value()), b.span());
                 }
             });
         });

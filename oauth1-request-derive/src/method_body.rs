@@ -31,7 +31,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                     return;
                 }
 
-                while next_param < **name {
+                while next_param < *name.value() {
                     quote!(
                         #ser.#next_param();
                     )
@@ -39,7 +39,8 @@ impl<'a> ToTokens for MethodBody<'a> {
                     next_param = next_param.next();
                 }
 
-                let ty_is_option = f.meta.option.get().map_or(false, |v| **v) || is_option(&f.ty);
+                let ty_is_option =
+                    f.meta.option.as_ref().map_or(false, |v| v.value) || is_option(&f.ty);
 
                 let value = if ty_is_option {
                     quote_spanned! {f.ty.span()=> {
@@ -50,7 +51,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                     quote! { &#this.#ident }
                 };
 
-                let display = if let Some(fmt) = f.meta.fmt.get() {
+                let display = if let Some(ref fmt) = f.meta.fmt {
                     quote! {
                         {
                             use std::fmt::{Display, Formatter, Result};
@@ -99,7 +100,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                         #ser.serialize_parameter(#name, #display);
                     }
                 };
-                if let Some(skip_if) = f.meta.skip_if.get() {
+                if let Some(ref skip_if) = f.meta.skip_if {
                     stmt = quote! {
                         if !{
                             let skip_if: fn(&_) -> bool = #skip_if;

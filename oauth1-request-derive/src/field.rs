@@ -1,8 +1,10 @@
+use proc_macro2::{Group, Span};
+use quote::ToTokens;
+use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
-use syn::{Attribute, ExprPath, Ident, Lit, LitBool, LitStr, Meta, NestedMeta, Path, Type};
+use syn::{Attribute, Expr, ExprLit, ExprPath, Ident, Lit, LitBool, LitStr, Path, Token, Type};
 
 use crate::ctxt::Ctxt;
-use crate::util::ReSpanned;
 
 pub struct Field {
     pub ident: Ident,
@@ -17,121 +19,111 @@ macro_rules! def_meta {
             $($field)*
         }
 
-        def_set_state! {
-            struct MetaSetState {
-                $($field)*
-            }
-        }
-
         impl $Name {
-            fn add_meta(&mut self, meta: Meta, set_state: &mut MetaSetState, cx: &mut Ctxt) {
-                struct Args<'a> {
-                    this: &'a mut $Name,
-                    meta: Meta,
-                    name: Ident,
-                    set_state: &'a mut MetaSetState,
-                    cx: &'a mut Ctxt,
-                }
-
-                let path = meta.path();
-                let name = if let Some(ident) = path_as_ident(path) {
-                    ident
-                } else {
-                    cx.error("expected identifier", path.span());
-                    return;
-                };
-
-                let args = Args {
-                    this: self,
-                    name,
-                    meta,
-                    set_state,
-                    cx,
-                };
-
-                add_meta_impl! { args; $($field)* }
+            fn add_meta(&mut self, meta: Meta) -> syn::Result<()> {
+                add_meta_impl! { (self, meta) { $($field)* } }
             }
         }
-    };
-}
-
-macro_rules! def_set_state {
-    (struct $Name:ident { $(pub $field:ident: $_ty:ty,)* }) => {
-        #[allow(dead_code)]
-        #[derive(Default)]
-        struct $Name { $($field: bool,)* }
     };
 }
 
 macro_rules! add_meta_impl {
-    ($args:expr; pub $name:ident $($rest:tt)*) => {
-        if $args.name == stringify!($name) {
-            add_meta_impl! { $args; @matches $name $($rest)* }
-        } else {
-            add_meta_impl! { $args; @skip $($rest)* }
-        }
+    (($self:expr, $meta:expr) $body:tt) => {
+        add_meta_impl! { @accum ($self, $meta) $body -> {} }
     };
-    ($args:expr; @skip: $_ty:ty, $($rest:tt)*) => {
-        add_meta_impl! { $args; $($rest)* }
-    };
-    ($args:expr; @matches $name:ident: bool, $($rest:tt)*) => {
-        if let Meta::Path(ref path) = $args.meta {
-            if $args.this.$name {
-                $args.cx.error(
-                    concat!("duplicate attribute `", stringify!($name), "`"),
-                    path.span(),
-                );
-            } else {
-                $args.this.$name = true;
-            }
-        } else {
-            $args.cx.error("expected meta word", $args.meta.span());
-        }
-    };
-    ($args:expr; @matches $name:ident: MetaValue<$ty:ty>, $($rest:tt)*) => {
-        if let Meta::NameValue(ref nv) = $args.meta {
-            match nv.lit {
-                Lit::Str(ref val) => {
-                    if $args.set_state.$name {
-                        $args.cx.error(
-                            concat!("duplicate attribute `", stringify!($name), "`"),
-                            nv.span(),
-                        );
-                    }
-                    $args.this.$name.set(val, $args.cx);
-                    $args.set_state.$name = true;
+    (@accum ($self:expr, $meta:expr) { pub $name:ident: bool, $($rest:tt)* } -> { $($arms:tt)* })
+    => {
+        add_meta_impl! { @accum ($self, $meta) { $($rest)* } -> {
+            $($arms)*
+            stringify!($name) => {
+                if !matches!($meta.kind, MetaKind::Path) {
+                    return Err(syn::Error::new($meta.span(), "expected meta word"));
                 }
-                _ => $args.cx.error("expected string literal", nv.lit.span()),
+                if $self.$name {
+                    let message = concat!("duplicate attribute `", stringify!($name), "`");
+                    return Err(syn::Error::new($meta.path.span(), message));
+                } else {
+                    $self.$name = true;
+                }
+                Ok(())
             }
+        } }
+    };
+    (@accum ($self:expr, $meta:expr) { pub $name:ident: $_:ty, $($rest:tt)* } -> { $($arms:tt)* })
+    => {
+        add_meta_impl! { @accum ($self, $meta) { $($rest)* } -> {
+            $($arms)*
+            stringify!($name) => {
+                let value = if let MetaKind::NameValue(value) = $meta.kind {
+                    value
+                } else {
+                    return Err(syn::Error::new($meta.span(), "expected name-value meta"));
+                };
+                let value = match <_>::from_expr(value) {
+                    Ok(value) => value,
+                    Err(e) => return Err(e),
+                };
+                if $self.$name.is_some() {
+                    let message = concat!("duplicate attribute `", stringify!($name), "`");
+                    return Err(syn::Error::new($meta.path.span(), message));
+                }
+                $self.$name = Some(value);
+                Ok(())
+            }
+        }}
+    };
+    (@accum ($self:expr, $meta:expr) {} -> { $($arms:tt)* }) => {{
+        let name = if let Some(name) = path_as_ident(&$meta.path) {
+            name
         } else {
-            $args.cx.error("expected name-value meta", $args.meta.span());
+            let path = $meta.path.to_token_stream().to_string().replace(' ', "");
+            let message = format!("unknown attribute `{}`", path);
+            return Err(syn::Error::new($meta.path.span(), &*message));
+        };
+        match &*name.to_string() {
+            $($arms)*
+            _ => {
+                let message = format!("unknown attribute `{}`", name);
+                Err(syn::Error::new($meta.path.span(), &*message))
+            }
         }
-    };
-    ($args:expr;) => {
-        $args.cx.error(&format!("unknown attribute `{}`", $args.name), $args.meta.span());
-    };
+    }};
 }
 
 def_meta! {
     #[derive(Default)]
     pub struct FieldMeta {
         pub encoded: bool,
-        pub fmt: MetaValue<ExprPath>,
-        pub option: MetaValue<bool>,
-        pub rename: MetaValue<UriSafe>,
+        pub fmt: Option<ExprPath>,
+        pub option: Option<LitBool>,
+        pub rename: Option<UriSafe>,
         pub skip: bool,
-        pub skip_if: MetaValue<ExprPath>,
+        pub skip_if: Option<ExprPath>,
     }
 }
 
-pub struct MetaValue<T> {
-    value: Option<ReSpanned<T>>,
+pub struct UriSafe(pub LitStr);
+
+/// Like `syn::Meta` but accepts an `Expr` as the value of `MetaNameValue`
+struct Meta {
+    path: Path,
+    kind: MetaKind,
 }
 
-pub struct UriSafe(pub String);
+#[allow(clippy::large_enum_variant)]
+enum MetaKind {
+    Path,
+    List(MetaList),
+    NameValue(Expr),
+}
 
-pub trait FromLitStrExt: Sized {
-    fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self>;
+struct MetaList {
+    span: Span,
+}
+
+/// Attempts to reinterpret an `Expr` as another syntax tree type value.
+trait FromExprExt: Sized {
+    fn from_expr(expr: Expr) -> syn::Result<Self>;
 }
 
 impl Field {
@@ -145,11 +137,11 @@ impl Field {
     }
 
     /// Executes the closure with a string token representing the (`rename`-ed) field name.
-    pub fn with_renamed<T, F: FnOnce(ReSpanned<&str>) -> T>(&self, f: F) -> T {
-        if let Some(name) = self.meta.rename.get() {
-            f(name.as_ref())
+    pub fn with_renamed<T, F: FnOnce(&LitStr) -> T>(&self, f: F) -> T {
+        if let Some(ref name) = self.meta.rename {
+            f(&name.0)
         } else {
-            f(ReSpanned::new(&self.ident.to_string(), self.ident.span()))
+            f(&LitStr::new(&self.ident.to_string(), self.ident.span()))
         }
     }
 }
@@ -157,37 +149,35 @@ impl Field {
 impl FieldMeta {
     pub fn new(attrs: &[Attribute], cx: &mut Ctxt) -> Self {
         let mut ret = Self::default();
-        let mut set_state = MetaSetState::default();
 
         for attr in attrs {
             if attr.path.segments.len() != 1 || attr.path.segments[0].ident != "oauth1" {
                 continue;
             }
 
-            let meta = match attr.parse_meta() {
-                Ok(m) => m,
+            let parser = |input: ParseStream<'_>| {
+                if input.is_empty() {
+                    // Manually create an error to work around `syn::parenthesized`'s behavior
+                    // to span the error at call site in this case.
+                    let message = "expected parentheses after `oauth1`";
+                    return Err(syn::Error::new(attr.path.span(), message));
+                }
+                let content;
+                syn::parenthesized!(content in input);
+                content.parse_terminated::<_, Token![,]>(Meta::parse)
+            };
+            let meta_list = match parser.parse2(attr.tokens.clone()) {
+                Ok(list) => list,
                 Err(e) => {
                     cx.error(&e.to_string(), e.span());
                     continue;
                 }
             };
 
-            let list = if let Meta::List(list) = meta {
-                list
-            } else {
-                cx.error("expected meta list", meta.span());
-                continue;
-            };
-
-            for nested in list.nested {
-                let meta = match nested {
-                    NestedMeta::Meta(meta) => meta,
-                    NestedMeta::Lit(lit) => {
-                        cx.error("expected meta item", lit.span());
-                        continue;
-                    }
-                };
-                ret.add_meta(meta, &mut set_state, cx);
+            for meta in meta_list {
+                if let Err(e) = ret.add_meta(meta) {
+                    cx.error(&e.to_string(), e.span());
+                }
             }
         }
 
@@ -195,61 +185,77 @@ impl FieldMeta {
     }
 }
 
-impl<T> MetaValue<T> {
-    pub fn get(&self) -> Option<&ReSpanned<T>> {
-        self.value.as_ref()
+impl Meta {
+    fn span(&self) -> Span {
+        match self.kind {
+            MetaKind::Path => self.path.span(),
+            MetaKind::List(ref list) => list.span,
+            MetaKind::NameValue(ref value) => join(self.path.span(), value.span()),
+        }
     }
 }
 
-impl<T: FromLitStrExt> MetaValue<T> {
-    fn set(&mut self, lit: &LitStr, cx: &mut Ctxt) {
-        self.value = T::from_lit_str(lit, cx).map(|v| ReSpanned::new(v, lit.span()));
+impl Parse for Meta {
+    fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+        let path = input.parse::<Path>()?;
+        if input.peek(syn::token::Paren) {
+            let span = join(path.span(), input.parse::<Group>().unwrap().span());
+            let kind = MetaKind::List(MetaList { span });
+            Ok(Meta { path, kind })
+        } else if input.peek(Token![=]) {
+            let _ = input.parse::<Token![=]>().unwrap();
+            let kind = MetaKind::NameValue(input.parse()?);
+            Ok(Meta { path, kind })
+        } else {
+            let kind = MetaKind::Path;
+            Ok(Meta { path, kind })
+        }
     }
 }
 
-impl<T> Default for MetaValue<T> {
-    fn default() -> Self {
-        Self { value: None }
+impl FromExprExt for ExprPath {
+    fn from_expr(expr: Expr) -> syn::Result<Self> {
+        if let Expr::Path(path) = expr {
+            Ok(path)
+        } else {
+            Err(syn::Error::new(expr.span(), "expected path"))
+        }
     }
 }
 
-impl AsRef<str> for UriSafe {
-    fn as_ref(&self) -> &str {
-        &*self.0
+impl FromExprExt for LitBool {
+    fn from_expr(expr: Expr) -> syn::Result<Self> {
+        if let Expr::Lit(ExprLit {
+            lit: Lit::Bool(lit),
+            ..
+        }) = expr
+        {
+            Ok(lit)
+        } else {
+            Err(syn::Error::new(expr.span(), "expected boolean literal"))
+        }
     }
 }
 
-impl FromLitStrExt for bool {
-    fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
-        syn::parse_str::<LitBool>(&lit.value())
-            .map(|b| b.value)
-            .map_err(|_| cx.error("expected boolean literal", lit.span()))
-            .ok()
-    }
-}
-
-impl FromLitStrExt for UriSafe {
-    fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
-        let s = lit.value();
-        for b in s.as_bytes() {
+impl FromExprExt for UriSafe {
+    fn from_expr(expr: Expr) -> syn::Result<Self> {
+        let s = if let Expr::Lit(ExprLit {
+            lit: Lit::Str(lit), ..
+        }) = expr
+        {
+            lit
+        } else {
+            return Err(syn::Error::new(expr.span(), "expected string literal"));
+        };
+        for b in s.value().as_bytes() {
             match b {
                 b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'-' | b'.' | b'_' | b'~' => (),
                 _ => {
-                    cx.error("parameter name must be URI-safe", lit.span());
-                    return None;
+                    return Err(syn::Error::new(s.span(), "parameter name must be URI-safe"));
                 }
             }
         }
-        Some(UriSafe(lit.value()))
-    }
-}
-
-impl FromLitStrExt for ExprPath {
-    fn from_lit_str(lit: &LitStr, cx: &mut Ctxt) -> Option<Self> {
-        let s = lit.value();
-        syn::parse_str(&s)
-            .map_err(|_| cx.error(&format!("invalid path: \"{}\"", s), lit.span()))
-            .ok()
+        Ok(UriSafe(s))
     }
 }
 
@@ -262,4 +268,9 @@ fn path_as_ident(path: &Path) -> Option<Ident> {
     }
 
     None
+}
+
+/// Joins two `Span`s or returns the first one if failed.
+fn join(first: Span, last: Span) -> Span {
+    first.join(last).unwrap_or(first)
 }
