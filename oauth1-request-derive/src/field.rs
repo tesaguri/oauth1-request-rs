@@ -1,10 +1,9 @@
 use proc_macro2::{Group, Span};
+use proc_macro_error::emit_error;
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{Attribute, Expr, ExprLit, ExprPath, Ident, Lit, LitBool, LitStr, Path, Token, Type};
-
-use crate::ctxt::Ctxt;
 
 pub struct Field {
     pub ident: Ident,
@@ -127,11 +126,11 @@ trait FromExprExt: Sized {
 }
 
 impl Field {
-    pub fn new(field: syn::Field, cx: &mut Ctxt) -> Self {
+    pub fn new(field: syn::Field) -> Self {
         let syn::Field {
             attrs, ident, ty, ..
         } = field;
-        let meta = FieldMeta::new(&attrs, cx);
+        let meta = FieldMeta::new(&attrs);
         let ident = ident.unwrap();
         Self { ident, ty, meta }
     }
@@ -147,7 +146,7 @@ impl Field {
 }
 
 impl FieldMeta {
-    pub fn new(attrs: &[Attribute], cx: &mut Ctxt) -> Self {
+    pub fn new(attrs: &[Attribute]) -> Self {
         let mut ret = Self::default();
 
         for attr in attrs {
@@ -169,14 +168,14 @@ impl FieldMeta {
             let meta_list = match parser.parse2(attr.tokens.clone()) {
                 Ok(list) => list,
                 Err(e) => {
-                    cx.error(&e.to_string(), e.span());
+                    emit_error!(e);
                     continue;
                 }
             };
 
             for meta in meta_list {
                 if let Err(e) = ret.add_meta(meta) {
-                    cx.error(&e.to_string(), e.span());
+                    emit_error!(e);
                 }
             }
         }

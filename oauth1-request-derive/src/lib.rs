@@ -16,12 +16,12 @@
 #[allow(unused_extern_crates)]
 extern crate proc_macro;
 
-mod ctxt;
 mod field;
 mod method_body;
 mod util;
 
 use proc_macro2::{Span, TokenStream};
+use proc_macro_error::{abort, abort_if_dirty, emit_error, proc_macro_error};
 use quote::quote;
 use syn::spanned::Spanned;
 use syn::{
@@ -29,58 +29,21 @@ use syn::{
     Ident,
 };
 
-use ctxt::Ctxt;
 use field::Field;
 use method_body::MethodBody;
-use util::error;
 
 /// See [`oauth1_request::Request`][Request].
 ///
 /// [Request]: https://docs.rs/oauth1-request/^0.3/oauth1_request/request/trait.Request.html
+#[proc_macro_error]
 #[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     expand_derive_oauth1_authorize(input).into()
 }
 
-fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
-    let fields = match input.data {
-        Data::Struct(DataStruct {
-            fields: Fields::Named(fields),
-            ..
-        }) => fields,
-        _ => return error("expected a struct with named fields", input.span()),
-    };
-
-    let mut cx = Ctxt::new();
-
-    let DeriveInput {
-        ident: name,
-        mut generics,
-        ..
-    } = input;
-
-    let mut fields: Vec<_> = fields
-        .named
-        .into_iter()
-        .map(|f| Field::new(f, &mut cx))
-        .collect();
-
-    fields.sort_by(|f, g| f.with_renamed(|a| g.with_renamed(|b| a.value().cmp(&b.value()))));
-    for w in fields.windows(2) {
-        let (f, g) = (&w[0], &w[1]);
-        f.with_renamed(|a| {
-            g.with_renamed(|b| {
-                if a.value() == b.value() {
-                    cx.error(&format!("duplicate parameter \"{}\"", b.value()), b.span());
-                }
-            });
-        });
-    }
-
-    if let Some(tokens) = cx.emit_errors() {
-        return tokens;
-    }
+fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
+    let name = &input.ident;
 
     // We assume that `dummy` does not conflict with any of call-side identifiers
     // and (ab)use it to avoid potential name collisions.
@@ -90,10 +53,50 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
     let krate = proc_macro_crate::crate_name("oauth1-request").unwrap();
     let krate = Ident::new(&krate, Span::call_site());
 
-    add_trait_bounds(&mut generics);
-    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+    add_trait_bounds(&mut input.generics);
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
-    let mut fn_generics = generics.clone();
+    proc_macro_error::set_dummy(quote! {
+        const _: () = {
+            extern crate #krate as _oauth1_request;
+            impl #impl_generics _oauth1_request::Request for #name #ty_generics
+                #where_clause
+            {
+                fn serialize<S>(&self, serializer: S) -> S::Output
+                where
+                    S: _oauth1_request::Serializer,
+                {
+                    unimplemented!();
+                }
+            }
+        };
+    });
+
+    let fields = match input.data {
+        Data::Struct(DataStruct {
+            fields: Fields::Named(fields),
+            ..
+        }) => fields,
+        _ => abort!(input.span(), "expected a struct with named fields"),
+    };
+
+    let mut fields: Vec<_> = fields.named.into_iter().map(Field::new).collect();
+
+    fields.sort_by(|f, g| f.with_renamed(|a| g.with_renamed(|b| a.value().cmp(&b.value()))));
+    for w in fields.windows(2) {
+        let (f, g) = (&w[0], &w[1]);
+        f.with_renamed(|a| {
+            g.with_renamed(|b| {
+                if a.value() == b.value() {
+                    emit_error!(b.span(), "duplicate parameter \"{}\"", b.value());
+                }
+            });
+        });
+    }
+
+    abort_if_dirty();
+
+    let mut fn_generics = input.generics.clone();
     fn_generics.params.push(parse_quote! {
         #dummy: _oauth1_request::Serializer
     });
