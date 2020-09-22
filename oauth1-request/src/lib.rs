@@ -183,7 +183,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `GET` request to `uri`.
-    pub fn get<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn get<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -191,7 +191,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `PUT` request to `uri`.
-    pub fn put<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn put<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -199,7 +199,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `POST` request to `uri`.
-    pub fn post<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn post<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -207,7 +207,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `DELETE` request to `uri`.
-    pub fn delete<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn delete<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -215,7 +215,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes an `OPTIONS` request to `uri`.
-    pub fn options<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn options<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -223,7 +223,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `HEAD` request to `uri`.
-    pub fn head<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn head<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -231,7 +231,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `CONNECT` request to `uri`.
-    pub fn connect<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn connect<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -239,7 +239,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `PATCH` request to `uri`.
-    pub fn patch<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn patch<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -247,7 +247,7 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `TRACE` request to `uri`.
-    pub fn trace<U: Display, R: Request>(&self, uri: U, request: &R) -> String
+    pub fn trace<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
     {
@@ -255,7 +255,12 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a request to `uri` with a custom HTTP request method.
-    pub fn build<U: Display, R: Request>(&self, method: &str, uri: U, request: &R) -> String
+    pub fn build<U: Display, R: Request + ?Sized>(
+        &self,
+        method: &str,
+        uri: U,
+        request: &R,
+    ) -> String
     where
         SM: Clone,
     {
@@ -276,7 +281,12 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     /// This may be more efficient than `build` if the signature method holds a non-`Copy` data
     /// (e.g. RSA private key). However, the cost is the same as `build` for the signature methods
     /// bundled with this library (`HmacSha1` and `Plaintext`).
-    pub fn consume<U: Display, R: Request>(self, method: &str, uri: U, request: &R) -> String {
+    pub fn consume<U: Display, R: Request + ?Sized>(
+        self,
+        method: &str,
+        uri: U,
+        request: &R,
+    ) -> String {
         let serializer = Authorizer::with_signature_method(
             self.signature_method,
             method,
@@ -343,7 +353,7 @@ pub fn get<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -361,7 +371,7 @@ pub fn put<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -379,7 +389,7 @@ pub fn post<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -397,7 +407,7 @@ pub fn delete<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -415,7 +425,7 @@ pub fn options<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -433,7 +443,7 @@ pub fn head<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -451,7 +461,7 @@ pub fn connect<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -469,7 +479,7 @@ pub fn patch<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -487,7 +497,7 @@ pub fn trace<SM, U, R>(
 where
     U: Display,
     SM: SignatureMethod,
-    R: Request,
+    R: Request + ?Sized,
 {
     let mut builder = Builder::new(client, signature_method);
     builder.token(token);
@@ -497,7 +507,7 @@ where
 /// Turns a `Request` into an `x-www-form-urlencoded` string.
 pub fn to_form_urlencoded<R>(request: &R) -> String
 where
-    R: Request,
+    R: Request + ?Sized,
 {
     request.serialize(Urlencoder::form())
 }
@@ -505,7 +515,7 @@ where
 /// Turns a `Request` to a query string and appends it to the given URI.
 pub fn to_uri_query<R>(uri: String, request: &R) -> String
 where
-    R: Request,
+    R: Request + ?Sized,
 {
     request.serialize(Urlencoder::query(uri))
 }
