@@ -102,35 +102,30 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
     let body = MethodBody::new(&fields, &dummy);
 
     quote! {
-        #[allow(non_camel_case_types)]
-        enum #dummy {}
+        const _: () = {
+            extern crate #krate as _oauth1_request;
 
-        impl #dummy {
-            fn _dummy(self) {
-                extern crate #krate as _oauth1_request;
+            #[allow(nonstandard_style)]
+            fn #dummy #fn_generics(mut #dummy: (&#name #ty_generics, #dummy)) -> #dummy::Output
+            #where_clause
+            {
+                #body
+            }
 
-                #[allow(nonstandard_style)]
-                fn #dummy #fn_generics(mut #dummy: (&#name #ty_generics, #dummy)) -> #dummy::Output
+            impl #impl_generics _oauth1_request::Request for #name #ty_generics
                 #where_clause
+            {
+                // We do not want to mess with the signature which appears in the docs
+                // and do not want to expose the `serializer` and `S` to the macro caller,
+                // so we are separating the implementation to another function.
+                fn serialize<S>(&self, serializer: S) -> S::Output
+                where
+                    S: _oauth1_request::Serializer,
                 {
-                    #body
-                }
-
-                impl #impl_generics _oauth1_request::Request for #name #ty_generics
-                    #where_clause
-                {
-                    fn serialize<S>(
-                        &self,
-                        serializer: S
-                    ) -> S::Output
-                    where
-                        S: _oauth1_request::Serializer
-                    {
-                        #dummy((self, serializer))
-                    }
+                    #dummy((self, serializer))
                 }
             }
-        }
+        };
     }
 }
 
