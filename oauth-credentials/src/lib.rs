@@ -6,11 +6,16 @@
 #![doc(html_root_url = "https://docs.rs/oauth-credentials/0.1.0")]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
+#![cfg_attr(feature = "cargo-clippy", allow(redundant_static_lifetimes))]
+#![allow(deprecated)]
 #![warn(missing_docs, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(not(feature = "std"))]
 extern crate core as std;
+
+#[cfg(feature = "serde")]
+mod serde_imp;
 
 use std::borrow::Borrow;
 use std::fmt::{self, Debug, Formatter};

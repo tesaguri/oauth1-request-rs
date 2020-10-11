@@ -29,7 +29,7 @@ hyper = { version = "0.13", features = ["stream"] }
 log = "0.4"
 nom = "=6.0.0-alpha3"
 oauth = { version = "0.3", package = "oauth1-request" }
-oauth-credentials = "0.1"
+oauth-credentials = { version = "0.1", features = ["serde"] }
 percent-encoding = "2"
 pin-project = "1"
 serde = { version = "1", features = ["derive"] }

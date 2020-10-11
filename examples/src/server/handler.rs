@@ -76,8 +76,8 @@ pub async fn echo(req: Request<Body>) -> Response<Body> {
 pub async fn post_request_temp_credentials(req: Request<Body>) -> Response<Body> {
     #[derive(Serialize)]
     struct Token<'a> {
-        oauth_token: &'a str,
-        oauth_token_secret: &'a str,
+        #[serde(flatten)]
+        credentials: Credentials<&'a str>,
         oauth_callback_confirmed: bool,
     }
 
@@ -101,8 +101,7 @@ pub async fn post_request_temp_credentials(req: Request<Body>) -> Response<Body>
             }
         }
         let body = serde_urlencoded::to_string(&Token {
-            oauth_token: REQUEST.identifier,
-            oauth_token_secret: REQUEST.secret,
+            credentials: REQUEST,
             oauth_callback_confirmed: true,
         })
         .unwrap();
@@ -118,18 +117,8 @@ pub async fn post_request_temp_credentials(req: Request<Body>) -> Response<Body>
 ///
 /// https://tools.ietf.org/html/rfc5849#section-2.3
 pub async fn post_request_token(req: Request<Body>) -> Response<Body> {
-    #[derive(Serialize)]
-    struct Token<'a> {
-        oauth_token: &'a str,
-        oauth_token_secret: &'a str,
-    }
-
     verify_and_then(req, CLIENT, Some(REQUEST), Some(VERIFIER), |_, _| {
-        let body = serde_urlencoded::to_string(&Token {
-            oauth_token: TOKEN.identifier,
-            oauth_token_secret: TOKEN.secret,
-        })
-        .unwrap();
+        let body = serde_urlencoded::to_string(&TOKEN).unwrap();
         Response::builder()
             .header(CONTENT_TYPE, APPLICATION_WWW_FORM_URLENCODED)
             .body(Body::from(body))

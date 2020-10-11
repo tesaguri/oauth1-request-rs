@@ -11,13 +11,6 @@ use tower_service::Service;
 
 use crate::util::BodyExt;
 
-// https://tools.ietf.org/html/rfc5849#section-2.1
-#[derive(serde::Deserialize)]
-struct TempCredentials {
-    oauth_token: Box<str>,
-    oauth_token_secret: Box<str>,
-}
-
 pub async fn temporary_credentials<T, S, B>(
     client: &Credentials<T>,
     callback: &str,
@@ -30,25 +23,12 @@ where
     B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
 {
     let uri = http::Uri::from_static("http://127.0.0.1:8080/request_temp_credentials");
-
     let authorization = oauth::Builder::<_, _>::new(client.as_ref(), oauth::HmacSha1)
         .callback(callback)
         .post(&uri, &());
-
     let body = send_request(uri, authorization, http).await;
-    let res: TempCredentials = serde_urlencoded::from_bytes(&body).unwrap();
 
-    Credentials {
-        identifier: res.oauth_token,
-        secret: res.oauth_token_secret,
-    }
-}
-
-// https://tools.ietf.org/html/rfc5849#section-2.3
-#[derive(serde::Deserialize)]
-struct TokenCredentials {
-    oauth_token: Box<str>,
-    oauth_token_secret: Box<str>,
+    serde_urlencoded::from_bytes(&body).unwrap()
 }
 
 pub async fn token_credentials<C, T, S, B>(
@@ -65,19 +45,13 @@ where
     B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
 {
     let uri = http::Uri::from_static("http://127.0.0.1:8080/request_token");
-
     let authorization = oauth::Builder::new(client.as_ref(), oauth::HmacSha1)
         .token(temporary.as_ref())
         .verifier(verifier)
         .post(&uri, &());
-
     let body = send_request(uri, authorization, http).await;
-    let res: TokenCredentials = serde_urlencoded::from_bytes(&body).unwrap();
 
-    Credentials {
-        identifier: res.oauth_token,
-        secret: res.oauth_token_secret,
-    }
+    serde_urlencoded::from_bytes(&body).unwrap()
 }
 
 async fn send_request<S, B>(uri: http::Uri, authorization: String, mut http: S) -> Vec<u8>

@@ -39,3 +39,4 @@ version-sync = "0.9"
 default = ["derive", "hmac-sha1"]
 derive = ["oauth1-request-derive"]
 hmac-sha1 = ["hmac", "sha-1"]
+serde = ["oauth-credentials/serde"]
