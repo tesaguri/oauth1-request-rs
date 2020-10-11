@@ -211,12 +211,12 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
 
     fn serialize_oauth_nonce(&mut self) {
         if self.sign.use_nonce() {
-            let nonce_buf;
+            let mut nonce_buf;
             let nonce = if let Some(n) = self.options.nonce {
                 n
             } else {
-                nonce_buf = gen_nonce();
-                unsafe { str::from_utf8_unchecked(&nonce_buf) }
+                nonce_buf = Default::default();
+                gen_nonce(&mut nonce_buf)
             };
             append_to_header!(self, nonce, nonce);
         }
@@ -273,17 +273,29 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
     }
 }
 
-const NONCE_LEN: usize = 32;
+// This is worth 72 bits of entropy. The nonce is required to be unique across all requests with
+// the same timestamp, client and token. Even if you generate the nonce one million times a second
+// (which is unlikely unless you are DoS-ing the server or something), the expected time it takes
+// until getting a collision is about 299 years (*), which should be sufficient in practice.
+//
+// (*): the probability that there is at least one nonce collision in a second is:
+//     P = 1 - (2^72 - 1)/(2^72) * (2^72 - 2)/(2^72) * ... * (2^72 - 999999)/(2^72)
+// (birthday problem), and the expected number of seconds it takes until getting a collision with
+// the same timestamp is 1/P.
+const NONCE_LEN: usize = 12;
 
-fn gen_nonce() -> [u8; NONCE_LEN] {
-    let mut ret = [0u8; NONCE_LEN];
-
+fn gen_nonce(buf: &mut [u8; NONCE_LEN]) -> &str {
     let mut rng = thread_rng();
-    let mut rand = [0u8; NONCE_LEN * 6 / 8];
+
+    let mut rand = [0u8; NONCE_LEN * 3 / 4];
     rng.fill_bytes(&mut rand);
 
-    let config = base64::Config::new(base64::CharacterSet::UrlSafe, false);
-    base64::encode_config_slice(&rand, config, &mut ret);
+    // Trim leading zeroes to be stingy.
+    let i = rand.iter().position(|&b| b != 0).unwrap_or(rand.len());
+    let rand = &rand[i..];
 
-    ret
+    base64::encode_config_slice(&rand, base64::URL_SAFE_NO_PAD, buf);
+
+    debug_assert!(str::from_utf8(buf).is_ok(), "buf={:?}", buf);
+    unsafe { str::from_utf8_unchecked(buf) }
 }
