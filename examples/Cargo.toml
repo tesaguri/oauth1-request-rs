@@ -6,13 +6,34 @@ authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 publish = false
 
 [[bin]]
-name = "derive"
-path = "src/derive.rs"
+name = "client"
+path = "src/client/main.rs"
+
+[[bin]]
+name = "server"
+path = "src/server/main.rs"
 
 [dependencies]
-futures = { version = "=0.3" }
+anyhow = "1"
+atoi = "0.3"
+base64 = "0.13"
+bytes = "0.5"
+env_logger = "0.7"
+form_urlencoded = "1"
+futures = "0.3"
+headers = "0.3"
+hmac = "0.9"
 http = "0.2"
+http-body = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
+log = "0.4"
+nom = "=6.0.0-alpha3"
 oauth = { version = "0.3", package = "oauth1-request" }
+oauth-credentials = "0.1"
+percent-encoding = "2"
+pin-project = "1"
+serde = { version = "1", features = ["derive"] }
+serde_urlencoded = "0.7"
+sha-1 = "0.9"
 tokio = { version = "0.2", features = ["macros"] }
 tower-service = "0.3"
