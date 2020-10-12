@@ -137,6 +137,12 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
 }
 
 impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
+    fn append_to_header_encoded<V: Display>(&mut self, k: &str, v: V) {
+        self.check_dictionary_order(k);
+        write!(self.authorization, r#"{}="{}","#, k, v).unwrap();
+        self.sign_delimiter();
+    }
+
     fn sign_delimiter(&mut self) {
         if self.append_delim_to_sign {
             self.sign.delimiter();
@@ -166,10 +172,8 @@ macro_rules! append_to_header {
     (@inner $self:expr, $k:ident, $v:expr, $w:expr) => {{
         let this = $self;
         let k = concat!("oauth_", stringify!($k));
-        this.check_dictionary_order(k);
-        write!(this.authorization, r#"{}="{}","#, k, $v).unwrap();
-        this.sign_delimiter();
-        this.sign.$k(k, $w);
+        this.append_to_header_encoded(k, $v);
+        this.sign.$k($w);
     }};
     ($self:expr, encoded $k:ident, $v:expr) => {{
         let v = $v;
@@ -220,7 +224,9 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
     }
 
     fn serialize_oauth_signature_method(&mut self) {
-        append_to_header!(self, encoded signature_method, self.sign.get_signature_method_name());
+        let v = self.sign.get_signature_method_name();
+        self.append_to_header_encoded("oauth_signature_method", v);
+        self.sign.signature_method();
     }
 
     fn serialize_oauth_timestamp(&mut self) {
@@ -252,7 +258,8 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
 
     fn serialize_oauth_version(&mut self) {
         if self.options.version {
-            append_to_header!(self, encoded version, "1.0");
+            self.append_to_header_encoded("oauth_version", "1.0");
+            self.sign.version();
         }
     }
 

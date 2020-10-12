@@ -40,8 +40,8 @@ pub trait SignatureMethod {
 macro_rules! provide {
     ($(#[doc = $doc:expr])+ $name:ident, $($rest:tt)*) => {
         $(#[doc = $doc])+
-        fn $name<V: Display>(&mut self, default_key: &'static str, value: V) {
-            self.parameter(default_key, value);
+        fn $name<V: Display>(&mut self, value: V) {
+            self.parameter(concat!("oauth_", stringify!($name)), value);
         }
         provide! { $($rest)* }
     };
@@ -50,10 +50,8 @@ macro_rules! provide {
             #[doc = concat!(
 "Feeds `self` with the `oauth_", stringify!($name), "` parameter part of the signature base string.
 
-`default_key` argument is passed just for the convenience of implementors and is always `\"oauth_",
-stringify!($name), "\"`.
-
-The default implementation forwards to the `parameter` method."
+The default implementation forwards to the `parameter` method with `\"oauth_",
+stringify!($name), "\"` as the first argument."
             )]
             $name, $($rest)*
         }
@@ -99,15 +97,15 @@ The default implementation forwards to the `parameter` method."
 /// sign.delimiter();
 /// sign.parameter("a2", "a");
 /// sign.delimiter();
-/// sign.consumer_key("oauth_consumer_key", "9djdj82h48djs9d2");
+/// sign.consumer_key("9djdj82h48djs9d2");
 /// sign.delimiter();
-/// sign.nonce("oauth_nonce", "7d8f3e4a");
+/// sign.nonce("7d8f3e4a");
 /// sign.delimiter();
-/// sign.signature_method("oauth_signature_method", "HMAC-SHA1");
+/// sign.signature_method();
 /// sign.delimiter();
-/// sign.timestamp("oauth_timestamp", 137131201);
+/// sign.timestamp(137131201);
 /// sign.delimiter();
-/// sign.token("oauth_token", "kkk9d7dh3k39sjv7");
+/// sign.token("kkk9d7dh3k39sjv7");
 /// sign.delimiter();
 /// sign.parameter("z", "");
 /// let _ = sign.end();
@@ -151,24 +149,19 @@ pub trait Sign {
     /// Feeds `self` with the `oauth_signature_method` parameter part of the
     /// signature base string.
     ///
-    /// `default_key` and `default_value` arguments are passed just for the convenience of
-    /// implementors and are always `"oauth_signature_method"` and
-    /// `self.get_signature_method().name()` respectively.
-    ///
-    /// The default implementation forwards to the `parameter` method.
-    fn signature_method(&mut self, default_key: &'static str, default_value: &'static str) {
-        self.parameter(default_key, default_value);
+    /// The default implementation forwards to the `parameter` method with
+    /// `"oauth_signature_method"` and `self.get_signature_method_name()` as the arguments.
+    fn signature_method(&mut self) {
+        self.parameter("oauth_signature_method", self.get_signature_method_name());
     }
 
     /// Feeds `self` with the `oauth_timestamp` parameter part of the
     /// signature base string.
     ///
-    /// `default_key` argument is passed just for the convenience of implementors and is always
-    /// `"oauth_timestamp"`.
-    ///
-    /// The default implementation forwards to the `parameter` method.
-    fn timestamp(&mut self, default_key: &'static str, value: u64) {
-        self.parameter(default_key, value);
+    /// The default implementation forwards to the `parameter` method with
+    /// `"oauth_timestamp"` as the first argument.
+    fn timestamp(&mut self, value: u64) {
+        self.parameter("oauth_timestamp", value);
     }
 
     /// If this method returns `false`, `Signer` will not emit the `oauth_nonce` part of the
@@ -183,12 +176,10 @@ pub trait Sign {
 
     /// Feeds `self` with the `oauth_version` parameter part of the signature base string.
     ///
-    /// `default_key` and `default_value` arguments are passed just for the convenience of
-    /// implementors and are always `"oauth_version"` and `"1.0"` respectively.
-    ///
-    /// The default implementation forwards to the `parameter` method.
-    fn version(&mut self, default_key: &'static str, default_value: &'static str) {
-        self.parameter(default_key, default_value);
+    /// The default implementation forwards to the `parameter` method with
+    /// `"oauth_version"` and `"1.0"` as the arguments.
+    fn version(&mut self) {
+        self.parameter("oauth_version", "1.0");
     }
 }
 

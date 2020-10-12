@@ -61,14 +61,14 @@ impl<L: Sign, R: Sign> Sign for Either<L, R> {
     }
 
     delegate! {
-        fn callback[V: Display](&mut self, default_value: &'static str, value: V);
-        fn nonce[V: Display](&mut self, default_key: &'static str, value: V);
+        fn callback[V: Display](&mut self, value: V);
+        fn nonce[V: Display](&mut self, value: V);
         fn use_nonce(&self) -> bool;
-        fn signature_method(&mut self, default_key: &'static str, default_value: &'static str);
-        fn timestamp(&mut self, default_key: &'static str, value: u64);
+        fn signature_method(&mut self);
+        fn timestamp(&mut self, value: u64);
         fn use_timestamp(&self) -> bool;
-        fn token[V: Display](&mut self, default_key: &'static str, value: V);
-        fn verifier[V: Display](&mut self, default_key: &'static str, value: V);
-        fn version(&mut self, default_key: &'static str, default_value: &'static str);
+        fn token[V: Display](&mut self, value: V);
+        fn verifier[V: Display](&mut self, value: V);
+        fn version(&mut self);
     }
 }
