@@ -2,8 +2,6 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.4
 
-use std::fmt::Display;
-
 use super::*;
 
 /// The `PLAINTEXT` signature method.
@@ -17,11 +15,7 @@ pub struct PlaintextSign(String);
 impl SignatureMethod for Plaintext {
     type Sign = PlaintextSign;
 
-    fn sign_with<C, T>(self, client_secret: C, token_secret: Option<T>) -> PlaintextSign
-    where
-        C: Display,
-        T: Display,
-    {
+    fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> PlaintextSign {
         let mut key = String::with_capacity(128);
         write_signing_key(&mut key, client_secret, token_secret);
         PlaintextSign(key)

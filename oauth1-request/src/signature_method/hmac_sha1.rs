@@ -13,8 +13,9 @@ use sha1::digest::generic_array::{ArrayLength, GenericArray};
 use sha1::digest::{BlockInput, FixedOutput, Reset, Update};
 use sha1::Sha1;
 
-use super::*;
 use crate::util::PercentEncode;
+
+use super::*;
 
 /// The `HMAC-SHA1` signature method.
 #[derive(Copy, Clone, Debug, Default)]
@@ -45,11 +46,7 @@ enum SigningKey<D: BlockInput> {
 impl SignatureMethod for HmacSha1 {
     type Sign = HmacSha1Sign;
 
-    fn sign_with<C, T>(self, client_secret: C, token_secret: Option<T>) -> HmacSha1Sign
-    where
-        C: Display,
-        T: Display,
-    {
+    fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> HmacSha1Sign {
         let mut key = SigningKey::new();
         write_signing_key(&mut key, client_secret, token_secret);
         HmacSha1Sign {

@@ -197,16 +197,9 @@ mod tests {
     impl<SM: SignatureMethod> SignatureMethod for Inspect<SM> {
         type Sign = InspectSign<SM::Sign>;
 
-        fn sign_with<C: Display, T: Display>(
-            self,
-            client_secret: C,
-            token_secret: Option<T>,
-        ) -> Self::Sign {
-            println!("client_secret: {:?}", client_secret.to_string());
-            println!(
-                "token_secret: {:?}",
-                token_secret.as_ref().map(ToString::to_string)
-            );
+        fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> Self::Sign {
+            println!("client_secret: {:?}", client_secret);
+            println!("token_secret: {:?}", token_secret);
             InspectSign(self.0.sign_with(client_secret, token_secret))
         }
     }

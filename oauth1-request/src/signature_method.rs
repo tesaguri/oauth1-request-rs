@@ -24,6 +24,8 @@ pub use plaintext::Plaintext;
 
 use std::fmt::{Display, Write};
 
+use crate::util::percent_encode;
+
 /// Types that represent a signature method.
 ///
 /// This is used to construct a `Self::Sign` and carries configuration data for them.
@@ -32,10 +34,7 @@ pub trait SignatureMethod {
     type Sign: Sign;
 
     /// Creates a `Self::Sign` that signs a signature base string with the given shared-secrets.
-    fn sign_with<C, T>(self, client_secret: C, token_secret: Option<T>) -> Self::Sign
-    where
-        C: Display,
-        T: Display;
+    fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> Self::Sign;
 }
 
 macro_rules! provide {
@@ -193,13 +192,10 @@ pub trait Sign {
     }
 }
 
-fn write_signing_key<W: Write>(
-    dst: &mut W,
-    client_secret: impl Display,
-    token_secret: Option<impl Display>,
-) {
-    write!(dst, "{}&", client_secret).unwrap();
+fn write_signing_key<W: Write>(dst: &mut W, client_secret: &str, token_secret: Option<&str>) {
+    write!(dst, "{}", percent_encode(client_secret)).unwrap();
+    dst.write_str("&").unwrap();
     if let Some(ts) = token_secret {
-        write!(dst, "{}", ts).unwrap();
+        write!(dst, "{}", percent_encode(ts)).unwrap();
     }
 }

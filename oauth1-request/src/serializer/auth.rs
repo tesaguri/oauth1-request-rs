@@ -91,10 +91,7 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
         token: Option<Credentials<&'a str>>,
         options: &'a Options<'a>,
     ) -> Self {
-        let mut sign = signature_method.sign_with(
-            percent_encode(client.secret),
-            token.as_ref().map(Credentials::secret).map(percent_encode),
-        );
+        let mut sign = signature_method.sign_with(client.secret, token.map(|t| t.secret));
 
         let mut authorization = String::with_capacity(512);
         authorization.push_str("OAuth ");
