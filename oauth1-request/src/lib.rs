@@ -67,11 +67,7 @@
 //! See [`Request`] for more details on the custom derive macro.
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.2")]
-// TODO: Remove the `allow` attribute when Rust 1.47 hits stable.
-// <https://github.com/rust-lang/rust/pull/74926>
-#![allow(unknown_lints)]
 #![deny(broken_intra_doc_links)]
-#![warn(unknown_lints)]
 #![warn(missing_docs, rust_2018_idioms)]
 
 #[macro_use]
