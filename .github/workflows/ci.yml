@@ -31,32 +31,25 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: cargo-registry-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
+          key: cargo-registry-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
           restore-keys: |
-            cargo-registry-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-            cargo-registry-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-${{ runner.os }}-
+            cargo-registry-test-${{ runner.os }}-${{ matrix.features }}-
+            cargo-registry-test-${{ runner.os }}-
       - name: Cache Cargo build
         uses: actions/cache@v2
         with:
           path: target
-          key: cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
+          key: cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
           restore-keys: |
-            cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-            cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+            cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
+            cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
       - run: echo 'RUSTFLAGS=--allow unknown_lints' >> $GITHUB_ENV
         if: matrix.toolchain == '1.41.0'
-      - name: Build `oauth1-request-derive`
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --manifest-path oauth1-request-derive/Cargo.toml
       - name: Build `oauth1-request`
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
+          args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Build `examples`
         if: ${{ matrix.toolchain != '1.41.0' }}
         uses: actions-rs/cargo@v1
@@ -68,8 +61,52 @@ jobs:
         with:
           command: test
           args: --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
+  derive-test:
+    name: Test `oauth1-request-derive`
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          profile: minimal
+          override: true
+        id: toolchain
+      - name: Cache Cargo registry
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-derive-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
+          restore-keys: |
+            cargo-registry-derive-test-${{ runner.os }}-${{ matrix.features }}-
+            cargo-registry-derive-test-${{ runner.os }}-
+      - name: Cache Cargo build
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
+          restore-keys: |
+            cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
+            cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - name: Build `oauth1-request-derive`
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --tests --manifest-path oauth1-request-derive/Cargo.toml
+      - name: Build `test-deps`
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --manifest-path oauth1-request-derive/test-deps/Cargo.toml --target-dir oauth1-request-derive/test-deps/target
       - name: Test `oauth1-request-derive`
-        if: ${{ matrix.toolchain != '1.41.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: test
