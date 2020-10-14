@@ -45,6 +45,8 @@ jobs:
             cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
             cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
             cargo-build-target-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - run: echo 'RUSTFLAGS=--allow unknown_lints' >> $GITHUB_ENV
+        if: matrix.toolchain == '1.41.0'
       - name: Build `oauth1-request-derive`
         uses: actions-rs/cargo@v1
         with:
@@ -56,7 +58,7 @@ jobs:
           command: build
           args: --verbose --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Build `examples`
-        # if: ${{ matrix.toolchain != '1.41.0' }}
+        if: ${{ matrix.toolchain != '1.41.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: build
@@ -67,6 +69,7 @@ jobs:
           command: test
           args: --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Test `oauth1-request-derive`
+        if: ${{ matrix.toolchain != '1.41.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: test

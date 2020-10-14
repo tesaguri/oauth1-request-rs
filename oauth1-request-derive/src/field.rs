@@ -35,8 +35,9 @@ macro_rules! add_meta_impl {
         add_meta_impl! { @accum ($self, $meta) { $($rest)* } -> {
             $($arms)*
             stringify!($name) => {
-                if !matches!($meta.kind, MetaKind::Path) {
-                    return Err(syn::Error::new($meta.span(), "expected meta word"));
+                match $meta.kind {
+                    MetaKind::Path => {}
+                    _ => return Err(syn::Error::new($meta.span(), "expected meta word")),
                 }
                 if $self.$name {
                     let message = concat!("duplicate attribute `", stringify!($name), "`");
