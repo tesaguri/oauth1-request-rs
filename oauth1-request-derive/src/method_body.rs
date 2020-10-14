@@ -46,7 +46,12 @@ impl<'a> ToTokens for MethodBody<'a> {
                     ready = true;
                 }
 
-                let ty_is_option = f.meta.option.get().map_or(false, |v| **v) || is_option(&f.ty);
+                let ty_is_option = f
+                    .meta
+                    .option
+                    .get()
+                    .map(|v| **v)
+                    .unwrap_or_else(|| is_option(&f.ty));
 
                 let value = if ty_is_option {
                     quote_spanned! {f.ty.span()=> {

@@ -26,7 +26,8 @@ macro_rules! assert_expand {
             mod inner {
                 // Shadow items imported via the prelude:
                 #[allow(dead_code)]
-                struct Option;
+                #[derive(Default)]
+                pub struct Option<T>(T);
                 #[allow(dead_code)]
                 struct Some;
                 #[allow(dead_code)]
@@ -246,6 +247,9 @@ assert_expand! {
         #[oauth1(option = "true", fmt = "super::fmt_ignore")]
         option_fmt: std::option::Option<&'static str> = Some("option_fmt"),
 
+        #[oauth1(option = "false", fmt = "super::fmt_ignore")]
+        option_false: Option<()>,
+
         #[oauth1(skip_if = "std::any::Any::is::<&'static str>")]
         #[oauth1(fmt = "std::fmt::Debug::fmt")]
         trait_item: T,
@@ -264,6 +268,7 @@ assert_expand! {
     |this, mut signer, ck, opts| {
         signer.parameter("FLAG", this.flag);
         let mut signer = signer.oauth_parameters(ck, opts);
+        signer.parameter("option_false", "");
         signer.parameter("option_fmt", "");
         signer.parameter_encoded("percent_encoded", &this.percent_encoded);
         signer.parameter("some", "option");
