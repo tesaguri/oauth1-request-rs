@@ -35,8 +35,8 @@ pub use skip_serialize_oauth_parameters;
 ///
 /// A `Request` implementation `serialize`s itself by feeding a `Serializer` with its key-value
 /// pairs through the serializer's `serialize_*` methods. The `serialize_*` method calls correspond
-/// to appending parameters to the request's signature base string ([RFC 5849 section 3.4.1.][rfc]),
-/// and the key-value pairs must be serialized in ascending dictionary order.
+/// to appending parameters to the signature base string ([RFC 5849 section 3.4.1.][rfc]) of
+/// the OAuth request, and the key-value pairs must be serialized in ascending dictionary order.
 ///
 /// [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.1
 ///
@@ -48,8 +48,9 @@ pub use skip_serialize_oauth_parameters;
 /// // Create an OAuth 1.0 `Authorization` header serializer.
 /// let client = oauth::Credentials::new("consumer_key", "consumer_secret");
 /// let token = oauth::Credentials::new("token", "token_secret");
-/// let mut options = auth::Options::new();
-/// options.nonce("nonce").timestamp(9999999999);
+/// let options = auth::Options::new();
+/// # let mut options = options;
+/// # options.nonce("mo8_whwD5c91").timestamp(1234567890);
 /// let mut serializer = HmacSha1Authorizer::new(
 ///     "GET",
 ///     "https://example.com/api/v1/get.json",
@@ -75,11 +76,11 @@ pub use skip_serialize_oauth_parameters;
 ///     authorization,
 ///     "OAuth \
 ///      oauth_consumer_key=\"consumer_key\",\
-///      oauth_nonce=\"nonce\",\
+///      oauth_nonce=\"mo8_whwD5c91\",\
 ///      oauth_signature_method=\"HMAC-SHA1\",\
-///      oauth_timestamp=\"9999999999\",\
+///      oauth_timestamp=\"1234567890\",\
 ///      oauth_token=\"token\",\
-///      oauth_signature=\"R1%2B4C7PHNUwA2TyMeNZDo0T8lSM%3D\"",
+///      oauth_signature=\"eC5rUmIcYvAaIIWCIvOwhgUDByk%3D\"",
 /// );
 /// ```
 pub trait Serializer {

@@ -9,15 +9,16 @@
 //! oauth = { version = "0.3", package = "oauth1-request" }
 //! ```
 //!
-//! For brevity we refer to the crate name as `oauth` throughout the documentation.
+//! For brevity, we refer to the crate name as `oauth` throughout the documentation,
+//! since the API is designed in favor of qualified paths like `oauth::get`.
 //!
 //! ## Create a request
+//!
+//! A typical authorization flow looks like this:
 //!
 //! ```
 //! # extern crate oauth1_request as oauth;
 //! #
-//! let uri = "https://example.com/api/v1/comments/create.json";
-//!
 //! // Define a type to represent your request.
 //! #[derive(oauth::Request)]
 //! struct CreateComment<'a> {
@@ -25,46 +26,67 @@
 //!     text: &'a str,
 //! }
 //!
+//! let uri = "https://example.com/api/v1/comments/create.json";
+//!
 //! let request = CreateComment {
 //!     article_id: 123456789,
-//!     text: "Rust lang is great 🦀",
+//!     text: "A request signed with OAuth & Rust 🦀 🔏",
 //! };
 //!
-//! // Create a `Builder` and populate it with your credentials.
-//! let consumer = oauth::Credentials::new("consumer_key", "consumer_secret");
+//! // Prepare your credentials.
+//! let client = oauth::Credentials::new("consumer_key", "consumer_secret");
 //! let token = oauth::Credentials::new("token", "token_secret");
-//! let mut builder = oauth::Builder::new(consumer, oauth::HmacSha1);
-//! builder.token(token).nonce("nonce").timestamp(9999999999);
 //!
-//! // Authorize the request.
-//! let authorization_header = builder.post(uri, &request);
+//! // Create the `Authorization` header.
+//! let authorization_header = oauth::post(oauth::HmacSha1, uri, client, Some(token), &request);
+//! # // Override the above value to pin the nonce and timestamp value.
+//! # let mut builder = oauth::Builder::new(client, oauth::HmacSha1);
+//! # builder.token(token);
+//! # builder.nonce("Dk-OGluFEQ4f").timestamp(1234567890);
+//! # let authorization_header = builder.post(uri, &request);
+//! // `oauth_nonce` and `oauth_timestamp` vary on each execution.
 //! assert_eq!(
 //!     authorization_header,
 //!     "OAuth \
 //!          oauth_consumer_key=\"consumer_key\",\
-//!          oauth_nonce=\"nonce\",\
+//!          oauth_nonce=\"Dk-OGluFEQ4f\",\
 //!          oauth_signature_method=\"HMAC-SHA1\",\
-//!          oauth_timestamp=\"9999999999\",\
+//!          oauth_timestamp=\"1234567890\",\
 //!          oauth_token=\"token\",\
-//!          oauth_signature=\"bbhEIrjfisdDBrZkKnEXKa4ykE4%3D\"",
+//!          oauth_signature=\"n%2FrUgos4CFFZbZK8Z8wFR7drU4c%3D\"",
 //! );
 //!
-//! // You can create an x-www-form-urlencoded or a URI with query pairs from the request.
+//! // You can create an `x-www-form-urlencoded` string or a URI with query pairs from the request.
 //!
 //! let form = oauth::to_form_urlencoded(&request);
 //! assert_eq!(
 //!     form,
-//!     "article_id=123456789&text=Rust%20lang%20is%20great%20%F0%9F%A6%80",
+//!     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
 //! );
 //!
 //! let uri = oauth::to_uri_query(uri.to_owned(), &request);
 //! assert_eq!(
 //!     uri,
-//!     "https://example.com/api/v1/comments/create.json?article_id=123456789&text=Rust%20lang%20is%20great%20%F0%9F%A6%80",
+//!     "https://example.com/api/v1/comments/create.json?article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
 //! );
 //! ```
 //!
-//! See [`Request`] for more details on the custom derive macro.
+//! Use [`oauth::Builder`][Builder] if you need to specify a callback URI or verifier:
+//!
+//! ```rust
+//! # extern crate oauth1_request as oauth;
+//! #
+//! let uri = "https://example.com/oauth/request_temp_credentials";
+//! let callback = "https://client.example.net/oauth/callback";
+//! #
+//! # let client = oauth::Credentials::new("consumer_key", "consumer_secret");
+//!
+//! let authorization_header = oauth::Builder::new(client, oauth::HmacSha1)
+//!     .callback(callback)
+//!     .post(uri, &());
+//! ```
+//!
+//! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.2")]
 #![deny(broken_intra_doc_links)]
@@ -73,11 +95,13 @@
 #[macro_use]
 mod util;
 
-pub mod request;
 pub mod serializer;
 pub mod signature_method;
 
+mod request;
+
 #[cfg(feature = "derive")]
+#[doc(inline)]
 pub use oauth1_request_derive::Request;
 
 pub use request::Request;
@@ -144,6 +168,12 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self
     }
 
+    /// Sets/unsets the `oauth_verifier` value.
+    pub fn verifier(&mut self, verifier: impl Into<Option<&'a str>>) -> &mut Self {
+        self.options.verifier(verifier);
+        self
+    }
+
     /// Sets/unsets the `oauth_nonce` value.
     ///
     /// By default, `Builder` generates a random nonce for each request.
@@ -166,12 +196,6 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         self
     }
 
-    /// Sets/unsets the `oauth_verifier` value.
-    pub fn verifier(&mut self, verifier: impl Into<Option<&'a str>>) -> &mut Self {
-        self.options.verifier(verifier);
-        self
-    }
-
     /// Sets whether to include the `oauth_version` value in requests.
     pub fn version(&mut self, version: bool) -> &mut Self {
         self.options.version(version);
@@ -179,6 +203,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `GET` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn get<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -187,6 +213,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `PUT` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn put<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -195,6 +223,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `POST` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn post<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -203,6 +233,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `DELETE` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn delete<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -211,6 +243,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes an `OPTIONS` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn options<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -219,6 +253,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `HEAD` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn head<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -227,6 +263,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `CONNECT` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn connect<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -235,6 +273,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `PATCH` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn patch<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -243,6 +283,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a `TRACE` request to `uri`.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn trace<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -251,6 +293,8 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
     }
 
     /// Authorizes a request to `uri` with a custom HTTP request method.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
     pub fn build<U: Display, R: Request + ?Sized>(
         &self,
         method: &str,
@@ -339,6 +383,8 @@ impl<T: Debug> Debug for Credentials<T> {
 }
 
 /// Authorizes a `GET` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn get<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -357,6 +403,8 @@ where
 }
 
 /// Authorizes a `PUT` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn put<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -375,6 +423,8 @@ where
 }
 
 /// Authorizes a `POST` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn post<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -393,6 +443,8 @@ where
 }
 
 /// Authorizes a `DELETE` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn delete<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -411,6 +463,8 @@ where
 }
 
 /// Authorizes an `OPTIONS` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn options<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -429,6 +483,8 @@ where
 }
 
 /// Authorizes a `HEAD` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn head<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -447,6 +503,8 @@ where
 }
 
 /// Authorizes a `CONNECT` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn connect<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -465,6 +523,8 @@ where
 }
 
 /// Authorizes a `PATCH` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn patch<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -483,6 +543,8 @@ where
 }
 
 /// Authorizes a `TRACE` request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
 pub fn trace<SM, U, R>(
     signature_method: SM,
     uri: U,
@@ -509,6 +571,9 @@ where
 }
 
 /// Turns a `Request` to a query string and appends it to the given URI.
+///
+/// This function naively concatenates a query string to `uri` and if `uri` already has
+/// a query part, it will have a duplicate query part like `?foo=bar?baz=qux`.
 pub fn to_uri_query<R>(uri: String, request: &R) -> String
 where
     R: Request + ?Sized,

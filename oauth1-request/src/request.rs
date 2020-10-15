@@ -8,46 +8,12 @@ use crate::util::OAuthParameter;
 
 /// Types that represent an HTTP request to be authorized with OAuth.
 ///
-/// This trait can be implemented automatically by `#[derive(Request)]` derive macro
-/// and in most cases you won't need to implement it manually.
+/// `Request` is an abstraction of a sequence of key-value pairs of a query part of a URI
+/// and `x-www-form-urlencoded` string.
 ///
-/// A `Request` is composed of a sequence of key-value pairs which will eventually be represented by
-/// a query part of a URI or an `x-www-form-urlencoded` string, and the derive macro uses
-/// the struct's field names and `Display` implementation of the values.
-///
-/// ## `#[derive(Request)]`
-///
-/// You can customize the behavior of the derive macro with the following field attributes:
-///
-/// - `#[oauth1(encoded)]`
-///
-/// Do not percent encode the value when serializing it.
-///
-/// - `#[oauth1(fmt = path)]`
-///
-/// Format the value using the function at `path`. The function must be callable as
-/// `fn(&T, &mut Formatter<'_>) -> fmt::Result` (same as `Display::fmt`).
-///
-/// - `#[oauth1(option = true)]` (or `#[oauth1(option = false)]`)
-///
-/// If set to `true`, skip the field when the value is `None` or use the unwrapped value otherwise.
-/// The value's type must be `Option<T>` in that case.
-///
-/// When the field's type name is `Option<_>`, the attribute is implicitly set to `true`.
-/// Use `#[oauth1(option = "false")]` if you need to opt out of that behavior.
-///
-/// - `#[oauth1(rename = "name")]`
-///
-/// Use the given string as the key. The given string must be URI-safe.
-///
-/// - `#[oauth1(skip)]`
-///
-/// Unconditionally skip the field.
-///
-/// - `#[oauth1(skip_if = path)]`
-///
-/// Call the function at `path` and skip the field if the function returns `true`.
-/// The function must be callable as `fn(&T) -> bool`.
+/// This trait can be implemented automatically by
+/// [`#[derive(Request)]`][oauth1_request_derive::Request] derive macro.
+/// In most cases, you won't need to implement it manually.
 pub trait Request {
     /// Feeds a [`Serializer`] implementation with the key-value pair of the request
     /// and returns the serializer's output.

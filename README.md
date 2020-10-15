@@ -15,11 +15,51 @@ Add this to your `Cargo.toml`:
 oauth = { version = "0.3", package = "oauth1-request" }
 ```
 
-## Pros
+A typical authorization flow looks like this:
 
-* Customizable crypto implementations (no dependency on`ring` by default).
-* *Slightly* lower memory footprint (*maybe*): it avoids allocating memory for sorting query pairs unlike other crates.
+```rust
+// Define a type to represent your request.
+#[derive(oauth::Request)]
+struct CreateComment<'a> {
+    article_id: u64,
+    text: &'a str,
+}
 
-## Cons
+let uri = "https://example.com/api/v1/comments/create.json";
 
-* Only dogfed on Twitter and likely to break on other sites.
+let request = CreateComment {
+    article_id: 123456789,
+    text: "A request signed with OAuth & Rust 🦀 🔏",
+};
+
+// Prepare your credentials.
+let client = oauth::Credentials::new("consumer_key", "consumer_secret");
+let token = oauth::Credentials::new("token", "token_secret");
+
+// Create the `Authorization` header.
+let authorization_header = oauth::post(oauth::HmacSha1, uri, client, Some(token), &request);
+assert_eq!(
+    authorization_header,
+    "OAuth \
+         oauth_consumer_key=\"consumer_key\",\
+         oauth_nonce=\"Dk-OGluFEQ4f\",\
+         oauth_signature_method=\"HMAC-SHA1\",\
+         oauth_timestamp=\"1234567890\",\
+         oauth_token=\"token\",\
+         oauth_signature=\"n%2FrUgos4CFFZbZK8Z8wFR7drU4c%3D\"",
+);
+
+// You can create an `x-www-form-urlencoded` string or a URI with query pairs from the request.
+
+let form = oauth::to_form_urlencoded(&request);
+assert_eq!(
+    form,
+    "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
+);
+
+let uri = oauth::to_uri_query(uri.to_owned(), &request);
+assert_eq!(
+    uri,
+    "https://example.com/api/v1/comments/create.json?article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
+);
+```

@@ -98,7 +98,7 @@ pub struct PercentEncode<D>(pub D);
 /// should be percent encoded.
 ///
 /// Every character that is not an "unreserved character" in RFC 3986 should be encoded.
-/// https://tools.ietf.org/html/rfc3986#section-2.3
+/// <https://tools.ietf.org/html/rfc3986#section-2.3>
 #[rustfmt::skip]
 const ENCODE_MAP: [bool; 0x100] = [
      true,  true,  true,  true,  true,  true,  true,  true,

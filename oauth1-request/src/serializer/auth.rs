@@ -33,6 +33,8 @@ options! {
         new;
         /// Sets `oauth_callback` parameter.
         callback: Option<&'a str>,
+        /// Sets `oauth_verifier` parameter.
+        verifier: Option<&'a str>,
         /// Sets `oauth_nonce` parameter.
         nonce: Option<&'a str>,
         /// Sets `oauth_timestamp` parameter.
@@ -42,8 +44,6 @@ options! {
         ///
         /// [rfc]: https://tools.ietf.org/html/rfc5849#section-3.3
         timestamp: Option<NonZeroU64>,
-        /// Sets `oauth_verifier` parameter.
-        verifier: Option<&'a str>,
         /// Sets whether to include `oauth_version="1.0"` parameter in the `Authorization` header.
         version: bool,
     }
