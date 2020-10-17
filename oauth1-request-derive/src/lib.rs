@@ -123,7 +123,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
             {
                 fn serialize<S>(&self, serializer: S) -> S::Output
                 where
-                    S: _oauth1_request::Serializer,
+                    S: _oauth1_request::serializer::Serializer,
                 {
                     unimplemented!();
                 }
@@ -157,7 +157,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 
     let mut fn_generics = input.generics.clone();
     fn_generics.params.push(parse_quote! {
-        #dummy: _oauth1_request::Serializer
+        #dummy: _oauth1_request::serializer::Serializer
     });
     let (fn_generics, _, _) = fn_generics.split_for_impl();
 
@@ -182,7 +182,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
                 // so we are separating the implementation to another function.
                 fn serialize<S>(&self, serializer: S) -> S::Output
                 where
-                    S: _oauth1_request::Serializer,
+                    S: _oauth1_request::serializer::Serializer,
                 {
                     #dummy((self, serializer))
                 }

@@ -7,7 +7,7 @@ use std::str;
 
 use percent_encoding::AsciiSet;
 
-use crate::Serializer;
+use crate::serializer::Serializer;
 
 macro_rules! options {
     ($(

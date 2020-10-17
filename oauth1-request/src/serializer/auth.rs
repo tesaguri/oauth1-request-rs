@@ -9,7 +9,9 @@ use rand::prelude::*;
 
 use crate::signature_method::{Plaintext, Sign, SignatureMethod};
 use crate::util::*;
-use crate::{Credentials, Serializer};
+use crate::Credentials;
+
+use super::Serializer;
 
 /// A `Serializer` that produces an HTTP `Authorization` header string by signing a request
 /// in OAuth 1.0 protocol.

@@ -105,7 +105,6 @@ mod request;
 pub use oauth1_request_derive::Request;
 
 pub use request::Request;
-pub use serializer::Serializer;
 #[cfg(feature = "hmac-sha1")]
 pub use signature_method::HmacSha1;
 pub use signature_method::Plaintext;

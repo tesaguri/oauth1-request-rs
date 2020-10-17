@@ -3,7 +3,8 @@
 use std::fmt::Write;
 
 use crate::util::PercentEncode;
-use crate::Serializer;
+
+use super::Serializer;
 
 /// A `Serializer` that produces a URI query or an `x-www-form-urlencoded` string from a request.
 pub struct Urlencoder {
