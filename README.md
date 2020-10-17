@@ -37,7 +37,7 @@ let client = oauth::Credentials::new("consumer_key", "consumer_secret");
 let token = oauth::Credentials::new("token", "token_secret");
 
 // Create the `Authorization` header.
-let authorization_header = oauth::post(oauth::HmacSha1, uri, client, Some(token), &request);
+let authorization_header = oauth::post(oauth::HmacSha1, uri, &client, Some(&token), &request);
 assert_eq!(
     authorization_header,
     "OAuth \

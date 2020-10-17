@@ -38,7 +38,7 @@
 //! let token = oauth::Credentials::new("token", "token_secret");
 //!
 //! // Create the `Authorization` header.
-//! let authorization_header = oauth::post(oauth::HmacSha1, uri, client, Some(token), &request);
+//! let authorization_header = oauth::post(oauth::HmacSha1, uri, &client, Some(&token), &request);
 //! # // Override the above value to pin the nonce and timestamp value.
 //! # let mut builder = oauth::Builder::new(client, oauth::HmacSha1);
 //! # builder.token(token);
@@ -381,184 +381,75 @@ impl<T: Debug> Debug for Credentials<T> {
     }
 }
 
-/// Authorizes a `GET` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn get<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("GET", uri, request)
+macro_rules! def_shorthand {
+    ($($(#[$attr:meta])* $name:ident($method:expr);)*) => {$(
+        $(#[$attr])*
+        pub fn $name<SM, U, C, T, R>(
+            signature_method: SM,
+            uri: U,
+            client: &Credentials<C>,
+            token: Option<&Credentials<T>>,
+            request: &R,
+        ) -> String
+        where
+            SM: SignatureMethod,
+            U: Display,
+            C: Borrow<str>,
+            T: Borrow<str>,
+            R: Request + ?Sized,
+        {
+            let mut builder = Builder::new(client.as_ref(), signature_method);
+            builder.token(token.map(Credentials::as_ref));
+            builder.consume($method, uri, request)
+        }
+    )*};
 }
 
-/// Authorizes a `PUT` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn put<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("PUT", uri, request)
-}
+def_shorthand! {
+    /// Authorizes a `GET` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    get("GET");
 
-/// Authorizes a `POST` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn post<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("POST", uri, request)
-}
+    /// Authorizes a `PUT` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    put("PUT");
 
-/// Authorizes a `DELETE` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn delete<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("DELETE", uri, request)
-}
+    /// Authorizes a `POST` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    post("POST");
 
-/// Authorizes an `OPTIONS` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn options<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("OPTIONS", uri, request)
-}
+    /// Authorizes a `DELETE` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    delete("DELETE");
 
-/// Authorizes a `HEAD` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn head<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("HEAD", uri, request)
-}
+    /// Authorizes an `OPTIONS` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    options("OPTIONS");
 
-/// Authorizes a `CONNECT` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn connect<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("CONNECT", uri, request)
-}
+    /// Authorizes a `HEAD` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    head("HEAD");
 
-/// Authorizes a `PATCH` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn patch<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("PATCH", uri, request)
-}
+    /// Authorizes a `CONNECT` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    connect("CONNECT");
 
-/// Authorizes a `TRACE` request to `uri` using the given credentials.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-pub fn trace<SM, U, R>(
-    signature_method: SM,
-    uri: U,
-    client: Credentials<&str>,
-    token: Option<Credentials<&str>>,
-    request: &R,
-) -> String
-where
-    U: Display,
-    SM: SignatureMethod,
-    R: Request + ?Sized,
-{
-    let mut builder = Builder::new(client, signature_method);
-    builder.token(token);
-    builder.consume("TRACE", uri, request)
+    /// Authorizes a `PATCH` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    patch("PATCH");
+
+    /// Authorizes a `TRACE` request to `uri` using the given credentials.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    trace("TRACE");
 }
 
 /// Turns a `Request` into an `x-www-form-urlencoded` string.
