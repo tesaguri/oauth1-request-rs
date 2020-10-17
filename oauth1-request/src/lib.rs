@@ -34,14 +34,14 @@
 //! };
 //!
 //! // Prepare your credentials.
-//! let client = oauth::Credentials::new("consumer_key", "consumer_secret");
-//! let token = oauth::Credentials::new("token", "token_secret");
+//! let token =
+//!     oauth::Token::from_parts("consumer_key", "consumer_secret", "token", "token_secret");
 //!
 //! // Create the `Authorization` header.
-//! let authorization_header = oauth::post(oauth::HmacSha1, uri, &client, Some(&token), &request);
+//! let authorization_header = oauth::post(oauth::HmacSha1, uri, &token, &request);
 //! # // Override the above value to pin the nonce and timestamp value.
-//! # let mut builder = oauth::Builder::new(client, oauth::HmacSha1);
-//! # builder.token(token);
+//! # let mut builder = oauth::Builder::new(token.client, oauth::HmacSha1);
+//! # builder.token(token.token);
 //! # builder.nonce("Dk-OGluFEQ4f").timestamp(std::num::NonZeroU64::new(1234567890));
 //! # let authorization_header = builder.post(uri, &request);
 //! // `oauth_nonce` and `oauth_timestamp` vary on each execution.
@@ -78,8 +78,8 @@
 //! #
 //! let uri = "https://example.com/oauth/request_temp_credentials";
 //! let callback = "https://client.example.net/oauth/callback";
-//! #
-//! # let client = oauth::Credentials::new("consumer_key", "consumer_secret");
+//!
+//! let client = oauth::Credentials::new("consumer_key", "consumer_secret");
 //!
 //! let authorization_header = oauth::Builder::<_, _>::new(client, oauth::HmacSha1)
 //!     .callback(callback)
@@ -104,7 +104,7 @@ mod request;
 #[doc(inline)]
 pub use oauth1_request_derive::Request;
 #[doc(no_inline)]
-pub use oauth_credentials::Credentials;
+pub use oauth_credentials::{Credentials, Token};
 
 pub use request::Request;
 #[cfg(feature = "hmac-sha1")]
@@ -139,6 +139,13 @@ impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C,
             token: None,
             options: auth::Options::new(),
         }
+    }
+
+    /// Creates a `Builder` that uses the token credentials from `token`.
+    pub fn with_token(token: Token<C, T>, signature_method: SM) -> Self {
+        let mut ret = Builder::new(token.client, signature_method);
+        ret.token(token.token);
+        ret
     }
 
     /// Sets/unsets the token credentials pair to sign requests with.
@@ -331,8 +338,7 @@ macro_rules! def_shorthand {
         pub fn $name<SM, U, C, T, R>(
             signature_method: SM,
             uri: U,
-            client: &Credentials<C>,
-            token: Option<&Credentials<T>>,
+            token: &Token<C, T>,
             request: &R,
         ) -> String
         where
@@ -342,9 +348,7 @@ macro_rules! def_shorthand {
             T: Borrow<str>,
             R: Request + ?Sized,
         {
-            let mut builder = Builder::new(client.as_ref(), signature_method);
-            builder.token(token.map(Credentials::as_ref));
-            builder.consume($method, uri, request)
+            Builder::with_token(token.as_ref(), signature_method).consume($method, uri, request)
         }
     )*};
 }
