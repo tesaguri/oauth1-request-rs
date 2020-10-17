@@ -42,7 +42,7 @@
 //! # // Override the above value to pin the nonce and timestamp value.
 //! # let mut builder = oauth::Builder::new(client, oauth::HmacSha1);
 //! # builder.token(token);
-//! # builder.nonce("Dk-OGluFEQ4f").timestamp(1234567890);
+//! # builder.nonce("Dk-OGluFEQ4f").timestamp(std::num::NonZeroU64::new(1234567890));
 //! # let authorization_header = builder.post(uri, &request);
 //! // `oauth_nonce` and `oauth_timestamp` vary on each execution.
 //! assert_eq!(
@@ -111,6 +111,7 @@ pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
 use std::fmt::{self, Debug, Display, Formatter};
+use std::num::NonZeroU64;
 use std::str;
 
 use serializer::auth::{self, Authorizer};
@@ -190,7 +191,7 @@ impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C,
     /// This method overrides that behavior and forces the `Builder` to use the specified timestamp.
     ///
     /// This method is for debugging/testing purpose only and should not be used in production.
-    pub fn timestamp(&mut self, timestamp: impl Into<Option<u64>>) -> &mut Self {
+    pub fn timestamp(&mut self, timestamp: impl Into<Option<NonZeroU64>>) -> &mut Self {
         self.options.timestamp(timestamp);
         self
     }

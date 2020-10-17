@@ -42,6 +42,9 @@ pub use skip_serialize_oauth_parameters;
 ///
 /// ```
 /// # extern crate oauth1_request as oauth;
+/// #
+/// use std::num::NonZeroU64;
+///
 /// use oauth::serializer::auth::{self, HmacSha1Authorizer};
 /// use oauth::serializer::{Serializer, SerializerExt};
 ///
@@ -50,7 +53,7 @@ pub use skip_serialize_oauth_parameters;
 /// let token = oauth::Credentials::new("token", "token_secret");
 /// let options = auth::Options::new();
 /// # let mut options = options;
-/// # options.nonce("mo8_whwD5c91").timestamp(1234567890);
+/// # options.nonce("mo8_whwD5c91").timestamp(NonZeroU64::new(1234567890));
 /// let mut serializer = HmacSha1Authorizer::new(
 ///     "GET",
 ///     "https://example.com/api/v1/get.json",
@@ -179,6 +182,8 @@ mod tests {
     use super::auth::{HmacSha1Authorizer, PlaintextAuthorizer};
     use super::*;
 
+    use std::num::NonZeroU64;
+
     use crate::serializer::auth;
     use crate::signature_method::{HmacSha1, Identity, Sign, SignatureMethod};
     use crate::Credentials;
@@ -248,10 +253,10 @@ mod tests {
                 let client = Credentials::new(CK, CS);
                 let token = Credentials::new(AK, AS);
                 let mut options = auth::Options::new();
-                options.nonce(NONCE)
-                    .timestamp(TIMESTAMP)
-                    .version(true);
                 $(
+                    options.nonce($nonce)
+                        .timestamp($timestamp)
+                        .version(true);
                     let mut auth = Authorizer::with_signature_method(
                         Inspect(HmacSha1),
                         $method,
@@ -311,10 +316,12 @@ mod tests {
             ($_signer:ident;) => ();
         }
 
+        let timestamp = NonZeroU64::new(TIMESTAMP).unwrap();
+
         test! {
             (
                 "GET", "https://stream.twitter.com/1.1/statuses/sample.json",
-                CK, CS, AK, AS, NONCE, TIMESTAMP,
+                CK, CS, AK, AS, NONCE, timestamp,
                 {}, { encoded stall_warnings: "true", },
             ) -> (
                 "OGQqcy4l5xWBFX7t0DrkP5%2FD0rM%3D",
@@ -322,7 +329,7 @@ mod tests {
             );
             (
                 "POST", "https://api.twitter.com/1.1/statuses/update.json",
-                CK, CS, AK, AS, NONCE, TIMESTAMP,
+                CK, CS, AK, AS, NONCE, timestamp,
                 { encoded include_entities: "true", },
                 { status: "Hello Ladies + Gentlemen, a signed OAuth request!", },
             ) -> (
@@ -330,11 +337,11 @@ mod tests {
                 "include_entities=true&\
                     status=Hello%20Ladies%20%2B%20Gentlemen%2C%20a%20signed%20OAuth%20request%21",
             );
-            ("POST", "https://example.com/post.json", CK, CS, AK, AS, NONCE, TIMESTAMP, {}, {})
+            ("POST", "https://example.com/post.json", CK, CS, AK, AS, NONCE, timestamp, {}, {})
                 -> ("pN52L1gJ6sOyYOyv23cwfWFsIZc%3D", "");
             (
                 "GET", "https://example.com/get.json",
-                CK, CS, AK, AS, NONCE, TIMESTAMP,
+                CK, CS, AK, AS, NONCE, timestamp,
                 { encoded bar: "%E9%85%92%E5%A0%B4", foo: "ふー", }, {},
             ) -> (
                 "Xp35hf3T21yhpEuxez7p6bV62Bw%3D",

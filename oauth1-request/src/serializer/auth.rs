@@ -42,7 +42,7 @@ options! {
         /// Sets `oauth_timestamp` parameter.
         ///
         /// The OAuth standard ([RFC 5849 section 3.3.][rfc]) says that the timestamp value
-        /// MUST be a positive integer, so this method treats `0` as `None`.
+        /// MUST be a positive integer.
         ///
         /// [rfc]: https://tools.ietf.org/html/rfc5849#section-3.3
         timestamp: Option<NonZeroU64>,

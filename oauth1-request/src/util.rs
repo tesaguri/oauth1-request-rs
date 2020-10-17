@@ -34,14 +34,6 @@ macro_rules! options {
 }
 
 macro_rules! impl_setters {
-    ($(#[$attr:meta])* $setter:ident: Option<NonZeroU64>, $($rest:tt)*) => {
-        $(#[$attr])*
-        pub fn $setter(&mut self, $setter: impl Into<Option<u64>>) -> &mut Self {
-            self.$setter = $setter.into().and_then(NonZeroU64::new);
-            self
-        }
-        impl_setters! { $($rest)* }
-    };
     ($(#[$attr:meta])* $setter:ident: Option<$t:ty>, $($rest:tt)*) => {
         $(#[$attr])*
         pub fn $setter(&mut self, $setter: impl Into<Option<$t>>) -> &mut Self {
