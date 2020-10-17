@@ -81,7 +81,7 @@
 //! #
 //! # let client = oauth::Credentials::new("consumer_key", "consumer_secret");
 //!
-//! let authorization_header = oauth::Builder::new(client, oauth::HmacSha1)
+//! let authorization_header = oauth::Builder::<_, _>::new(client, oauth::HmacSha1)
 //!     .callback(callback)
 //!     .post(uri, &());
 //! ```
@@ -119,9 +119,9 @@ use signature_method::SignatureMethod;
 
 /// A builder for OAuth `Authorization` header string.
 #[derive(Clone, Debug)]
-pub struct Builder<'a, SM, T = String> {
+pub struct Builder<'a, SM, C = String, T = C> {
     signature_method: SM,
-    client: Credentials<T>,
+    client: Credentials<C>,
     token: Option<Credentials<T>>,
     options: auth::Options<'a>,
 }
@@ -143,10 +143,10 @@ pub struct Credentials<T = String> {
     pub secret: T,
 }
 
-impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
+impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C, T> {
     /// Creates a `Builder` that signs requests using the specified client credentials
     /// and signature method.
-    pub fn new(client: Credentials<T>, signature_method: SM) -> Self {
+    pub fn new(client: Credentials<C>, signature_method: SM) -> Self {
         Builder {
             signature_method,
             client,
