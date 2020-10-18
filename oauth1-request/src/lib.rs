@@ -126,7 +126,7 @@ pub use signature_method::HmacSha1;
 pub use signature_method::Plaintext;
 
 use std::borrow::Borrow;
-use std::fmt::{self, Debug, Display, Formatter};
+use std::fmt::{Debug, Display};
 use std::num::NonZeroU64;
 use std::str;
 
@@ -160,13 +160,7 @@ pub struct Builder<'a, SM, T = String> {
 /// - Client credentials (consumer key and secrets)
 /// - Temporary credentials (request token and secret)
 /// - Token credentials (access token and secret)
-#[derive(Clone, Copy)]
-pub struct Credentials<T = String> {
-    /// The unique identifier part of the credentials pair.
-    pub identifier: T,
-    /// The shared secret part of the credentials pair.
-    pub secret: T,
-}
+pub type Credentials<T = String> = oauth_credentials::Credentials<T>;
 
 options! {
     /// Optional OAuth parameters.
@@ -370,47 +364,5 @@ impl<'a, SM: SignatureMethod, T: Borrow<str>> Builder<'a, SM, T> {
         );
 
         request.authorize_with(signer, self.client.identifier.borrow(), Some(options))
-    }
-}
-
-impl<T: Borrow<str>> Credentials<T> {
-    /// Creates a `Credentials` with the specified identifier and secret.
-    pub fn new(identifier: T, secret: T) -> Self {
-        Credentials { identifier, secret }
-    }
-
-    /// Returns the unique identifier part of the credentials pair.
-    pub fn identifier(&self) -> &str {
-        self.identifier.borrow()
-    }
-
-    /// Returns the shared secret part of the credentials pair.
-    pub fn secret(&self) -> &str {
-        self.secret.borrow()
-    }
-
-    /// Borrows the identifier and secret strings from `self`
-    /// and creates a new `Credentials` with them.
-    pub fn as_ref(&self) -> Credentials<&str> {
-        Credentials {
-            identifier: self.identifier.borrow(),
-            secret: self.secret.borrow(),
-        }
-    }
-}
-
-impl<T: Debug> Debug for Credentials<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        struct Dummy;
-        impl Debug for Dummy {
-            fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-                f.write_str("<hidden>")
-            }
-        }
-
-        f.debug_struct("Credentials")
-            .field("identifier", &self.identifier)
-            .field("secret", &Dummy)
-            .finish()
     }
 }
