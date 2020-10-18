@@ -106,7 +106,7 @@
 //!
 //! See [`Authorize`](authorize/trait.Authorize.html) for more details on the custom derive macro.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.2")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.3.3")]
 #![deny(intra_doc_link_resolution_failure)]
 #![warn(missing_docs, rust_2018_idioms)]
 
