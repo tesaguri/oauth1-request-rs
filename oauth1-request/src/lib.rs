@@ -38,7 +38,7 @@
 //!     oauth::Token::from_parts("consumer_key", "consumer_secret", "token", "token_secret");
 //!
 //! // Create the `Authorization` header.
-//! let authorization_header = oauth::post(oauth::HmacSha1, uri, &token, &request);
+//! let authorization_header = oauth::post(uri, &request, &token, oauth::HmacSha1);
 //! # // Override the above value to pin the nonce and timestamp value.
 //! # let mut builder = oauth::Builder::new(token.client, oauth::HmacSha1);
 //! # builder.token(token.token);
@@ -335,20 +335,20 @@ impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C,
 macro_rules! def_shorthand {
     ($($(#[$attr:meta])* $name:ident($method:expr);)*) => {$(
         $(#[$attr])*
-        pub fn $name<SM, U, C, T, R>(
-            signature_method: SM,
+        pub fn $name<U, R, C, T, SM>(
             uri: U,
-            token: &Token<C, T>,
             request: &R,
+            token: &Token<C, T>,
+            signature_method: SM,
         ) -> String
         where
-            SM: SignatureMethod,
             U: Display,
+            R: Request + ?Sized,
             C: Borrow<str>,
             T: Borrow<str>,
-            R: Request + ?Sized,
+            SM: SignatureMethod,
         {
-            Builder::with_token(token.as_ref(), signature_method).consume($method, uri, request)
+            authorize($method, uri, request, token, signature_method)
         }
     )*};
 }
@@ -398,6 +398,40 @@ def_shorthand! {
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
     trace("TRACE");
+}
+
+/// Authorizes a request to `uri` using the given credentials.
+///
+/// `uri` must not contain a query part, which would result in a wrong signature.
+pub fn authorize<U, R, C, T, SM>(
+    method: &str,
+    uri: U,
+    request: &R,
+    token: &Token<C, T>,
+    signature_method: SM,
+) -> String
+where
+    U: Display,
+    R: Request + ?Sized,
+    C: Borrow<str>,
+    T: Borrow<str>,
+    SM: SignatureMethod,
+{
+    fn inner<U, R, SM>(
+        method: &str,
+        uri: U,
+        request: &R,
+        token: Token<&str, &str>,
+        signature_method: SM,
+    ) -> String
+    where
+        U: Display,
+        R: Request + ?Sized,
+        SM: SignatureMethod,
+    {
+        Builder::with_token(token, signature_method).consume(method, uri, request)
+    }
+    inner(method, uri, request, token.as_ref(), signature_method)
 }
 
 /// Turns a `Request` into an `x-www-form-urlencoded` string.
