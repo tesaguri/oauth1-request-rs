@@ -2,7 +2,7 @@
 
 //! This crate provides a derive macro for [`oauth1_request::Request`][Request]:
 //!
-//! [Request]: https://docs.rs/oauth1-request/0.3/oauth1_request/trait.Request.html
+//! [Request]: https://docs.rs/oauth1-request/0.4/oauth1_request/trait.Request.html
 //!
 //! ```
 //! #[derive(oauth::Request)]
@@ -13,7 +13,7 @@
 //! is enabled (which is on by default).
 //! You should use the re-export instead of depending on this crate directly.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.3.3")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.4.0")]
 
 #[allow(unused_extern_crates)]
 extern crate proc_macro;

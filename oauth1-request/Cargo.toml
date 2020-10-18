@@ -1,6 +1,6 @@
 [package]
 name = "oauth1-request"
-version = "0.3.2"
+version = "0.4.0"
 edition = "2018"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -9,7 +9,7 @@ keywords = ["oauth", "oauth1"]
 categories = ["authentication"]
 homepage = "https://github.com/tesaguri/oauth1-request-rs"
 repository = "https://github.com/tesaguri/oauth1-request-rs"
-documentation = "https://docs.rs/oauth1-request/0.3.2/oauth1_request/"
+documentation = "https://docs.rs/oauth1-request/0.4.0/oauth1_request/"
 description = """
 Yet yet yet another OAuth 1 client library.
 """
@@ -23,7 +23,7 @@ percent-encoding = "2"
 rand = "0.7"
 
 # `derive` feature
-oauth1-request-derive = { version = "0.3", optional = true }
+oauth1-request-derive = { version = "0.4", optional = true }
 
 # `hmac-sha1` feature
 either = { version = "1", optional = true }
@@ -32,7 +32,7 @@ sha-1 = { version = "0.9", optional = true }
 
 [dev-dependencies]
 # Trick to make `proc-macro-crate` work in doctests.
-oauth1-request = { version = "0.3", path = "" }
+oauth1-request = { version = "0.4", path = "" }
 version-sync = "0.9"
 
 [features]
