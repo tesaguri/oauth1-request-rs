@@ -37,7 +37,8 @@ let token =
     oauth::Token::from_parts("consumer_key", "consumer_secret", "token", "token_secret");
 
 // Create the `Authorization` header.
-let authorization_header = oauth::post(oauth::HmacSha1, uri, &token, &request);
+let authorization_header = oauth::post(uri, &request, &token, oauth::HmacSha1);
+// `oauth_nonce` and `oauth_timestamp` vary on each execution.
 assert_eq!(
     authorization_header,
     "OAuth \
