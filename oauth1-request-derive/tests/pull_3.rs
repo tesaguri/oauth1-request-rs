@@ -2,7 +2,7 @@
 
 macro_rules! def_foo {
     ($t:ty) => {
-        #[derive(oauth::Request)]
+        #[derive(oauth1_request::Request)]
         pub struct Foo {
             field: $t,
         }

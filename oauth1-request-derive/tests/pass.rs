@@ -1,6 +1,6 @@
 #![deny(warnings)]
 
-extern crate oauth;
+extern crate oauth1_request as oauth;
 
 use std::fmt::{self, Display, Formatter};
 

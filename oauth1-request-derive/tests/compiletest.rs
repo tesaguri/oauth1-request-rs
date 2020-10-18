@@ -1,3 +1,5 @@
+extern crate compiletest_rs as compiletest;
+
 use std::process::Command;
 use std::{env, fs};
 

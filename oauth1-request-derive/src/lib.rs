@@ -5,6 +5,7 @@
 //! [Request]: https://docs.rs/oauth1-request/0.4/oauth1_request/trait.Request.html
 //!
 //! ```
+//! # extern crate oauth1_request as oauth;
 //! #[derive(oauth::Request)]
 //! # struct Foo {}
 //! ```
@@ -42,6 +43,8 @@ use method_body::MethodBody;
 /// ## Example
 ///
 /// ```
+/// # extern crate oauth1_request as oauth;
+/// #
 /// #[derive(oauth::Request)]
 /// struct CreateItem<'a> {
 ///     name: &'a str,

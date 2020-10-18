@@ -5,6 +5,10 @@ version = "0.0.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 publish = false
 
+[workspace]
+# Exclude the examples from the workspace because it uses features from newest Rust toolchains
+# and breaks the CI on older toolchains.
+
 [[bin]]
 name = "client"
 path = "src/client/main.rs"
