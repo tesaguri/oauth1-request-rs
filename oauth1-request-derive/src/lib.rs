@@ -2,7 +2,7 @@
 
 //! This crate provides a derive macro for [`oauth1_request::Request`][Request]:
 //!
-//! [Request]: https://docs.rs/oauth1-request/0.3/oauth1_request/request/trait.Request.html
+//! [Request]: https://docs.rs/oauth1-request/0.3/oauth1_request/trait.Request.html
 //!
 //! ```
 //! #[derive(oauth::Request)]
