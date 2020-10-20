@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/oauth-credentials.svg)](https://crates.io/crates/oauth-credentials)
 [![docs.rs](https://docs.rs/oauth-credentials/badge.svg)](https://docs.rs/oauth-credentials/)
 
-`oauth-credentials` crate defines a Rust type for the "credentials" pair
+`oauth-credentials` crate defines Rust types related to the "credentials" pair
 ([RFC 5849 section 1.1][rfc]) of the OAuth 1.0 protocol.
 
 [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1

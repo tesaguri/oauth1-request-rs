@@ -1,4 +1,4 @@
-//! Types for representing the credential pairs ([RFC 5849 section 1.1][rfc]) of the OAuth 1.0
+//! Types related to the credential pairs ([RFC 5849 section 1.1][rfc]) of the OAuth 1.0
 //! protocol.
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
@@ -20,15 +20,24 @@ mod serde_imp;
 use std::borrow::Borrow;
 use std::fmt::{self, Debug, Formatter};
 
-/// A "credentials" pair defined in [RFC 5849 section 1.1][rfc].
+/// An OAuth "credentials" pair defined in [RFC 5849 section 1.1][rfc].
 ///
 /// [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
 ///
 /// This type represents:
 ///
-/// - Client credentials (consumer key and secret)
-/// - Temporary credentials (request token and secret)
-/// - Token credentials (access token and secret)
+/// - Client credentials (consumer key and secret) used to authenticate as a client.
+/// - Temporary credentials (request token and secret) which represent an authorization request.
+/// - Token credentials (access token and secret) which represent an access grant from
+/// a resource owner to a client.
+///
+/// In order to make requests on behalf of a resource owner, you (the client) need a set of
+/// client credentials and token credentials, which is represented by the [Token] type.
+///
+/// In a typical authorization flow, you only have client credentials at the beginning. To obtain
+/// token credentials, you first obtain a set of temporary credentials using the client
+/// credentials. And after the resource owner approves the authorization request, you use the
+/// temporary credentials to request a set of token credentials from the server.
 #[derive(Clone, Copy)]
 pub struct Credentials<T> {
     /// The unique identifier part of the credentials pair.
@@ -37,7 +46,7 @@ pub struct Credentials<T> {
     pub secret: T,
 }
 
-/// A set of client credentials and token/temporary credentials used for authorizing requests
+/// A set of OAuth client credentials and token/temporary credentials used for authorizing requests
 /// on behalf of a resource owner.
 #[derive(Clone, Copy, Debug)]
 pub struct Token<C, T> {
