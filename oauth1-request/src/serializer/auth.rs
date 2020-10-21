@@ -215,13 +215,12 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
     fn serialize_oauth_nonce(&mut self) {
         if self.sign.use_nonce() {
             let mut nonce_buf;
-            let nonce = if let Some(n) = self.options.nonce {
-                n
+            if let Some(n) = self.options.nonce {
+                append_to_header!(self, nonce, n);
             } else {
                 nonce_buf = Default::default();
-                gen_nonce(&mut nonce_buf)
-            };
-            append_to_header!(self, nonce, nonce);
+                append_to_header!(self, encoded nonce, gen_nonce(&mut nonce_buf));
+            }
         }
     }
 
