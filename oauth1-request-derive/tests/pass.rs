@@ -290,6 +290,7 @@ assert_expand! {
 
         #[oauth1(skip_if = str::is_empty)]
         #[oauth1(fmt = super::fmt_str)]
+        #[allow(clippy::borrowed_box)]
         deref_arg: &'a Box<String> = &Box::new(String::new()),
     }
     |this, mut ser| {
