@@ -6,6 +6,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      CARGO_TARGET_DIR: target
     strategy:
       fail-fast: false
       matrix:

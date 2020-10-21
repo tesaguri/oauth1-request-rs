@@ -41,3 +41,8 @@ serde_urlencoded = "0.7"
 sha-1 = "0.9"
 tokio = { version = "0.2", features = ["macros"] }
 tower-service = "0.3"
+
+[patch.crates-io]
+oauth-credentials = { path = "../oauth-credentials" }
+oauth1-request = { path = "../oauth1-request" }
+oauth1-request-derive = { path = "../oauth1-request-derive" }
