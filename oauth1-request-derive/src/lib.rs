@@ -14,7 +14,7 @@
 //! is enabled (which is on by default).
 //! You should use the re-export instead of depending on this crate directly.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.4.0")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.4.1")]
 
 #[allow(unused_extern_crates)]
 extern crate proc_macro;
