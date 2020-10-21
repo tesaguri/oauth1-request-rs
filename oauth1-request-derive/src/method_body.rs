@@ -117,10 +117,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                 }
                 if ty_is_option {
                     stmt = quote_spanned! {f.ty.span()=>
-                        if {
-                            let value = &#this.#ident;
-                            ::std::option::Option::is_some(value)
-                        } {
+                        if ::std::option::Option::is_some(&#this.#ident) {
                             #stmt
                         }
                     };
