@@ -119,9 +119,13 @@ jobs:
     strategy:
       matrix:
         toolchain:
+          - '1.0.0'
+          - '1.6.0'
           - '1.8.0'
           - '1.13.0'
         include:
+          - toolchain: '1.0.0'
+            features: std
           - toolchain: '1.13.0'
             features: serde
     steps:
@@ -133,6 +137,17 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
+      - name: Hack up `Cargo.toml` for the extremely old toolchain
+        # These toolchains fail to parse Cargo registry information for `serde`,
+        # so the manifest needs to be rewritten to exclude `serde` dependency.
+        # These toolchains are out of our MSRV guarantee, but we want to be super conservative
+        # and attempt to keep the crate compilable as possible.
+        if: matrix.toolchain == '1.0.0' || matrix.toolchain == '1.6.0'
+        run: |
+          cat <<TOML > oauth-credentials/Cargo.toml
+          package = { name = "oauth-credentials", version = "0.0.0" }
+          features = { std = [] }
+          TOML
       - name: Cache Cargo registry
         uses: actions/cache@v2
         with:
