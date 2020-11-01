@@ -11,6 +11,8 @@
 #![warn(missing_docs, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(all(not(feature = "std"), feature = "alloc"))]
+extern crate alloc;
 #[cfg(not(feature = "std"))]
 extern crate core as std;
 
@@ -19,6 +21,9 @@ mod serde_imp;
 
 use std::borrow::Borrow;
 use std::fmt::{self, Debug, Formatter};
+
+#[cfg(all(not(feature = "std"), feature = "alloc"))]
+use alloc::string::String;
 
 /// An OAuth "credentials" pair defined in [RFC 5849 section 1.1][rfc].
 ///
@@ -39,6 +44,38 @@ use std::fmt::{self, Debug, Formatter};
 /// credentials. And after the resource owner approves the authorization request, you use the
 /// temporary credentials to request a set of token credentials from the server.
 #[derive(Clone, Copy)]
+#[cfg(feature = "alloc")]
+pub struct Credentials<T = String> {
+    /// The unique identifier part of the credentials pair.
+    pub identifier: T,
+    /// The shared secret part of the credentials pair.
+    pub secret: T,
+}
+
+// XXX: These almost-identical (modulo default type param) items should certainly be defined with a
+// macro, but doing so would break the build on toolchains prior to nightly-2016-05-29 (7746a334d).
+// Maybe <https://github.com/rust-lang/rust/pull/33926> is relevant?
+
+/// An OAuth "credentials" pair defined in [RFC 5849 section 1.1][rfc].
+///
+/// [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
+///
+/// This type represents:
+///
+/// - Client credentials (consumer key and secret) used to authenticate as a client.
+/// - Temporary credentials (request token and secret) which represent an authorization request.
+/// - Token credentials (access token and secret) which represent an access grant from
+/// a resource owner to a client.
+///
+/// In order to make requests on behalf of a resource owner, you (the client) need a set of
+/// client credentials and token credentials, which is represented by the [Token] type.
+///
+/// In a typical authorization flow, you only have client credentials at the beginning. To obtain
+/// token credentials, you first obtain a set of temporary credentials using the client
+/// credentials. And after the resource owner approves the authorization request, you use the
+/// temporary credentials to request a set of token credentials from the server.
+#[derive(Clone, Copy)]
+#[cfg(not(feature = "alloc"))]
 pub struct Credentials<T> {
     /// The unique identifier part of the credentials pair.
     pub identifier: T,
@@ -49,7 +86,19 @@ pub struct Credentials<T> {
 /// A set of OAuth client credentials and token/temporary credentials used for authorizing requests
 /// on behalf of a resource owner.
 #[derive(Clone, Copy, Debug)]
-pub struct Token<C, T> {
+#[cfg(feature = "alloc")]
+pub struct Token<C = String, T = C> {
+    /// Client credentials.
+    pub client: Credentials<C>,
+    /// Token/temporary credentials.
+    pub token: Credentials<T>,
+}
+
+/// A set of OAuth client credentials and token/temporary credentials used for authorizing requests
+/// on behalf of a resource owner.
+#[derive(Clone, Copy, Debug)]
+#[cfg(not(feature = "alloc"))]
+pub struct Token<C, T = C> {
     /// Client credentials.
     pub client: Credentials<C>,
     /// Token/temporary credentials.
@@ -140,7 +189,7 @@ impl<C: Borrow<str>, T: Borrow<str>> Token<C, T> {
     }
 
     /// Converts from `&Token<C, T>` to `Token<&str, &str>`.
-    pub fn as_ref(&self) -> Token<&str, &str> {
+    pub fn as_ref(&self) -> Token<&str> {
         Token::new(self.client(), self.token())
     }
 }
@@ -155,7 +204,7 @@ impl<'a, 'b> Token<&'a str, &'b str> {
     }
 }
 
-impl<'a, C: Borrow<str>, T: Borrow<str>> From<&'a Token<C, T>> for Token<&'a str, &'a str> {
+impl<'a, C: Borrow<str>, T: Borrow<str>> From<&'a Token<C, T>> for Token<&'a str> {
     fn from(token: &'a Token<C, T>) -> Self {
         token.as_ref()
     }

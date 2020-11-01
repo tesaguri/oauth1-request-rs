@@ -28,4 +28,11 @@ and as a private dependency of a stable crate.
 
 The minimum supported Rust version of `oauth-credentials` is Rust 1.8.0.
 
-The `serde` Cargo feature requires Rust 1.13.0 or later.
+Some Cargo features require newer Rust toolchain as shown below.
+
+Feature | MSRV
+-|-
+(none) | 1.8.0
+`std` | 1.8.0
+`serde` |  1.13.0
+`alloc` (without `std`) | 1.36.0

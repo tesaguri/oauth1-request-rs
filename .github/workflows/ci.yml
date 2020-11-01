@@ -123,11 +123,14 @@ jobs:
           - '1.6.0'
           - '1.8.0'
           - '1.13.0'
+          - '1.36.0'
         include:
           - toolchain: '1.0.0'
             features: std
           - toolchain: '1.13.0'
             features: serde
+          - toolchain: '1.36.0'
+            features: alloc
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust toolchain
@@ -146,7 +149,7 @@ jobs:
         run: |
           cat <<TOML > oauth-credentials/Cargo.toml
           package = { name = "oauth-credentials", version = "0.0.0" }
-          features = { std = [] }
+          features = { alloc = [], std = ["alloc"] }
           TOML
       - name: Cache Cargo registry
         uses: actions/cache@v2
