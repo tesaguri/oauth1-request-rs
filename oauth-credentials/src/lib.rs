@@ -130,6 +130,32 @@ impl<T: Borrow<str>> Credentials<T> {
     }
 }
 
+impl<T> Credentials<T> {
+    /// Maps a `Credentials<T>` to `Credentials<U>` by applying a function to contained values.
+    ///
+    /// # Example
+    ///
+    /// ```edition2018
+    /// # use oauth_credentials::Credentials;
+    /// # const _: &str = stringify! {
+    /// async fn get_temporary_credentials() -> Credentials { /* ... */ }
+    /// # };
+    /// # async fn f() {
+    /// # async fn get_temporary_credentials() -> Credentials {
+    /// #     Credentials::new("", "").map(Into::into)
+    /// # }
+    /// let boxed: Credentials<Box<str>> = get_temporary_credentials().await.map(Into::into);
+    /// # }
+    /// ```
+    pub fn map<U, F>(self, mut f: F) -> Credentials<U>
+    where
+        F: FnMut(T) -> U,
+        U: Borrow<str>,
+    {
+        Credentials::new(f(self.identifier), f(self.secret))
+    }
+}
+
 impl<'a, T: Borrow<str>> From<&'a Credentials<T>> for Credentials<&'a str> {
     fn from(credentials: &'a Credentials<T>) -> Self {
         credentials.as_ref()
@@ -188,6 +214,92 @@ impl<C: Borrow<str>, T: Borrow<str>> Token<C, T> {
     /// Converts from `&Token<C, T>` to `Token<&str, &str>`.
     pub fn as_ref(&self) -> Token<&str> {
         Token::new(self.client(), self.token())
+    }
+}
+
+impl<C, T> Token<C, T> {
+    /// Maps a `Token<C, T>` to `Token<C2, T>` by applying a function to a contained `client`
+    /// value, leaving a `token` value untouched.
+    ///
+    /// # Example
+    ///
+    /// ```edition2018
+    /// # use std::borrow::Borrow;
+    /// # use oauth_credentials::{Credentials, Token};
+    /// async fn get_token<C: Borrow<str>, T: Borrow<str>>(temporary: Token<C, T>) -> Token<C, String> {
+    ///     // ...
+    /// #     Token::new(temporary.client, Credentials::new("", "").map(Into::into))
+    /// }
+    /// # async fn f() {
+    /// # let temporary = Token::from_parts("", "", "", "");
+    /// let token: Token<&str, String> = get_token(temporary.as_ref()).await;
+    /// let owned: Token = token.map_client(String::from);
+    /// # }
+    /// ```
+    pub fn map_client<C2, F>(self, f: F) -> Token<C2, T>
+    where
+        F: FnMut(C) -> C2,
+        C2: Borrow<str>,
+    {
+        Token {
+            client: self.client.map(f),
+            token: self.token,
+        }
+    }
+
+    /// Maps a `Token<C, T>` to `Token<C, T2>` by applying a function to a contained `token`
+    /// value, leaving a `client` value untouched.
+    ///
+    /// # Example
+    ///
+    /// ```edition2018
+    /// # use std::borrow::Borrow;
+    /// # use oauth_credentials::{Credentials, Token};
+    /// async fn get_token<C: Borrow<str>, T: Borrow<str>>(temporary: Token<C, T>) -> Token<C, String> {
+    ///     // ...
+    /// #     Token::new(temporary.client, Credentials::new("", "").map(Into::into))
+    /// }
+    /// # async fn f() {
+    /// # let temporary = Token::from_parts("", "", "", "").map_client(Into::into);
+    /// let token: Token<Box<str>, String> = get_token(temporary).await;
+    /// let boxed: Token<Box<str>> = token.map_token(Into::into);
+    /// # }
+    /// ```
+    pub fn map_token<T2, F>(self, f: F) -> Token<C, T2>
+    where
+        F: FnMut(T) -> T2,
+        T2: Borrow<str>,
+    {
+        Token {
+            client: self.client,
+            token: self.token.map(f),
+        }
+    }
+}
+
+impl<T> Token<T> {
+    /// Maps a `Token<T, T>` to `Token<U, U>` by applying a function to contained string values.
+    ///
+    /// # Example
+    ///
+    /// ```edition2018
+    /// # use std::borrow::Borrow;
+    /// # use oauth_credentials::Token;
+    /// async fn get_token() -> Token {
+    ///     // ...
+    /// #     Token::from_parts("", "", "", "").map(Into::into)
+    /// }
+    /// # async fn f() {
+    /// let token: Token = get_token().await;
+    /// let boxed: Token<Box<str>> = token.map(Into::into);
+    /// # }
+    /// ```
+    pub fn map<U, F>(self, mut f: F) -> Token<U>
+    where
+        F: FnMut(T) -> U,
+        U: Borrow<str>,
+    {
+        self.map_client(&mut f).map_token(f)
     }
 }
 

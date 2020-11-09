@@ -12,6 +12,9 @@ description = """
 Types for representing the credential pairs of OAuth 1.0.
 """
 
+[package.metadata.docs.rs]
+rustdoc-args = ["--edition", "2018"]
+
 [dependencies]
 serde = { version = "1", default-features = false, optional = true }
 
