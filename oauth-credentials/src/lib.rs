@@ -126,10 +126,7 @@ impl<T: Borrow<str>> Credentials<T> {
 
     /// Converts from `&Credentials<T>` to `Credentials<&str>`.
     pub fn as_ref(&self) -> Credentials<&str> {
-        Credentials {
-            identifier: self.identifier.borrow(),
-            secret: self.secret.borrow(),
-        }
+        Credentials::new(self.identifier(), self.secret())
     }
 }
 
