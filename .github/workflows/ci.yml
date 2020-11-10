@@ -119,15 +119,14 @@ jobs:
     strategy:
       matrix:
         toolchain:
-          # These (officially unsupported) toolchains seem to be incompatible with the semver trick.
-          # - '1.0.0'
-          # - '1.6.0'
+          - '1.0.0'
+          - '1.6.0'
           - '1.8.0'
           - '1.13.0'
           - '1.36.0'
         include:
-          # - toolchain: '1.0.0'
-          #   features: std
+          - toolchain: '1.0.0'
+            features: std
           - toolchain: '1.13.0'
             features: serde
           - toolchain: '1.36.0'
@@ -150,7 +149,8 @@ jobs:
         run: |
           cat <<TOML > oauth-credentials/Cargo.toml
           package = { name = "oauth-credentials", version = "0.0.0" }
-          features = { alloc = [], std = ["alloc"] }
+          dependencies = { oauth-credentials = { version = "0.2", default-features = false } }
+          features = { alloc = ["oauth-credentials/alloc"], std = ["oauth-credentials/std"] }
           TOML
       - name: Cache Cargo registry
         uses: actions/cache@v2
