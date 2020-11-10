@@ -1,13 +1,13 @@
 [package]
 name = "oauth-credentials"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 keywords = ["oauth", "oauth1"]
 categories = ["authentication"]
 repository = "https://github.com/tesaguri/oauth1-request-rs"
-documentation = "https://docs.rs/oauth-credentials/0.1.1/oauth_credentials/"
+documentation = "https://docs.rs/oauth-credentials/0.2.0/oauth_credentials/"
 description = """
 Types for representing the credential pairs of OAuth 1.0.
 """
