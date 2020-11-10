@@ -172,7 +172,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
+          args: --verbose --manifest-path oauth-credentials/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
     name: Test `oauth-credentials`
     runs-on: ubuntu-latest
