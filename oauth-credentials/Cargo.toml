@@ -13,13 +13,9 @@ Types for representing the credential pairs of OAuth 1.0.
 """
 
 [dependencies]
-serde = { version = "1", default-features = false, optional = true }
-
-[dev-dependencies]
-serde_derive = "1"
-serde_json = "1"
-serde_urlencoded = "0.7"
+oauth-credentials = { version = "0.2", default-features = false }
 
 [features]
-alloc = []
-std = ["alloc"]
+alloc = ["oauth-credentials/alloc"]
+std = ["oauth-credentials/std"]
+serde = ["oauth-credentials/serde"]
