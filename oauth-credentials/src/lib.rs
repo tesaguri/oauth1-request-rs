@@ -3,7 +3,7 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
 
-#![doc(html_root_url = "https://docs.rs/oauth-credentials/0.1.1")]
+#![doc(html_root_url = "https://docs.rs/oauth-credentials/0.1.2")]
 
 extern crate oauth_credentials;
 
