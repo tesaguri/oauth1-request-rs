@@ -2,6 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/oauth-credentials.svg)](https://crates.io/crates/oauth-credentials)
 [![docs.rs](https://docs.rs/oauth-credentials/badge.svg)](https://docs.rs/oauth-credentials/)
+[![Rust 1.0.0+](https://img.shields.io/badge/rust-1.0.0%2B-blue.svg)](#section-msrv)
 
 `oauth-credentials` crate defines Rust types related to the "credentials" pair
 ([RFC 5849 section 1.1][rfc]) of the OAuth 1.0 protocol.
@@ -24,7 +25,7 @@ and as a private dependency of a stable crate.
 
 [C-STABLE]: https://rust-lang.github.io/api-guidelines/necessities.html#public-dependencies-of-a-stable-crate-are-stable-c-stable
 
-## MSRV
+## <span id="section-msrv">MSRV</span>
 
 The minimum supported Rust version of `oauth-credentials` is Rust 1.0.0.
 
