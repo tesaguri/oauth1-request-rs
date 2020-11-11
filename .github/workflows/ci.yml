@@ -127,6 +127,14 @@ jobs:
         include:
           - toolchain: '1.0.0'
             features: std
+            # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
+            # because the toolchains do not understand Cargo registry's information for `serde`
+            # (see <https://github.com/rust-lang/cargo/issues/3763>).
+            # So, with these toolchains, we compile a crate named `oauth-credentials-test` instead,
+            # which depends on `oauth-credentials` without `serde` feature.
+            crate_suffix: '-test'
+          - toolchain: '1.6.0'
+            crate_suffix: '-test'
           - toolchain: '1.13.0'
             features: serde
           - toolchain: '1.36.0'
@@ -140,17 +148,6 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Hack up `Cargo.toml` for the extremely old toolchain
-        # These toolchains fail to parse Cargo registry information for `serde`,
-        # so the manifest needs to be rewritten to exclude `serde` dependency.
-        # These toolchains are out of our MSRV guarantee, but we want to be super conservative
-        # and attempt to keep the crate compilable as possible.
-        if: matrix.toolchain == '1.0.0' || matrix.toolchain == '1.6.0'
-        run: |
-          cat <<TOML > oauth-credentials/Cargo.toml
-          package = { name = "oauth-credentials", version = "0.0.0" }
-          features = { alloc = [], std = ["alloc"] }
-          TOML
       - name: Cache Cargo registry
         uses: actions/cache@v2
         with:
@@ -172,7 +169,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --manifest-path oauth-credentials/Cargo.toml --no-default-features --features=${{ matrix.features }}
+          args: --verbose --manifest-path oauth-credentials${{ matrix.crate_suffix }}/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
     name: Test `oauth-credentials`
     runs-on: ubuntu-latest

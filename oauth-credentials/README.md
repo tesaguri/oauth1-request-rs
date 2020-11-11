@@ -26,13 +26,19 @@ and as a private dependency of a stable crate.
 
 ## MSRV
 
-The minimum supported Rust version of `oauth-credentials` is Rust 1.8.0.
+The minimum supported Rust version of `oauth-credentials` is Rust 1.0.0.
 
 Some Cargo features require newer Rust toolchain as shown below.
 
 Feature | MSRV
 -|-
-(none) | 1.8.0
-`std` | 1.8.0
+(none) | 1.6.0
+`std` (default) | 1.0.0
 `serde` |  1.13.0
 `alloc` (without `std`) | 1.36.0
+
+Note that if your crate uses the `serde` feature (even if optionally!), it cannot be compiled
+directly with Rust 1.7.x and older due to [rust-lang/cargo#3763], but it can somehow be compiled as
+a non-root node of a dependency tree.
+
+[rust-lang/cargo#3763]: https://github.com/rust-lang/cargo/issues/3763

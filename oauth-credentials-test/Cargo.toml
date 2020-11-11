@@ -1,0 +1,15 @@
+[package]
+name = "oauth-credentials-test"
+version = "0.0.0"
+authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
+description = "A hack to make the CI work for Rust 1.7.0 and older."
+publish = false
+
+[dependencies]
+oauth-credentials = { path = "../oauth-credentials", default-features = false }
+
+[features]
+default = ["std"]
+
+alloc = ["oauth-credentials/alloc"]
+std = ["oauth-credentials/std"]
