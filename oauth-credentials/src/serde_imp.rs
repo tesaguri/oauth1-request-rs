@@ -31,7 +31,7 @@ const SECRET: &'static str = "oauth_token_secret";
 /// # fn main() -> Result<(), serde_urlencoded::de::Error> {
 /// // Response body from a Temporary Credential Request endpoint.
 /// let response = b"oauth_token=token&oauth_token_secret=secret&oauth_callback_confirmed=true";
-/// let deserialized: Credentials<String> = serde_urlencoded::from_bytes(response)?;
+/// let deserialized: Credentials = serde_urlencoded::from_bytes(response)?;
 /// assert!(matches!(
 ///     deserialized.as_ref(),
 ///     Credentials {
@@ -72,7 +72,7 @@ const SECRET: &'static str = "oauth_token_secret";
 /// }
 ///
 /// #[derive(Deserialize)]
-/// struct Helper(#[serde(with = "CredentialsDef")] Credentials<String>);
+/// struct Helper(#[serde(with = "CredentialsDef")] Credentials);
 ///
 /// # fn main() -> Result<(), serde_json::Error> {
 /// let json = r#"{"client_identifier":"client","client_secret":"secret"}"#;
