@@ -26,7 +26,7 @@ struct Test {
     fmt_arg_mismatch: (),
 
     #[oauth1(fmt = fmt_trait_bound_unsatisfied)]
-    //~^ ERROR: the trait bound `(): std::convert::AsRef<str>` is not satisfied
+    //~^ ERROR: the trait bound `(): AsRef<str>` is not satisfied
     fmt_trait_bound_unsatisfied: (),
 
     #[oauth1(fmt = fmt_ret_mismatch)]
@@ -42,7 +42,7 @@ struct Test {
     #[oauth1(option = true)]
     option_not_option: u8,
     //~^ ERROR: mismatched types
-    //~| expected enum `std::option::Option`, found `u8`
+    //~| expected enum `Option`, found `u8`
 
     #[oauth1(skip_if = skip_if_too_many_args)]
     //~^ ERROR: mismatched types
@@ -59,12 +59,12 @@ struct Test {
     skip_if_arg_mismatch: u8,
 
     #[oauth1(skip_if = skip_if_trait_bound_unsatisfied)]
-    //~^ ERROR: the trait bound `u8: std::convert::AsRef<str>` is not satisfied
+    //~^ ERROR: the trait bound `u8: AsRef<str>` is not satisfied
     skip_if_trait_bound_unsatisfied: u8,
 
     #[oauth1(skip_if = skip_if_ret_mismatch)]
     //~^ ERROR: mismatched types
-    //~| expected `bool`, found enum `std::option::Option`
+    //~| expected `bool`, found enum `Option`
     skip_if_ret_mismatch: u8,
 
     #[oauth1(skip_if = NOT_FN)]
