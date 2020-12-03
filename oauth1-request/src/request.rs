@@ -1,6 +1,5 @@
 //! Requests to be authorized with OAuth.
 
-use std::borrow::Borrow;
 use std::collections::BTreeSet;
 
 use crate::serializer::{Serializer, SerializerExt};
@@ -57,7 +56,7 @@ impl Request for () {
     }
 }
 
-impl<K: Borrow<str>, V: Borrow<str>> Request for BTreeSet<(K, V)> {
+impl<K: AsRef<str>, V: AsRef<str>> Request for BTreeSet<(K, V)> {
     fn serialize<S>(&self, mut serializer: S) -> S::Output
     where
         S: Serializer,
@@ -65,7 +64,7 @@ impl<K: Borrow<str>, V: Borrow<str>> Request for BTreeSet<(K, V)> {
         let mut next_param = OAuthParameter::default();
 
         for (k, v) in self {
-            let (k, v) = (k.borrow(), v.borrow());
+            let (k, v) = (k.as_ref(), v.as_ref());
             while next_param < *k {
                 next_param.serialize(&mut serializer);
                 next_param = next_param.next();

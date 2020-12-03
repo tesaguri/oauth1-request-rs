@@ -173,7 +173,6 @@ pub use request::Request;
 pub use signature_method::HmacSha1;
 pub use signature_method::Plaintext;
 
-use std::borrow::Borrow;
 use std::fmt::{Debug, Display};
 use std::num::NonZeroU64;
 use std::str;
@@ -191,7 +190,7 @@ pub struct Builder<'a, SM, C = String, T = C> {
     options: auth::Options<'a>,
 }
 
-impl<'a, SM: SignatureMethod, C: Borrow<str>, T: Borrow<str>> Builder<'a, SM, C, T> {
+impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T> {
     /// Creates a `Builder` that signs requests using the specified client credentials
     /// and signature method.
     pub fn new(client: Credentials<C>, signature_method: SM) -> Self {
@@ -406,8 +405,8 @@ macro_rules! def_shorthand {
         where
             U: Display,
             R: Request + ?Sized,
-            C: Borrow<str>,
-            T: Borrow<str>,
+            C: AsRef<str>,
+            T: AsRef<str>,
             SM: SignatureMethod,
         {
             authorize($method, uri, request, token, signature_method)
@@ -475,8 +474,8 @@ pub fn authorize<U, R, C, T, SM>(
 where
     U: Display,
     R: Request + ?Sized,
-    C: Borrow<str>,
-    T: Borrow<str>,
+    C: AsRef<str>,
+    T: AsRef<str>,
     SM: SignatureMethod,
 {
     fn inner<U, R, SM>(

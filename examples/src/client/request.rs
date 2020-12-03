@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use http::header::{HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use oauth_credentials::Token;
 use tower_service::Service;
@@ -25,8 +23,8 @@ macro_rules! request {
                 http: S,
             ) -> S::Future
             where
-                C: std::borrow::Borrow<str>,
-                T: std::borrow::Borrow<str>,
+                C: AsRef<str>,
+                T: AsRef<str>,
                 S: tower_service::Service<http::Request<B>>,
                 B: Default + From<Vec<u8>>,
             {
@@ -49,8 +47,8 @@ pub trait SendRequest: oauth::Request {
 
     fn send<C, T, S, B>(&self, token: &Token<C, T>, http: S) -> S::Future
     where
-        C: Borrow<str>,
-        T: Borrow<str>,
+        C: AsRef<str>,
+        T: AsRef<str>,
         S: Service<http::Request<B>>,
         B: Default + From<Vec<u8>>,
     {
