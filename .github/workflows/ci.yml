@@ -221,3 +221,40 @@ jobs:
         with:
           command: test
           args: --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
+  min-deps:
+    name: Check with `-Z minimal-versions`
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+        id: toolchain
+      - name: Cache Cargo registry
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry-min-deps-${{ runner.os }}-${{ hashFiles('Cargo.*') }}
+          restore-keys: |
+            cargo-registry-min-deps-${{ runner.os }}-
+      - name: Cache Cargo build
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: cargo-target-min-deps-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.*') }}
+          restore-keys: |
+            cargo-target-min-deps-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - name: Cargo update
+        uses: actions-rs/cargo@v1
+        with:
+          command: update
+          args: -Z minimal-versions
+        env:
+          RUSTC_BOOTSTRAP: 1
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --verbose --all-features
