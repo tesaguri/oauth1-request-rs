@@ -35,68 +35,13 @@ use syn::{
 use field::Field;
 use method_body::MethodBody;
 
-/// A derive macro for [`Request`](trait.Request.html) trait.
+/// A derive macro for [`oauth1_request::Request`][Request] trait.
 ///
-/// The derive macro uses the struct's field names and `Display` implementation of the values as
-/// the keys and values of the parameter pairs of the `Request`.
+/// [Request]: https://docs.rs/oauth1-request/0.4/oauth1_request/trait.Request.html
 ///
-/// ## Example
+/// See the [documentation] on the `oauth1_request` crate.
 ///
-/// ```
-/// # extern crate oauth1_request as oauth;
-/// #
-/// #[derive(oauth::Request)]
-/// struct CreateItem<'a> {
-///     name: &'a str,
-///     #[oauth1(rename = "type")]
-///     kind: Option<u32>,
-///     #[oauth1(skip_if = str::is_empty)]
-///     note: &'a str,
-/// }
-///
-/// let request = CreateItem {
-///     name: "test",
-///     kind: Some(42),
-///     note: "",
-/// };
-///
-/// assert_eq!(oauth::to_form_urlencoded(&request), "name=test&type=42");
-/// ```
-///
-/// ## Field attributes
-///
-/// You can customize the behavior of the derive macro with the following field attributes:
-///
-/// - `#[oauth1(encoded)]`
-///
-/// Do not percent encode the value when serializing it.
-///
-/// - `#[oauth1(fmt = path)]`
-///
-/// Use the formatting function at `path` instead of `Display::fmt` when serializing the value.
-/// The function must be callable as `fn(&T, &mut Formatter<'_>) -> fmt::Result`
-/// (same as `Display::fmt`).
-///
-/// - `#[oauth1(option = true)]` (or `#[oauth1(option = false)]`)
-///
-/// If set to `true`, skip the field when the value is `None` or use the unwrapped value otherwise.
-/// The value's type must be `Option<T>` in this case.
-///
-/// When the field's type name is `Option<_>`, the attribute is implicitly set to `true`.
-/// Use `#[oauth1(option = false)]` if you need to opt out of that behavior.
-///
-/// - `#[oauth1(rename = "name")]`
-///
-/// Use the given string as the parameter's key. The given string must be URI-safe.
-///
-/// - `#[oauth1(skip)]`
-///
-/// Do not serialize the field.
-///
-/// - `#[oauth1(skip_if = path)]`
-///
-/// Call the function at `path` and do not serialize the field if the function returns `true`.
-/// The function must be callable as `fn(&T) -> bool`.
+/// [documentation]: https://docs.rs/oauth1-request/0.4/oauth1_request/derive.Request.html
 #[proc_macro_error]
 #[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

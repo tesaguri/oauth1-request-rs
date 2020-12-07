@@ -100,6 +100,68 @@ pub mod signature_method;
 
 mod request;
 
+/// A derive macro for [`Request`] trait.
+///
+/// The derive macro uses the struct's field names and `Display` implementation of the values as
+/// the keys and values of the parameter pairs of the `Request`.
+///
+/// ## Example
+///
+/// ```
+/// # extern crate oauth1_request as oauth;
+/// #
+/// #[derive(oauth::Request)]
+/// struct CreateItem<'a> {
+///     name: &'a str,
+///     #[oauth1(rename = "type")]
+///     kind: Option<u32>,
+///     #[oauth1(skip_if = str::is_empty)]
+///     note: &'a str,
+/// }
+///
+/// let request = CreateItem {
+///     name: "test",
+///     kind: Some(42),
+///     note: "",
+/// };
+///
+/// assert_eq!(oauth::to_form_urlencoded(&request), "name=test&type=42");
+/// ```
+///
+/// ## Field attributes
+///
+/// You can customize the behavior of the derive macro with the following field attributes:
+///
+/// - `#[oauth1(encoded)]`
+///
+/// Do not percent encode the value when serializing it.
+///
+/// - `#[oauth1(fmt = path)]`
+///
+/// Use the formatting function at `path` instead of `Display::fmt` when serializing the value.
+/// The function must be callable as `fn(&T, &mut Formatter<'_>) -> fmt::Result`
+/// (same as `Display::fmt`).
+///
+/// - `#[oauth1(option = true)]` (or `#[oauth1(option = false)]`)
+///
+/// If set to `true`, skip the field when the value is `None` or use the unwrapped value otherwise.
+/// The value's type must be `Option<T>` in this case.
+///
+/// When the field's type name is `Option<_>`, the attribute is implicitly set to `true`.
+/// Use `#[oauth1(option = false)]` if you need to opt out of that behavior.
+///
+/// - `#[oauth1(rename = "name")]`
+///
+/// Use the given string as the parameter's key. The given string must be URI-safe.
+///
+/// - `#[oauth1(skip)]`
+///
+/// Do not serialize the field.
+///
+/// - `#[oauth1(skip_if = path)]`
+///
+/// Call the function at `path` and do not serialize the field if the function returns `true`.
+/// The function must be callable as `fn(&T) -> bool`.
 #[cfg(feature = "derive")]
 #[doc(inline)]
 pub use oauth1_request_derive::Request;
