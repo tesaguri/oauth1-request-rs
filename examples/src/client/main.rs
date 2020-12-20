@@ -1,7 +1,6 @@
 mod auth;
 #[macro_use]
 mod request;
-mod util;
 
 use futures::prelude::*;
 use hyper::client::{Client, ResponseFuture};

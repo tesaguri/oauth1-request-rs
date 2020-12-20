@@ -3,13 +3,10 @@
 use std::borrow::Borrow;
 use std::fmt::Debug;
 
-use bytes::Buf;
-use futures::TryStreamExt;
+use bytes::Bytes;
 use http::header::AUTHORIZATION;
 use oauth_credentials::Credentials;
 use tower_service::Service;
-
-use crate::util::BodyExt;
 
 pub async fn temporary_credentials<T, S, B>(
     client: &Credentials<T>,
@@ -54,22 +51,17 @@ where
     serde_urlencoded::from_bytes(&body).unwrap()
 }
 
-async fn send_request<S, B>(uri: http::Uri, authorization: String, mut http: S) -> Vec<u8>
+async fn send_request<S, B>(uri: http::Uri, authorization: String, mut http: S) -> Bytes
 where
     S: Service<http::Request<B>, Response = http::Response<B>>,
     S::Error: Debug,
-    B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
+    B: http_body::Body<Error = S::Error> + Default,
 {
     let req = http::Request::post(uri)
         .header(AUTHORIZATION, authorization)
         .body(B::default())
         .unwrap();
-
-    let body = http.call(req).await.unwrap().into_body().into_stream();
-    body.try_fold(Vec::new(), |mut acc, buf| {
-        acc.extend(buf.bytes());
-        async { Ok(acc) }
-    })
-    .await
-    .unwrap()
+    hyper::body::to_bytes(http.call(req).await.unwrap())
+        .await
+        .unwrap()
 }

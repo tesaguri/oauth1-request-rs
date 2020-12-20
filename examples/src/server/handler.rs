@@ -1,11 +1,7 @@
 use std::borrow::Cow;
-use std::cmp;
-use std::convert::TryFrom;
 use std::fmt::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use futures::TryStreamExt;
-use headers::{ContentLength, HeaderMapExt};
 use hmac::{Hmac, Mac, NewMac};
 use http::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use http::uri::Authority;
@@ -143,9 +139,9 @@ where
         .get(CONTENT_TYPE)
         .map_or(false, |v| v == APPLICATION_WWW_FORM_URLENCODED)
     {
-        read_to_vec(&mut req).await.unwrap()
+        hyper::body::to_bytes(&mut req).await.unwrap()
     } else {
-        Vec::new()
+        Default::default()
     };
 
     let params = if let Some(params) = collect_params(&req, &form) {
@@ -336,21 +332,6 @@ where
 
         Ok(())
     }
-}
-
-/// Reads the request body into a vector.
-async fn read_to_vec(req: &mut Request<Body>) -> hyper::Result<Vec<u8>> {
-    let capacity = req
-        .headers()
-        .typed_get::<ContentLength>()
-        .and_then(|v| usize::try_from(v.0).ok())
-        .map_or(0, |n| cmp::max(n, 4096));
-    req.body_mut()
-        .try_fold(Vec::with_capacity(capacity), |mut acc, chunk| {
-            acc.extend_from_slice(&chunk);
-            async { Ok(acc) }
-        })
-        .await
 }
 
 /// Collects form/query parameters into a vector.
