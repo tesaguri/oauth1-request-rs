@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "oauth-credentials",
-  "oauth-credentials-test",
   "oauth1-request",
   "oauth1-request-derive",
 ]

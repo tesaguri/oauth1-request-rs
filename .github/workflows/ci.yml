@@ -165,6 +165,8 @@ jobs:
             cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
             cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
             cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      # Remove the virtual manifest because Rust 1.13.0 run fails when built as a workspace member.
+      - run: rm Cargo.toml
       - name: Build `oauth-credentials`
         uses: actions-rs/cargo@v1
         with:
