@@ -19,7 +19,6 @@ extern crate core as std;
 #[cfg(feature = "serde")]
 mod serde_imp;
 
-use std::borrow::Borrow;
 use std::fmt::{self, Debug, Formatter};
 
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
@@ -105,7 +104,7 @@ pub struct Token<C, T = C> {
     pub token: Credentials<T>,
 }
 
-impl<T: Borrow<str>> Credentials<T> {
+impl<T: AsRef<str>> Credentials<T> {
     /// Creates a new `Credentials`.
     pub fn new(identifier: T, secret: T) -> Self {
         Credentials {
@@ -116,12 +115,12 @@ impl<T: Borrow<str>> Credentials<T> {
 
     /// Returns the unique identifier part of the credentials pair.
     pub fn identifier(&self) -> &str {
-        self.identifier.borrow()
+        self.identifier.as_ref()
     }
 
     /// Returns the shared secret part of the credentials pair.
     pub fn secret(&self) -> &str {
-        self.secret.borrow()
+        self.secret.as_ref()
     }
 
     /// Converts from `&Credentials<T>` to `Credentials<&str>`.
@@ -150,13 +149,13 @@ impl<T> Credentials<T> {
     pub fn map<U, F>(self, mut f: F) -> Credentials<U>
     where
         F: FnMut(T) -> U,
-        U: Borrow<str>,
+        U: AsRef<str>,
     {
         Credentials::new(f(self.identifier), f(self.secret))
     }
 }
 
-impl<'a, T: Borrow<str>> From<&'a Credentials<T>> for Credentials<&'a str> {
+impl<'a, T: AsRef<str>> From<&'a Credentials<T>> for Credentials<&'a str> {
     fn from(credentials: &'a Credentials<T>) -> Self {
         credentials.as_ref()
     }
@@ -185,7 +184,7 @@ impl<T: Debug> Debug for Credentials<T> {
     }
 }
 
-impl<C: Borrow<str>, T: Borrow<str>> Token<C, T> {
+impl<C: AsRef<str>, T: AsRef<str>> Token<C, T> {
     /// Creates a new `Token`.
     pub fn new(client: Credentials<C>, token: Credentials<T>) -> Self {
         Token {
@@ -224,9 +223,8 @@ impl<C, T> Token<C, T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use std::borrow::Borrow;
     /// # use oauth_credentials::{Credentials, Token};
-    /// async fn get_token<C: Borrow<str>, T: Borrow<str>>(temporary: Token<C, T>) -> Token<C, String> {
+    /// async fn get_token<C: AsRef<str>, T: AsRef<str>>(temporary: Token<C, T>) -> Token<C, String> {
     ///     // ...
     /// #     Token::new(temporary.client, Credentials::new("", "").map(Into::into))
     /// }
@@ -239,7 +237,7 @@ impl<C, T> Token<C, T> {
     pub fn map_client<C2, F>(self, f: F) -> Token<C2, T>
     where
         F: FnMut(C) -> C2,
-        C2: Borrow<str>,
+        C2: AsRef<str>,
     {
         Token {
             client: self.client.map(f),
@@ -253,9 +251,8 @@ impl<C, T> Token<C, T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use std::borrow::Borrow;
     /// # use oauth_credentials::{Credentials, Token};
-    /// async fn get_token<C: Borrow<str>, T: Borrow<str>>(temporary: Token<C, T>) -> Token<C, String> {
+    /// async fn get_token<C: AsRef<str>, T: AsRef<str>>(temporary: Token<C, T>) -> Token<C, String> {
     ///     // ...
     /// #     Token::new(temporary.client, Credentials::new("", "").map(Into::into))
     /// }
@@ -268,7 +265,7 @@ impl<C, T> Token<C, T> {
     pub fn map_token<T2, F>(self, f: F) -> Token<C, T2>
     where
         F: FnMut(T) -> T2,
-        T2: Borrow<str>,
+        T2: AsRef<str>,
     {
         Token {
             client: self.client,
@@ -283,7 +280,6 @@ impl<T> Token<T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use std::borrow::Borrow;
     /// # use oauth_credentials::Token;
     /// async fn get_token() -> Token {
     ///     // ...
@@ -297,7 +293,7 @@ impl<T> Token<T> {
     pub fn map<U, F>(self, mut f: F) -> Token<U>
     where
         F: FnMut(T) -> U,
-        U: Borrow<str>,
+        U: AsRef<str>,
     {
         self.map_client(&mut f).map_token(f)
     }
@@ -305,7 +301,7 @@ impl<T> Token<T> {
 
 impl<'a, 'b> Token<&'a str, &'b str> {
     /// Creates a new `Token<&str, &str>` from a pair of `&Credentials<_>`.
-    pub fn from_ref<C: Borrow<str>, T: Borrow<str>>(
+    pub fn from_ref<C: AsRef<str>, T: AsRef<str>>(
         client: &'a Credentials<C>,
         token: &'b Credentials<T>,
     ) -> Self {
@@ -313,7 +309,7 @@ impl<'a, 'b> Token<&'a str, &'b str> {
     }
 }
 
-impl<'a, C: Borrow<str>, T: Borrow<str>> From<&'a Token<C, T>> for Token<&'a str> {
+impl<'a, C: AsRef<str>, T: AsRef<str>> From<&'a Token<C, T>> for Token<&'a str> {
     fn from(token: &'a Token<C, T>) -> Self {
         token.as_ref()
     }

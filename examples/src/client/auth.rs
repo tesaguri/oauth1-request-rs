@@ -1,6 +1,5 @@
 //! Functions to retrieve token credentials from the server.
 
-use std::borrow::Borrow;
 use std::fmt::Debug;
 
 use bytes::Bytes;
@@ -14,7 +13,7 @@ pub async fn temporary_credentials<T, S, B>(
     http: S,
 ) -> Credentials<Box<str>>
 where
-    T: Borrow<str>,
+    T: AsRef<str>,
     S: Service<http::Request<B>, Response = http::Response<B>>,
     S::Error: Debug,
     B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
@@ -35,8 +34,8 @@ pub async fn token_credentials<C, T, S, B>(
     http: S,
 ) -> Credentials<Box<str>>
 where
-    C: Borrow<str>,
-    T: Borrow<str>,
+    C: AsRef<str>,
+    T: AsRef<str>,
     S: Service<http::Request<B>, Response = http::Response<B>>,
     S::Error: Debug,
     B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
