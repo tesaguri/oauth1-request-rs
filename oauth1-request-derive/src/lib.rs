@@ -2,7 +2,7 @@
 
 //! This crate provides a derive macro for [`oauth1_request::Request`][Request]:
 //!
-//! [Request]: https://docs.rs/oauth1-request/0.4/oauth1_request/trait.Request.html
+//! [Request]: https://docs.rs/oauth1-request/0.5/oauth1_request/trait.Request.html
 //!
 //! ```
 //! # extern crate oauth1_request as oauth;
@@ -37,11 +37,11 @@ use method_body::MethodBody;
 
 /// A derive macro for [`oauth1_request::Request`][Request] trait.
 ///
-/// [Request]: https://docs.rs/oauth1-request/0.4/oauth1_request/trait.Request.html
+/// [Request]: https://docs.rs/oauth1-request/0.5/oauth1_request/trait.Request.html
 ///
 /// See the [documentation] on the `oauth1_request` crate.
 ///
-/// [documentation]: https://docs.rs/oauth1-request/0.4/oauth1_request/derive.Request.html
+/// [documentation]: https://docs.rs/oauth1-request/0.5/oauth1_request/derive.Request.html
 #[proc_macro_error]
 #[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

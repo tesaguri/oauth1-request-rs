@@ -23,5 +23,5 @@ syn = { version = "1", features = ["full"] }
 
 [dev-dependencies]
 compiletest_rs = "0.5"
-oauth1-request = "0.4"
+oauth1-request = "0.5"
 version-sync = "0.9"

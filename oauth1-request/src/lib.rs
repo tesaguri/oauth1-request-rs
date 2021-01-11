@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! oauth = { version = "0.4", package = "oauth1-request" }
+//! oauth = { version = "0.5", package = "oauth1-request" }
 //! ```
 //!
 //! For brevity, we refer to the crate name as `oauth` throughout the documentation,
@@ -88,7 +88,7 @@
 //!
 //! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.4.3")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.0")]
 #![deny(broken_intra_doc_links)]
 #![warn(missing_docs, rust_2018_idioms)]
 
