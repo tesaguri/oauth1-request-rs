@@ -3,7 +3,7 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
 
-#![doc(html_root_url = "https://docs.rs/oauth-credentials/0.2.1")]
+#![doc(html_root_url = "https://docs.rs/oauth-credentials/0.3.0")]
 #![cfg_attr(feature = "cargo-clippy", allow(renamed_and_removed_lints))]
 #![cfg_attr(feature = "cargo-clippy", allow(redundant_field_names))]
 #![cfg_attr(feature = "cargo-clippy", allow(redundant_static_lifetimes))]

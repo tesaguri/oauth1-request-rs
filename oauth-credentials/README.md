@@ -13,10 +13,9 @@
 
 The goal of `oauth-credentials` is to provide a stable foundation for OAuth implementations.
 
-The crate is still unstable in the sense of Semantic Versioning. ~However, we are not planning to
+The crate is still unstable in the sense of Semantic Versioning. However, we are not planning to
 make any breaking change and are going to publish the API as it is as version 1.0.0 using the
-[semver trick] unless we find a flaw in the API significant enough to justify a breaking change.~
-Update: Version 0.3 will contain a breaking change. See [#5] for details.
+[semver trick] unless we find a flaw in the API significant enough to justify a breaking change.
 
 [semver trick]: https://github.com/dtolnay/semver-trick
 [#5]: https://github.com/tesaguri/oauth1-request-rs/pull/5
