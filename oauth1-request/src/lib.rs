@@ -168,18 +168,18 @@ pub use oauth1_request_derive::Request;
 #[doc(no_inline)]
 pub use oauth_credentials::{Credentials, Token};
 
-pub use request::Request;
+pub use self::request::Request;
 #[cfg(feature = "hmac-sha1")]
-pub use signature_method::HmacSha1;
-pub use signature_method::Plaintext;
+pub use self::signature_method::HmacSha1;
+pub use self::signature_method::Plaintext;
 
 use std::fmt::{Debug, Display};
 use std::num::NonZeroU64;
 use std::str;
 
-use serializer::auth::{self, Authorizer};
-use serializer::Urlencoder;
-use signature_method::SignatureMethod;
+use self::serializer::auth::{self, Authorizer};
+use self::serializer::Urlencoder;
+use self::signature_method::SignatureMethod;
 
 /// A builder for OAuth `Authorization` header string.
 #[derive(Clone, Debug)]

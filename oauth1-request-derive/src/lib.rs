@@ -32,8 +32,8 @@ use syn::{
     Ident,
 };
 
-use field::Field;
-use method_body::MethodBody;
+use self::field::Field;
+use self::method_body::MethodBody;
 
 /// A derive macro for [`oauth1_request::Request`][Request] trait.
 ///

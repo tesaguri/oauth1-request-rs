@@ -9,7 +9,7 @@
 cfg_if::cfg_if! {
     if #[cfg(feature = "hmac-sha1")] {
         pub mod hmac_sha1;
-        pub use hmac_sha1::HmacSha1;
+        pub use self::hmac_sha1::HmacSha1;
     }
 }
 
@@ -19,8 +19,8 @@ pub mod plaintext;
 #[cfg(feature = "either")]
 mod either;
 
-pub use identity::Identity;
-pub use plaintext::Plaintext;
+pub use self::identity::Identity;
+pub use self::plaintext::Plaintext;
 
 use std::fmt::{Display, Write};
 
