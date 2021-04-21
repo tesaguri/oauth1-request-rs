@@ -35,6 +35,9 @@ sha-1 = { version = "0.9", optional = true }
 oauth1-request = { version = "0.5", path = "", default-features = false }
 version-sync = "0.9"
 
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+js-sys = "0.3"
+
 [features]
 default = ["derive", "hmac-sha1"]
 derive = ["oauth1-request-derive"]
