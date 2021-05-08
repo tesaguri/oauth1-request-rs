@@ -55,8 +55,8 @@ macro_rules! assert_expand {
                 $($ty_param: std::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
             {
-                fn expected(&self, auth: Authorizer<Identity>) -> String {
-                    let expand_to: fn(&Self, Authorizer<Identity>) -> _ = $expand_to;
+                fn expected(&self, auth: Authorizer<'_, Identity>) -> String {
+                    let expand_to: fn(&Self, Authorizer<'_, Identity>) -> _ = $expand_to;
                     expand_to(self, auth)
                 }
             }
@@ -277,7 +277,7 @@ assert_expand! {
         #[oauth1(option = false, fmt = super::fmt_ignore)]
         option_false: Option<()>,
 
-        #[oauth1(skip_if = std::any::Any::is::<&'static str>)]
+        #[oauth1(skip_if = <dyn std::any::Any>::is::<&'static str>)]
         #[oauth1(fmt = std::fmt::Debug::fmt)]
         trait_item: T,
 
@@ -332,6 +332,7 @@ fn tautology<T>(_: &T) -> bool {
     true
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn fmt_ignore<T>(_: &T, _: &mut Formatter<'_>) -> fmt::Result {
     Ok(())
 }
