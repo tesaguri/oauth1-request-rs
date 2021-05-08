@@ -237,7 +237,6 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
             } else {
                 match SystemTime::now().duration_since(UNIX_EPOCH) {
                     Ok(d) => d.as_secs(),
-                    #[cold]
                     Err(_) => 1,
                 }
             };
