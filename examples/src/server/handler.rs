@@ -268,7 +268,7 @@ where
                     if let Some(t) = token {
                         key.extend(t.secret.as_bytes());
                     }
-                    Hmac::<Sha1>::new_varkey(&key).unwrap()
+                    Hmac::<Sha1>::new_from_slice(&key).unwrap()
                 };
 
                 let base = create_base_string(&req, &params);
