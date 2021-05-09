@@ -29,22 +29,7 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-test-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-test-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - run: echo 'RUSTFLAGS=--allow unknown_lints' >> $GITHUB_ENV
         if: matrix.toolchain == '1.41.0'
       - name: Build `oauth1-request`
@@ -82,22 +67,7 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-derive-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-derive-test-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-derive-test-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - name: Build `oauth1-request-derive`
         uses: actions-rs/cargo@v1
         with:
@@ -148,23 +118,7 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-credentials-msrv-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-credentials-msrv-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-registry-credentials-msrv-${{ steps.toolchain.outputs.rustc_hash }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - uses: actions/checkout@v2
         with:
           repository: rust-lang/crates.io-index
@@ -209,23 +163,7 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-credentials-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-credentials-test-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-credentials-test-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - name: Build `oauth-credentials`
         uses: actions-rs/cargo@v1
         with:
@@ -247,20 +185,7 @@ jobs:
           toolchain: stable
           profile: minimal
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-min-deps-${{ runner.os }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-min-deps-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-min-deps-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-min-deps-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - name: Cargo update
         uses: actions-rs/cargo@v1
         with:
