@@ -165,6 +165,20 @@ jobs:
             cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
             cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
             cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: actions/checkout@v2
+        with:
+          repository: rust-lang/crates.io-index
+          ref: 46a429eac9f70fd7281922780d7dd42e2fb7ab77
+          path: crates.io-index
+      - run: |
+          # Remove the virtual manifest because Rust 1.13.0 run fails when built as a workspace member.
+          rm Cargo.toml
+          # Reference: <https://github.com/mcgoo/vcpkg-rs/blob/f75707b/.github/workflows/rust-1.12.yml>
+          mkdir -p oauth-credentials/.cargo
+          cat <<EOF >> oauth-credentials/.cargo/config
+          [source.crates-io]
+          registry = "file://$GITHUB_WORKSPACE/crates.io-index"
+          EOF
       - name: Build `oauth-credentials`
         uses: actions-rs/cargo@v1
         with:
