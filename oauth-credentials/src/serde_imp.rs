@@ -145,7 +145,7 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Credentials<T> {
         let visitor = Visitor {
             marker: PhantomData,
         };
-        d.deserialize_struct(CREDENTIALS, &FIELDS, visitor)
+        d.deserialize_struct(CREDENTIALS, FIELDS, visitor)
     }
 }
 

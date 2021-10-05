@@ -24,6 +24,7 @@ mod method_body;
 mod util;
 
 use proc_macro2::{Span, TokenStream};
+use proc_macro_crate::FoundCrate;
 use proc_macro_error::{abort, abort_if_dirty, emit_error, proc_macro_error};
 use quote::quote;
 use syn::spanned::Spanned;
@@ -57,7 +58,11 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
     let dummy = format!("_impl_ToOAuth1Request_for_{}", name);
     let dummy = Ident::new(&dummy, Span::call_site());
 
-    let krate = proc_macro_crate::crate_name("oauth1-request").unwrap();
+    let krate = match proc_macro_crate::crate_name("oauth1-request").unwrap() {
+        FoundCrate::Name(krate) => krate,
+        // This is used in `oauth1_request`'s doctests.
+        FoundCrate::Itself => std::env::var("CARGO_CRATE_NAME").unwrap(),
+    };
     let krate = Ident::new(&krate, Span::call_site());
 
     add_trait_bounds(&mut input.generics);

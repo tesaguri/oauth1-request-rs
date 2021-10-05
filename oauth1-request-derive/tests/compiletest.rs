@@ -4,17 +4,18 @@ use std::process::Command;
 use std::{env, fs};
 
 fn run_mode(mode: &'static str) {
-    let mut config = compiletest::Config::default();
-
-    config.mode = mode.parse().expect("invalid mode");
-    config.target_rustcflags = Some(String::from(
-        "\
-         --edition=2018 \
-         --extern oauth1_request \
-         -L test-deps/target/debug/deps \
-         ",
-    ));
-    config.src_base = format!("tests/{}", mode).into();
+    let config = compiletest::Config {
+        mode: mode.parse().expect("invalid mode"),
+        target_rustcflags: Some(String::from(
+            "\
+             --edition=2018 \
+             --extern oauth1_request \
+             -L test-deps/target/debug/deps \
+             ",
+        )),
+        src_base: format!("tests/{}", mode).into(),
+        ..Default::default()
+    };
 
     let deps = "test-deps/target/debug/deps";
     if fs::metadata(deps).is_ok() {

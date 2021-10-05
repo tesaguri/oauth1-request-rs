@@ -144,8 +144,8 @@ where
 
     fn into_hmac(self) -> Hmac<D> {
         match self {
-            SigningKey::Key { ref buf, pos } => Hmac::new_varkey(&buf[..pos]).unwrap(),
-            SigningKey::Digest(digest) => Hmac::new_varkey(&digest.finalize_fixed()).unwrap(),
+            SigningKey::Key { ref buf, pos } => Hmac::new_from_slice(&buf[..pos]).unwrap(),
+            SigningKey::Digest(digest) => Hmac::new_from_slice(&digest.finalize_fixed()).unwrap(),
         }
     }
 }
@@ -178,7 +178,7 @@ mod tests {
             k.extend(&[1]);
 
             let mut skm = sk.clone().into_hmac();
-            let mut m = Hmac::<Sha1>::new_varkey(&k).unwrap();
+            let mut m = Hmac::<Sha1>::new_from_slice(&k).unwrap();
             skm.update(b"test");
             m.update(b"test");
 

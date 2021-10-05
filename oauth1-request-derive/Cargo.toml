@@ -16,12 +16,12 @@ proc-macro = true
 
 [dependencies]
 proc-macro2 = "1"
-proc-macro-crate = "0.1.2"
+proc-macro-crate = "1"
 proc-macro-error = "1"
 quote = "1"
 syn = { version = "1", features = ["full"] }
 
 [dev-dependencies]
-compiletest_rs = "0.5"
+compiletest_rs = "0.7"
 oauth1-request = "0.5"
 version-sync = "0.9"

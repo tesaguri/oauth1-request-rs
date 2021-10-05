@@ -15,7 +15,7 @@ jobs:
           - stable
           - beta
           - nightly
-          - '1.41.0'
+          - '1.46.0'
         features:
           -
           - derive
@@ -29,31 +29,16 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-test-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-test-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - run: echo 'RUSTFLAGS=--allow unknown_lints' >> $GITHUB_ENV
-        if: matrix.toolchain == '1.41.0'
+        if: matrix.toolchain == '1.46.0'
       - name: Build `oauth1-request`
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Build `examples`
-        if: ${{ matrix.toolchain != '1.41.0' }}
+        if: ${{ matrix.toolchain != '1.46.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: build
@@ -82,22 +67,7 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-derive-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-derive-test-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-derive-test-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-derive-test-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - name: Build `oauth1-request-derive`
         uses: actions-rs/cargo@v1
         with:
@@ -148,25 +118,22 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
+      - uses: Swatinem/rust-cache@v1
+      - uses: actions/checkout@v2
         with:
-          path: ~/.cargo/registry
-          key: cargo-registry-credentials-msrv-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-credentials-msrv-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-registry-credentials-msrv-${{ steps.toolchain.outputs.rustc_hash }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
-      # Remove the virtual manifest because Rust 1.13.0 run fails when built as a workspace member.
-      - run: rm Cargo.toml
+          repository: rust-lang/crates.io-index
+          ref: 46a429eac9f70fd7281922780d7dd42e2fb7ab77
+          path: crates.io-index
+      - name: Workaround compatibility issues of Cargo
+        run: |
+          # Remove the virtual manifest because Rust 1.13.0 run fails when built as a workspace member.
+          rm Cargo.toml
+          # Reference: <https://github.com/mcgoo/vcpkg-rs/blob/f75707b/.github/workflows/rust-1.12.yml>
+          mkdir -p oauth-credentials/.cargo
+          cat <<EOF >> oauth-credentials/.cargo/config
+          [source.crates-io]
+          registry = "file://$GITHUB_WORKSPACE/crates.io-index"
+          EOF
       - name: Build `oauth-credentials`
         uses: actions-rs/cargo@v1
         with:
@@ -196,23 +163,7 @@ jobs:
           profile: minimal
           override: true
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-credentials-test-${{ runner.os }}-${{ matrix.features }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-credentials-test-${{ runner.os }}-${{ matrix.features }}-
-            cargo-registry-credentials-test-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-${{ hashFiles('**/Cargo.*') }}
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ matrix.features }}-
-            cargo-target-credentials-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - name: Build `oauth-credentials`
         uses: actions-rs/cargo@v1
         with:
@@ -234,20 +185,7 @@ jobs:
           toolchain: stable
           profile: minimal
         id: toolchain
-      - name: Cache Cargo registry
-        uses: actions/cache@v2
-        with:
-          path: ~/.cargo/registry
-          key: cargo-registry-min-deps-${{ runner.os }}-${{ hashFiles('Cargo.*') }}
-          restore-keys: |
-            cargo-registry-min-deps-${{ runner.os }}-
-      - name: Cache Cargo build
-        uses: actions/cache@v2
-        with:
-          path: target
-          key: cargo-target-min-deps-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.*') }}
-          restore-keys: |
-            cargo-target-min-deps-${{ runner.os }}-${{ steps.toolchain.outputs.rustc_hash }}-
+      - uses: Swatinem/rust-cache@v1
       - name: Cargo update
         uses: actions-rs/cargo@v1
         with:

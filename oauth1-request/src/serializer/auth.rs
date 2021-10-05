@@ -282,7 +282,6 @@ fn get_current_timestamp() -> u64 {
             use std::time::{SystemTime, UNIX_EPOCH};
             match SystemTime::now().duration_since(UNIX_EPOCH) {
                 Ok(d) => d.as_secs(),
-                #[cold]
                 Err(_) => 1,
             }
         }
