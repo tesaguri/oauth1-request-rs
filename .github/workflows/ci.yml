@@ -15,7 +15,7 @@ jobs:
           - stable
           - beta
           - nightly
-          - '1.41.0'
+          - '1.46.0'
         features:
           -
           - derive
@@ -31,14 +31,14 @@ jobs:
         id: toolchain
       - uses: Swatinem/rust-cache@v1
       - run: echo 'RUSTFLAGS=--allow unknown_lints' >> $GITHUB_ENV
-        if: matrix.toolchain == '1.41.0'
+        if: matrix.toolchain == '1.46.0'
       - name: Build `oauth1-request`
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Build `examples`
-        if: ${{ matrix.toolchain != '1.41.0' }}
+        if: ${{ matrix.toolchain != '1.46.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: build
