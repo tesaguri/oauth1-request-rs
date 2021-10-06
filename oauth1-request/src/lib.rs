@@ -1,4 +1,4 @@
-//! Yet yet yet another OAuth 1 client library.
+//! Yet yet yet another OAuth 1.0 client library.
 //!
 //! # Usage
 //!

@@ -4,7 +4,7 @@
 [![Current Version](https://img.shields.io/crates/v/oauth1-request.svg)](https://crates.io/crates/oauth1-request)
 [![Documentation](https://docs.rs/oauth1-request/badge.svg)](https://docs.rs/oauth1-request/)
 
-Yet yet yet another OAuth 1 client library for Rust.
+Yet yet yet another OAuth 1.0 client library for Rust.
 
 ## Usage
 
