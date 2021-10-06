@@ -38,6 +38,10 @@ version-sync = "0.9"
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 js-sys = "0.3"
 
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+wasm-bindgen-test = "0.3"
+
 [features]
 default = ["derive", "hmac-sha1"]
 derive = ["oauth1-request-derive"]
