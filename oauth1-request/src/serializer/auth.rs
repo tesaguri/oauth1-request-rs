@@ -3,7 +3,6 @@
 use std::fmt::{Display, Write};
 use std::num::NonZeroU64;
 use std::str;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use rand::prelude::*;
 
@@ -235,10 +234,7 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
             let t = if let Some(t) = self.options.timestamp {
                 t.get()
             } else {
-                match SystemTime::now().duration_since(UNIX_EPOCH) {
-                    Ok(d) => d.as_secs(),
-                    Err(_) => 1,
-                }
+                get_current_timestamp()
             };
             append_to_header!(self, encoded timestamp, t);
         }
@@ -274,6 +270,21 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
         write!(authorization, r#""{}""#, sign.end()).unwrap();
 
         authorization
+    }
+}
+
+fn get_current_timestamp() -> u64 {
+    cfg_if::cfg_if! {
+        // `std::time::SystemTime::now` is not supported and panics on `wasm32-unknown-unknown` target
+        if #[cfg(all(feature = "js", target_arch = "wasm32", target_os = "unknown"))] {
+            (js_sys::Date::now() / 1000.0) as u64
+        } else {
+            use std::time::{SystemTime, UNIX_EPOCH};
+            match SystemTime::now().duration_since(UNIX_EPOCH) {
+                Ok(d) => d.as_secs(),
+                Err(_) => 1,
+            }
+        }
     }
 }
 

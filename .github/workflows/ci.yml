@@ -16,29 +16,50 @@ jobs:
           - beta
           - nightly
           - '1.46.0'
-        features:
+        target:
           -
-          - derive
-          - hmac-sha1
+        features:
+          - js
+          - js,derive
+          - js,hmac-sha1
+        include:
+          - toolchain: stable
+            features: js
+            target: wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ matrix.toolchain }}
+          target: ${{ matrix.target }}
           profile: minimal
           override: true
         id: toolchain
       - uses: Swatinem/rust-cache@v1
+        with:
+          key: ${{ matrix.target }}
+      - name: Install `wasm-bindgen-test-runner`
+        if: matrix.target == 'wasm32-unknown-unknown'
+        run: |
+          VER=0.2.78
+          NAME="wasm-bindgen-$VER-x86_64-unknown-linux-musl"
+          DIGEST=14f1b0ef9225370f0d270efbdbbfe2cf5eb191d57b8eec14ade69c98c71e226f
+          curl -fLOsS "https://github.com/rustwasm/wasm-bindgen/releases/download/$VER/$NAME.tar.gz"
+          sha256sum --check --quiet <<< "$DIGEST $NAME.tar.gz"
+          tar -xzf "$NAME.tar.gz" "$NAME/wasm-bindgen-test-runner"
+          mv "$NAME/wasm-bindgen-test-runner" /usr/local/bin/
       - run: echo 'RUSTFLAGS=--allow unknown_lints' >> $GITHUB_ENV
         if: matrix.toolchain == '1.46.0'
+      - run: echo 'CARGO_BUILD_TARGET=${{ matrix.target }}' >> $GITHUB_ENV
+        if: matrix.target != ''
       - name: Build `oauth1-request`
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --features=${{ matrix.features }}
       - name: Build `examples`
-        if: ${{ matrix.toolchain != '1.46.0' }}
+        if: ${{ matrix.target == '' && matrix.toolchain != '1.46.0' }}
         uses: actions-rs/cargo@v1
         with:
           command: build
