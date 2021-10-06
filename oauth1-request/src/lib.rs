@@ -88,7 +88,7 @@
 //!
 //! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.0")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.1")]
 #![deny(broken_intra_doc_links)]
 #![warn(missing_docs, rust_2018_idioms)]
 
