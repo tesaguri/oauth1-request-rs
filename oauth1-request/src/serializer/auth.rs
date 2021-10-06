@@ -276,7 +276,7 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
 fn get_current_timestamp() -> u64 {
     cfg_if::cfg_if! {
         // `std::time::SystemTime::now` is not supported and panics on `wasm32-unknown-unknown` target
-        if #[cfg(all(target_arch = "wasm32", target_os = "unknown"))] {
+        if #[cfg(all(feature = "js", target_arch = "wasm32", target_os = "unknown"))] {
             (js_sys::Date::now() / 1000.0) as u64
         } else {
             use std::time::{SystemTime, UNIX_EPOCH};

@@ -19,12 +19,12 @@ jobs:
         target:
           -
         features:
-          -
-          - derive
-          - hmac-sha1
+          - js
+          - js,derive
+          - js,hmac-sha1
         include:
           - toolchain: stable
-            features: ''
+            features: js
             target: wasm32-unknown-unknown
     steps:
       - uses: actions/checkout@v2

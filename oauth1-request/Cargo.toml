@@ -30,13 +30,14 @@ either = { version = "1.2", optional = true }
 hmac = { version = "0.11", optional = true }
 sha-1 = { version = "0.9", optional = true }
 
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+# `js` feature
+js-sys = { version = "0.3", optional = true }
+
 [dev-dependencies]
 # Trick to make `proc-macro-crate` work in doctests.
 oauth1-request = { version = "0.5", path = "", default-features = false }
 version-sync = "0.9"
-
-[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
-js-sys = "0.3"
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]
 getrandom = { version = "0.2", features = ["js"] }
@@ -46,4 +47,5 @@ wasm-bindgen-test = "0.3"
 default = ["derive", "hmac-sha1"]
 derive = ["oauth1-request-derive"]
 hmac-sha1 = ["hmac", "sha-1"]
+js = ["js-sys"]
 serde = ["oauth-credentials/serde"]
