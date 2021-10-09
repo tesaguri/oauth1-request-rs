@@ -53,13 +53,9 @@ options! {
 /// A version of `Signer` that uses the `PLAINTEXT` signature method.
 pub type PlaintextAuthorizer<'a> = Authorizer<'a, Plaintext>;
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "hmac-sha1")] {
-        use crate::signature_method::HmacSha1;
-        /// A version of `Signer` that uses the `HMAC-SHA1` signature method.
-        pub type HmacSha1Authorizer<'a> = Authorizer<'a, HmacSha1>;
-    }
-}
+/// A version of `Signer` that uses the `HMAC-SHA1` signature method.
+#[cfg(feature = "hmac-sha1")]
+pub type HmacSha1Authorizer<'a> = Authorizer<'a, crate::signature_method::HmacSha1>;
 
 impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     /// Creates an `Authorizer`.
