@@ -71,9 +71,33 @@
 //! );
 //! ```
 //!
+//! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
+//!
+//! If you want to authorize a request with dynamic keys, you can use a
+//! [`BTreeSet<(K, V)>`][std::collections::BTreeSet]:
+//!
+//! ```
+//! # extern crate oauth1_request as oauth;
+//! #
+//! use std::collections::BTreeSet;
+//!
+//! let request: BTreeSet<_> = vec![
+//!     ("article_id", "123456789"),
+//!     ("text", "A request signed with OAuth & Rust 🦀 🔏"),
+//! ]
+//! .into_iter()
+//! .collect();
+//!
+//! let form = oauth::to_form_urlencoded(&request);
+//! assert_eq!(
+//!     form,
+//!     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
+//! );
+//! ```
+//!
 //! Use [`oauth::Builder`][Builder] if you need to specify a callback URI or verifier:
 //!
-//! ```rust
+//! ```
 //! # extern crate oauth1_request as oauth;
 //! #
 //! let uri = "https://example.com/oauth/request_temp_credentials";
@@ -85,8 +109,6 @@
 //!     .callback(callback)
 //!     .post(uri, &());
 //! ```
-//!
-//! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
 
 #![cfg_attr(docsrs, feature(doc_cfg, doc_cfg_hide))]
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.1")]
