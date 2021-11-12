@@ -5,11 +5,10 @@ use std::fmt::{self, Formatter};
 //~| expected `u8`, found `()`
 //~^^^ ERROR: mismatched types
 //~| expected `()`, found `u8`
-//~^^^^^ ERROR: `()` doesn't implement `std::fmt::Display`
 // FIXME: move these errors to (1) to (3) respectively
 struct Test {
     not_display: (),
-    //^ (3)
+    //~^ ERROR: `()` doesn't implement `std::fmt::Display`
 
     #[oauth1(fmt = fmt_missing_arg)]
     //~^ ERROR: mismatched types
