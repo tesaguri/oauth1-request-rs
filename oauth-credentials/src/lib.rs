@@ -54,6 +54,8 @@ pub struct Credentials<T = String> {
 // XXX: These almost-identical (modulo default type param) items should certainly be defined with a
 // macro, but doing so would break the build on toolchains prior to nightly-2016-05-29 (7746a334d).
 // Maybe <https://github.com/rust-lang/rust/pull/33926> is relevant?
+// Also, `<#[cfg(feature = "alloc")] T = String, #[cfg(not(feature = "alloc"))] T>` cannot be used
+// on toolchains prior to 1.27.0.
 
 /// An OAuth "credentials" pair defined in [RFC 5849 section 1.1][rfc].
 ///

@@ -11,10 +11,10 @@
 
 ## Stability
 
-The goal of `oauth-credentials` is to provide a stable foundation for OAuth
-implementations.
+The goal of `oauth-credentials` is to provide a stable and interoperable
+foundation for OAuth implementations.
 
-The crate is still unstable in the sense of Semantic Versioning. However, we
+However, the crate is still unstable in the sense of Semantic Versioning. But we
 are not planning to make any breaking change and are going to publish the API
 as it is as version 1.0.0 using the [semver trick] unless we find a flaw in the
 API significant enough to justify a breaking change.
@@ -43,7 +43,7 @@ Feature | MSRV
 
 Note that if your crate uses the `serde` feature (even if optionally!), it
 cannot be compiled directly with Rust 1.7.x and older due to
-[rust-lang/cargo#3763], but it can somehow be compiled as a non-root node of a
-dependency tree.
+[rust-lang/cargo#3763], but it can somehow be compiled as a dependency of
+another crate if the feature is disabled.
 
 [rust-lang/cargo#3763]: https://github.com/rust-lang/cargo/issues/3763
