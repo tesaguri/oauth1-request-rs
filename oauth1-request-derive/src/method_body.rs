@@ -1,4 +1,4 @@
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 use syn::{Ident, PathArguments, Type};
@@ -20,6 +20,8 @@ impl<'a> ToTokens for MethodBody<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let this = Ident::new("self", Span::mixed_site());
         let ser = Ident::new("serializer", Span::mixed_site());
+        // Name of destructured value inside an `Option` field value.
+        let bind = Ident::new("value", Span::mixed_site());
 
         let mut next_param = OAuthParameter::default();
         for f in self.fields {
@@ -45,13 +47,10 @@ impl<'a> ToTokens for MethodBody<'a> {
                     .map(|v| v.value)
                     .unwrap_or_else(|| is_option(&f.ty));
 
-                let value = if ty_is_option {
-                    quote_spanned! {f.ty.span()=> {
-                        let value = &#this.#ident;
-                        ::std::option::Option::as_ref(value).unwrap()
-                    }}
+                let unwrapped = if ty_is_option {
+                    TokenStream::from(TokenTree::Ident(bind.clone()))
                 } else {
-                    quote! { &#this.#ident }
+                    quote_spanned! {f.ty.span()=> &#this.#ident }
                 };
 
                 let display = if let Some(ref fmt) = f.meta.fmt {
@@ -88,10 +87,10 @@ impl<'a> ToTokens for MethodBody<'a> {
                                 #fmt;
                             fmt
                         })
-                        .make_adapter(#value)
+                        .make_adapter(#unwrapped)
                     }
                 } else {
-                    value.clone()
+                    unwrapped.clone()
                 };
 
                 let mut stmt = if f.meta.encoded {
@@ -108,7 +107,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                         if !{
                             let skip_if: fn(&_) -> bool = #skip_if;
                             skip_if
-                        }(#value)
+                        }(#unwrapped)
                         {
                             #stmt
                         }
@@ -116,7 +115,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                 }
                 if ty_is_option {
                     stmt = quote_spanned! {f.ty.span()=>
-                        if ::std::option::Option::is_some({
+                        if let ::std::option::Option::Some(#bind) = ::std::option::Option::as_ref({
                             let value = &#this.#ident;
                             value
                         }) {
