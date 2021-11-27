@@ -305,6 +305,16 @@ assert_expand! {
     }
 }
 
+// Just checking that this compiles.
+#[derive(oauth::Request)]
+struct Hygiene {
+    #[oauth1(fmt = serializer)]
+    a: (),
+}
+fn serializer(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
+    unimplemented!();
+}
+
 // Just checking that this produces no warnings.
 #[derive(oauth::Request)]
 #[allow(nonstandard_style)]

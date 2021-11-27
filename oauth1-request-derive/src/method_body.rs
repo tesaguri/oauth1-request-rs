@@ -1,4 +1,4 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
 use syn::{Ident, PathArguments, Type};
@@ -8,19 +8,18 @@ use crate::util::OAuthParameter;
 
 pub struct MethodBody<'a> {
     fields: &'a [Field],
-    dummy: &'a Ident,
 }
 
 impl<'a> MethodBody<'a> {
-    pub fn new(fields: &'a [Field], dummy: &'a Ident) -> Self {
-        MethodBody { fields, dummy }
+    pub fn new(fields: &'a [Field]) -> Self {
+        MethodBody { fields }
     }
 }
 
 impl<'a> ToTokens for MethodBody<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let dummy = &self.dummy;
-        let (this, ser) = (quote! { #dummy.0 }, quote! { #dummy.1 });
+        let this = Ident::new("self", Span::mixed_site());
+        let ser = Ident::new("serializer", Span::mixed_site());
 
         let mut next_param = OAuthParameter::default();
         for f in self.fields {
