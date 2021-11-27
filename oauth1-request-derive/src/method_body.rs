@@ -50,7 +50,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                 let unwrapped = if ty_is_option {
                     TokenStream::from(TokenTree::Ident(bind.clone()))
                 } else {
-                    quote_spanned! {f.ty.span()=> &#this.#ident }
+                    quote! { &#this.#ident }
                 };
 
                 let display = if let Some(ref fmt) = f.meta.fmt {
@@ -94,6 +94,16 @@ impl<'a> ToTokens for MethodBody<'a> {
                 };
 
                 let mut stmt = if f.meta.encoded {
+                    // Set the expression's span to `f.ty` so that a trait bound error will appear
+                    // at the field's position.
+                    //
+                    // ```
+                    // #[derive(Request)] // <- Not here
+                    // struct Foo {
+                    //     field: (),
+                    //     //~^ ERROR: `()` doesn't implement `std::fmt::Display`
+                    // }
+                    // ```
                     quote_spanned! {f.ty.span()=>
                         #ser.serialize_parameter_encoded(#name, #display);
                     }
@@ -114,10 +124,23 @@ impl<'a> ToTokens for MethodBody<'a> {
                     };
                 }
                 if ty_is_option {
-                    stmt = quote_spanned! {f.ty.span()=>
+                    let tmp = Ident::new("tmp", f.ty.span());
+                    stmt = quote! {
                         if let ::std::option::Option::Some(#bind) = ::std::option::Option::as_ref({
-                            let value = &#this.#ident;
-                            value
+                            // Set the argument's span to `f.ty` so that a type error will appear
+                            // at the field's position. The span resolves at call site, so we are
+                            // binding `#tmp` to the ephemeral block to avoid name conflict.
+                            //
+                            // ```
+                            // #[derive(Request)] // <- Not here
+                            // struct Foo {
+                            //     #[oauth1(option = true)]
+                            //     field: (),
+                            //     //~^ expected enum `Option`, found `()`
+                            // }
+                            // ```
+                            let #tmp = &#this.#ident;
+                            #tmp
                         }) {
                             #stmt
                         }
