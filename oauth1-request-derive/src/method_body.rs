@@ -60,8 +60,8 @@ impl<'a> ToTokens for MethodBody<'a> {
 
                             // We can't just use `f.ty` instead of `T` because doing so would lead
                             // to E0412/E0261 if `f.ty` contains lifetime/type parameters.
-                            struct Adapter<'a, T: 'a + ?Sized, F>(&'a T, F);
-                            impl<'a, T: 'a + ?Sized, F> Display for Adapter<'a, T, F>
+                            struct Adapter<'a, T: ?Sized, F>(&'a T, F);
+                            impl<'a, T: ?Sized, F> Display for Adapter<'a, T, F>
                             where
                                 F: Fn(&T, &mut Formatter<'_>) -> Result,
                             {
