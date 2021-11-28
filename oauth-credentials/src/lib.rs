@@ -174,7 +174,9 @@ impl<T: Debug> Debug for Credentials<T> {
 
         #[derive(Debug)]
         struct Credentials<T> {
+            #[allow(dead_code)]
             identifier: T,
+            #[allow(dead_code)]
             secret: Hidden,
         }
 
