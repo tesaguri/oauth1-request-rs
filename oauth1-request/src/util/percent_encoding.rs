@@ -135,15 +135,10 @@ mod tests {
     #[test]
     fn encode_map() {
         for b in 0u8..=0xFF {
-            #[allow(clippy::match_like_matches_macro)]
-            let expected = match b {
-                // Unreserved characters
-                b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'-' | b'.' | b'_' | b'~' => false,
-                _ => true,
-            };
             assert_eq!(
                 should_percent_encode(b),
-                expected,
+                // Unreserved characters
+                !matches!(b, b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' | b'-' | b'.' | b'_' | b'~'),
                 "byte = {:X} ({:?})",
                 b,
                 char::from(b),

@@ -16,7 +16,11 @@
 //!
 //! A typical authorization flow looks like this:
 //!
-//! ```
+#![cfg_attr(all(feature = "derive", feature = "hmac-sha1"), doc = " ```")]
+#![cfg_attr(
+    not(all(feature = "derive", feature = "hmac-sha1")),
+    doc = " ```ignore"
+)]
 //! # extern crate oauth1_request as oauth;
 //! #
 //! // Define a type to represent your request.
@@ -97,7 +101,8 @@
 //!
 //! Use [`oauth::Builder`][Builder] if you need to specify a callback URI or verifier:
 //!
-//! ```
+#![cfg_attr(feature = "hmac-sha1", doc = " ```")]
+#![cfg_attr(not(feature = "hmac-sha1"), doc = " ```ignore")]
 //! # extern crate oauth1_request as oauth;
 //! #
 //! let uri = "https://example.com/oauth/request_temp_credentials";

@@ -40,7 +40,8 @@ pub use skip_serialize_oauth_parameters;
 ///
 /// [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.1
 ///
-/// ```
+#[cfg_attr(feature = "hmac-sha1", doc = " ```")]
+#[cfg_attr(not(feature = "hmac-sha1"), doc = " ```ignore")]
 /// # extern crate oauth1_request as oauth;
 /// #
 /// use std::num::NonZeroU64;
@@ -178,6 +179,7 @@ impl<S: Serializer> SerializerExt for S {
 }
 
 #[cfg(test)]
+#[cfg(feature = "hmac-sha1")]
 mod tests {
     use super::auth::{HmacSha1Authorizer, PlaintextAuthorizer};
     use super::*;
