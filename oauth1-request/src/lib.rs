@@ -114,7 +114,6 @@
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.1")]
 // Prevent `oauth-credentials/alloc` feature from showing up on re-exports.
 #![cfg_attr(docsrs, doc(cfg_hide(feature = "alloc")))]
-#![deny(broken_intra_doc_links)]
 #![warn(missing_docs, rust_2018_idioms)]
 
 #[macro_use]
