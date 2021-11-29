@@ -126,7 +126,7 @@ impl<'a> ToTokens for MethodBody<'a> {
                 if ty_is_option {
                     let tmp = Ident::new("tmp", f.ty.span());
                     stmt = quote! {
-                        if let ::std::option::Option::Some(#bind) = ::std::option::Option::as_ref({
+                        if let ::std::option::Option::Some(#bind) = {
                             // Set the argument's span to `f.ty` so that a type error will appear
                             // at the field's position. The span resolves at call site, so we are
                             // binding `#tmp` to the ephemeral block to avoid name conflict.
@@ -140,8 +140,8 @@ impl<'a> ToTokens for MethodBody<'a> {
                             // }
                             // ```
                             let #tmp = &#this.#ident;
-                            #tmp
-                        }) {
+                            ::std::option::Option::as_ref(#tmp)
+                        } {
                             #stmt
                         }
                     };
