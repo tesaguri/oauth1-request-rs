@@ -80,15 +80,18 @@ macro_rules! add_meta_impl {
             name
         } else {
             let path = $meta.path.to_token_stream().to_string().replace(' ', "");
-            let message = format!("unknown attribute `{}`", path);
-            return Err(syn::Error::new($meta.path.span(), &*message));
+            return Err(syn::Error::new(
+                $meta.path.span(),
+                format_args!("unknown attribute `{}`", path),
+            ));
         };
-        match &*name.to_string() {
+        let name = name.to_string();
+        match &*name {
             $($arms)*
-            _ => {
-                let message = format!("unknown attribute `{}`", name);
-                Err(syn::Error::new($meta.path.span(), &*message))
-            }
+            _ => Err(syn::Error::new(
+                $meta.path.span(),
+                format_args!("unknown attribute `{}`", name),
+            ))
         }
     }};
 }
