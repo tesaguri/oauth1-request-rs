@@ -1,74 +1,56 @@
 use std::fmt::{self, Formatter};
 
 #[derive(oauth1_request::Request)]
-//~^ ERROR: mismatched types
-//~| expected `u8`, found `()`
+//~^ ERROR: `()` doesn't implement `std::fmt::Display`
+//~| `()` cannot be formatted with the default formatter
 //~^^^ ERROR: mismatched types
+//~| expected `u8`, found `()`
+//~^^^^^ ERROR: mismatched types
 //~| expected `()`, found `u8`
 // FIXME: move these errors to (1) to (3) respectively
 struct Test {
     not_display: (),
-    //~^ ERROR: `()` doesn't implement `std::fmt::Display`
+    //^ (1)
 
     #[oauth1(fmt = fmt_missing_arg)]
-    //~^ ERROR: mismatched types
-    //~| incorrect number of function parameters
     fmt_missing_arg: (),
 
     #[oauth1(fmt = fmt_arg_not_ref)]
-    //~^ ERROR: mismatched types
-    //~| expected reference, found `()`
     fmt_arg_not_ref: (),
 
     #[oauth1(fmt = fmt_arg_mismatch)]
-    //^ (1)
+    //^ (2)
     fmt_arg_mismatch: (),
 
     #[oauth1(fmt = fmt_trait_bound_unsatisfied)]
-    //~^ ERROR: the trait bound `(): AsRef<str>` is not satisfied
     fmt_trait_bound_unsatisfied: (),
 
     #[oauth1(fmt = fmt_ret_mismatch)]
-    //~^ ERROR: mismatched types
-    //~| expected struct `std::fmt::Error`, found `()`
     fmt_ret_mismatch: (),
 
     #[oauth1(fmt = NOT_FN)]
-    //~^ ERROR: mismatched types
-    //~| expected fn pointer, found `()`
     fmt_not_fn: (),
 
     #[oauth1(option = true)]
     option_not_option: u8,
-    //~^ ERROR: mismatched types
-    //~| expected enum `Option`, found `u8`
 
     #[oauth1(skip_if = skip_if_too_many_args)]
-    //~^ ERROR: mismatched types
-    //~| incorrect number of function parameters
     skip_if_too_many_args: u8,
 
     #[oauth1(skip_if = skip_if_arg_not_ref)]
-    //~^ ERROR: mismatched types
-    //~| expected reference, found `u8`
     skip_if_arg_not_ref: u8,
 
     #[oauth1(skip_if = skip_if_arg_mismatch)]
-    //^ (2)
+    //^ (3)
     skip_if_arg_mismatch: u8,
 
     #[oauth1(skip_if = skip_if_trait_bound_unsatisfied)]
-    //~^ ERROR: the trait bound `u8: AsRef<str>` is not satisfied
     skip_if_trait_bound_unsatisfied: u8,
 
     #[oauth1(skip_if = skip_if_ret_mismatch)]
-    //~^ ERROR: mismatched types
-    //~| expected `bool`, found enum `Option`
     skip_if_ret_mismatch: u8,
 
     #[oauth1(skip_if = NOT_FN)]
-    //~^ ERROR: mismatched types
-    //~| expected fn pointer, found `()`
     skip_if_not_fn: u8,
 }
 

@@ -22,6 +22,6 @@ quote = "1"
 syn = { version = "1", features = ["full"] }
 
 [dev-dependencies]
-compiletest_rs = "0.7"
 oauth1-request = { version = "0.5", default-features = false, features = ["derive"] }
+trybuild = "1"
 version-sync = "0.9"

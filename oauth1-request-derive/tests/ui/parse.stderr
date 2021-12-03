@@ -1,0 +1,65 @@
+error: expected parentheses after `oauth1`
+ --> tests/ui/parse.rs:3:7
+  |
+3 |     #[oauth1]
+  |       ^^^^^^
+
+error: expected parentheses
+ --> tests/ui/parse.rs:6:14
+  |
+6 |     #[oauth1 = ""]
+  |              ^
+
+error: expected identifier
+ --> tests/ui/parse.rs:9:14
+  |
+9 |     #[oauth1("")]
+  |              ^^
+
+error: expected `,`
+  --> tests/ui/parse.rs:12:19
+   |
+12 |     #[oauth1(word word)]
+   |                   ^^^^
+
+error: expected `,`
+  --> tests/ui/parse.rs:15:19
+   |
+15 |     #[oauth1(word word word)]
+   |                   ^^^^
+
+error: expected `,`
+  --> tests/ui/parse.rs:18:27
+   |
+18 |     #[oauth1(name = value value)]
+   |                           ^^^^^
+
+error: expected `,`
+  --> tests/ui/parse.rs:21:27
+   |
+21 |     #[oauth1(name = value value value)]
+   |                           ^^^^^
+
+error: unexpected end of input, expected expression
+  --> tests/ui/parse.rs:24:13
+   |
+24 |     #[oauth1(name = )]
+   |             ^^^^^^^^^
+
+error: expected identifier
+  --> tests/ui/parse.rs:27:14
+   |
+27 |     #[oauth1(, meta)]
+   |              ^
+
+error: expected identifier
+  --> tests/ui/parse.rs:30:20
+   |
+30 |     #[oauth1(meta, , meta)]
+   |                    ^
+
+error: expected identifier
+  --> tests/ui/parse.rs:33:20
+   |
+33 |     #[oauth1(meta, ,)]
+   |                    ^

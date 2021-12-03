@@ -115,6 +115,10 @@ jobs:
           - stable
           - beta
           - nightly
+    # UI test results changes frequently and sometimes there may not be any way to
+    # make the test pass for all toolchains at the same time.
+    # Also, we don't want the workflow to break nightly :)
+    continue-on-error: ${{ matrix.toolchain != 'stable' }}
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust toolchain
@@ -129,11 +133,6 @@ jobs:
         with:
           command: build
           args: --verbose --tests --manifest-path oauth1-request-derive/Cargo.toml
-      - name: Build `test-deps`
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --manifest-path oauth1-request-derive/test-deps/Cargo.toml --target-dir oauth1-request-derive/test-deps/target
       - name: Test `oauth1-request-derive`
         uses: actions-rs/cargo@v1
         with:

@@ -1,0 +1,11 @@
+error[E0425]: cannot find value `missing_fmt` in this scope
+ --> tests/ui/resolve.rs:3:20
+  |
+3 |     #[oauth1(fmt = missing_fmt)]
+  |                    ^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find value `missing_skip_if` in this scope
+ --> tests/ui/resolve.rs:6:24
+  |
+6 |     #[oauth1(skip_if = missing_skip_if)]
+  |                        ^^^^^^^^^^^^^^^ not found in this scope

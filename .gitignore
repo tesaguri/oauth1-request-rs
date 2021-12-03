@@ -1,4 +1,3 @@
 /target
-/oauth1-request-derive/test-deps/target
 **/*.rs.bk
 Cargo.lock
