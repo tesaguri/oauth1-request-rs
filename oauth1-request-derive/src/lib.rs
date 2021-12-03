@@ -86,16 +86,12 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 
     let mut fields: Vec<_> = fields.named.into_iter().map(Field::new).collect();
 
-    fields.sort_by(|f, g| f.with_renamed(|a| g.with_renamed(|b| a.value().cmp(&b.value()))));
+    fields.sort_by(|f, g| f.name().cmp(&g.name()));
     for w in fields.windows(2) {
         let (f, g) = (&w[0], &w[1]);
-        f.with_renamed(|a| {
-            g.with_renamed(|b| {
-                if a.value() == b.value() {
-                    emit_error!(b.span(), "duplicate parameter \"{}\"", b.value());
-                }
-            });
-        });
+        if f.name() == g.name() {
+            emit_error!(g.name().span(), "duplicate parameter \"{}\"", g.name());
+        }
     }
 
     abort_if_dirty();

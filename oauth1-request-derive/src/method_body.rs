@@ -25,129 +25,129 @@ impl<'a> ToTokens for MethodBody<'a> {
 
         let mut next_param = OAuthParameter::default();
         for f in self.fields {
+            if f.meta.skip {
+                continue;
+            }
+
             let ident = &f.ident;
+            let name = f.name();
+            let name_string = name.string_value();
 
-            f.with_renamed(|name| {
-                if f.meta.skip {
-                    return;
-                }
+            while next_param < *name_string {
+                quote!(
+                    #ser.#next_param();
+                )
+                .to_tokens(tokens);
+                next_param = next_param.next();
+            }
 
-                while next_param < *name.value() {
-                    quote!(
-                        #ser.#next_param();
-                    )
-                    .to_tokens(tokens);
-                    next_param = next_param.next();
-                }
+            let ty_is_option = f
+                .meta
+                .option
+                .as_ref()
+                .map(|v| v.value)
+                .unwrap_or_else(|| is_option(&f.ty));
 
-                let ty_is_option = f
-                    .meta
-                    .option
-                    .as_ref()
-                    .map(|v| v.value)
-                    .unwrap_or_else(|| is_option(&f.ty));
+            let unwrapped = if ty_is_option {
+                TokenStream::from(TokenTree::Ident(bind.clone()))
+            } else {
+                quote! { &#this.#ident }
+            };
 
-                let unwrapped = if ty_is_option {
-                    TokenStream::from(TokenTree::Ident(bind.clone()))
-                } else {
-                    quote! { &#this.#ident }
-                };
+            let display = if let Some(ref fmt) = f.meta.fmt {
+                quote! {
+                    {
+                        use std::fmt::{Display, Formatter, Result};
 
-                let display = if let Some(ref fmt) = f.meta.fmt {
-                    quote! {
+                        // We can't just use `f.ty` instead of `T` because doing so would lead
+                        // to E0412/E0261 if `f.ty` contains lifetime/type parameters.
+                        struct Adapter<'a, T: ?Sized, F>(&'a T, F);
+                        impl<'a, T: ?Sized, F> Display for Adapter<'a, T, F>
+                        where
+                            F: Fn(&T, &mut Formatter<'_>) -> Result,
                         {
-                            use std::fmt::{Display, Formatter, Result};
+                            fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+                                self.1(self.0, f)
+                            }
+                        }
 
-                            // We can't just use `f.ty` instead of `T` because doing so would lead
-                            // to E0412/E0261 if `f.ty` contains lifetime/type parameters.
-                            struct Adapter<'a, T: ?Sized, F>(&'a T, F);
-                            impl<'a, T: ?Sized, F> Display for Adapter<'a, T, F>
+                        // A helper to make deref coertion from `&#f.ty` to `&T` work properly.
+                        struct MakeAdapter<F>(F);
+                        impl<F> MakeAdapter<F> {
+                            fn make_adapter<T: ?Sized>(self, t: &T) -> Adapter<'_, T, F>
                             where
-                                F: Fn(&T, &mut Formatter<'_>) -> Result,
+                                for<'a> Adapter<'a, T, F>: Display,
                             {
-                                fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-                                    self.1(self.0, f)
-                                }
+                                Adapter(t, self.0)
                             }
+                        }
 
-                            // A helper to make deref coertion from `&#f.ty` to `&T` work properly.
-                            struct MakeAdapter<F>(F);
-                            impl<F> MakeAdapter<F> {
-                                fn make_adapter<T: ?Sized>(self, t: &T) -> Adapter<'_, T, F>
-                                where
-                                    for<'a> Adapter<'a, T, F>: Display,
-                                {
-                                    Adapter(t, self.0)
-                                }
-                            }
+                        MakeAdapter
+                    }({
+                        let fmt: fn(&_, &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result =
+                            #fmt;
+                        fmt
+                    })
+                    .make_adapter(#unwrapped)
+                }
+            } else {
+                unwrapped.clone()
+            };
 
-                            MakeAdapter
-                        }({
-                            let fmt: fn(&_, &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result =
-                                #fmt;
-                            fmt
-                        })
-                        .make_adapter(#unwrapped)
-                    }
-                } else {
-                    unwrapped.clone()
-                };
-
-                let mut stmt = if f.meta.encoded {
-                    // Set the expression's span to `f.ty` so that a trait bound error will appear
-                    // at the field's position.
-                    //
-                    // ```
-                    // #[derive(Request)] // <- Not here
-                    // struct Foo {
-                    //     field: (),
-                    //     //~^ ERROR: `()` doesn't implement `std::fmt::Display`
-                    // }
-                    // ```
-                    quote_spanned! {f.ty.span()=>
-                        #ser.serialize_parameter_encoded(#name, #display);
-                    }
-                } else {
-                    quote_spanned! {f.ty.span()=>
-                        #ser.serialize_parameter(#name, #display);
+            let mut stmt = if f.meta.encoded {
+                // Set the expression's span to `f.ty` so that a trait bound error will appear
+                // at the field's position.
+                //
+                // ```
+                // #[derive(Request)] // <- Not here
+                // struct Foo {
+                //     field: (),
+                //     //~^ ERROR: `()` doesn't implement `std::fmt::Display`
+                // }
+                // ```
+                quote_spanned! {f.ty.span()=>
+                    #ser.serialize_parameter_encoded(#name, #display);
+                }
+            } else {
+                quote_spanned! {f.ty.span()=>
+                    #ser.serialize_parameter(#name, #display);
+                }
+            };
+            if let Some(ref skip_if) = f.meta.skip_if {
+                stmt = quote! {
+                    if !{
+                        let skip_if: fn(&_) -> bool = #skip_if;
+                        skip_if
+                    }(#unwrapped)
+                    {
+                        #stmt
                     }
                 };
-                if let Some(ref skip_if) = f.meta.skip_if {
-                    stmt = quote! {
-                        if !{
-                            let skip_if: fn(&_) -> bool = #skip_if;
-                            skip_if
-                        }(#unwrapped)
-                        {
-                            #stmt
-                        }
-                    };
-                }
-                if ty_is_option {
-                    let tmp = Ident::new("tmp", f.ty.span());
-                    stmt = quote! {
-                        if let ::std::option::Option::Some(#bind) = {
-                            // Set the argument's span to `f.ty` so that a type error will appear
-                            // at the field's position. The span resolves at call site, so we are
-                            // binding `#tmp` to the ephemeral block to avoid name conflict.
-                            //
-                            // ```
-                            // #[derive(Request)] // <- Not here
-                            // struct Foo {
-                            //     #[oauth1(option = true)]
-                            //     field: (),
-                            //     //~^ expected enum `Option`, found `()`
-                            // }
-                            // ```
-                            let #tmp = &#this.#ident;
-                            ::std::option::Option::as_ref(#tmp)
-                        } {
-                            #stmt
-                        }
-                    };
-                }
-                stmt.to_tokens(tokens);
-            });
+            }
+            if ty_is_option {
+                let tmp = Ident::new("tmp", f.ty.span());
+                stmt = quote! {
+                    if let ::std::option::Option::Some(#bind) = {
+                        // Set the argument's span to `f.ty` so that a type error will appear
+                        // at the field's position. The span resolves at call site, so we are
+                        // binding `#tmp` to the ephemeral block to avoid name conflict.
+                        //
+                        // ```
+                        // #[derive(Request)] // <- Not here
+                        // struct Foo {
+                        //     #[oauth1(option = true)]
+                        //     field: (),
+                        //     //~^ expected enum `Option`, found `()`
+                        // }
+                        // ```
+                        let #tmp = &#this.#ident;
+                        ::std::option::Option::as_ref(#tmp)
+                    } {
+                        #stmt
+                    }
+                };
+            }
+            stmt.to_tokens(tokens);
         }
 
         while next_param != OAuthParameter::None {
