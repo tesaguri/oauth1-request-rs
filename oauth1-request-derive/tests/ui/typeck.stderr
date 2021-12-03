@@ -8,53 +8,53 @@ error[E0308]: mismatched types
              found reference `&()`
   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0308]: mismatched types
+error[E0631]: type mismatch in function arguments
   --> tests/ui/typeck.rs:18:20
    |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
-...
 18 |     #[oauth1(fmt = fmt_arg_not_ref)]
-   |                    ^^^^^^^^^^^^^^^ expected reference, found `()`
-   |
-   = note: expected fn pointer `for<'r, 's, 't0> fn(&'r _, &'s mut Formatter<'t0>) -> Result<_, _>`
-                 found fn item `for<'r, 's> fn((), &'r mut Formatter<'s>) -> Result<_, _> {fmt_arg_not_ref}`
+   |                    ^^^^^^^^^^^^^^^ expected signature of `for<'r, 's, 't0> fn(&'r _, &'s mut Formatter<'t0>) -> _`
+...
+66 | fn fmt_arg_not_ref(_: (), _: &mut Formatter<'_>) -> fmt::Result {
+   | --------------------------------------------------------------- found signature of `for<'r, 's> fn((), &'r mut Formatter<'s>) -> _`
 
-error[E0308]: mismatched types
+error[E0593]: function is expected to take 2 arguments, but it takes 1 argument
   --> tests/ui/typeck.rs:15:20
    |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
-...
 15 |     #[oauth1(fmt = fmt_missing_arg)]
-   |                    ^^^^^^^^^^^^^^^ incorrect number of function parameters
-   |
-   = note: expected fn pointer `for<'r, 's, 't0> fn(&'r _, &'s mut Formatter<'t0>) -> Result<_, _>`
-                 found fn item `for<'r> fn(&'r ()) -> Result<_, _> {fmt_missing_arg}`
+   |                    ^^^^^^^^^^^^^^^ expected function that takes 2 arguments
+...
+62 | fn fmt_missing_arg(_: &()) -> fmt::Result {
+   | ----------------------------------------- takes 1 argument
 
-error[E0308]: mismatched types
-  --> tests/ui/typeck.rs:31:20
+error[E0277]: expected a `Fn<(&_, &mut Formatter<'_>)>` closure, found `()`
+  --> tests/ui/typeck.rs:33:20
+   |
+33 |     #[oauth1(fmt = NOT_FN)]
+   |                    ^^^^^^ expected an `Fn<(&_, &mut Formatter<'_>)>` closure, found `()`
+   |
+   = help: the trait `for<'r, 's, 't0> Fn<(&'r _, &'s mut Formatter<'t0>)>` is not implemented for `()`
+
+error[E0271]: type mismatch resolving `for<'r, 's, 't0> <for<'t1, 't2, 't3> fn(&'t1 (), &'t2 mut Formatter<'t3>) -> Result<(), ()> {fmt_ret_mismatch} as FnOnce<(&'r (), &'s mut Formatter<'t0>)>>::Output == Result<(), std::fmt::Error>`
+  --> tests/ui/typeck.rs:30:20
+   |
+30 |     #[oauth1(fmt = fmt_ret_mismatch)]
+   |                    ^^^^^^^^^^^^^^^^ expected `()`, found struct `std::fmt::Error`
+   |
+   = note: expected enum `Result<_, ()>`
+              found enum `Result<_, std::fmt::Error>`
+
+error[E0277]: the trait bound `(): AsRef<str>` is not satisfied
+  --> tests/ui/typeck.rs:3:10
    |
 3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
-...
-31 |     #[oauth1(fmt = NOT_FN)]
-   |                    ^^^^^^ expected fn pointer, found `()`
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ the trait `AsRef<str>` is not implemented for `()`
    |
-   = note: expected fn pointer `for<'r, 's, 't0> fn(&'r _, &'s mut Formatter<'t0>) -> Result<(), std::fmt::Error>`
-               found unit type `()`
-
-error[E0308]: mismatched types
-  --> tests/ui/typeck.rs:28:20
+note: required by a bound in `fmt_trait_bound_unsatisfied`
+  --> tests/ui/typeck.rs:74:35
    |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
-...
-28 |     #[oauth1(fmt = fmt_ret_mismatch)]
-   |                    ^^^^^^^^^^^^^^^^ expected struct `std::fmt::Error`, found `()`
-   |
-   = note: expected fn pointer `for<'r, 's, 't0> fn(&'r _, &'s mut Formatter<'t0>) -> Result<_, std::fmt::Error>`
-                 found fn item `for<'r, 's, 't0> fn(&'r (), &'s mut Formatter<'t0>) -> Result<_, ()> {fmt_ret_mismatch}`
+74 | fn fmt_trait_bound_unsatisfied<T: AsRef<str>>(_: &T, _: &mut Formatter<'_>) -> fmt::Result {
+   |                                   ^^^^^^^^^^ required by this bound in `fmt_trait_bound_unsatisfied`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `(): AsRef<str>` is not satisfied
   --> tests/ui/typeck.rs:25:20
@@ -63,9 +63,9 @@ error[E0277]: the trait bound `(): AsRef<str>` is not satisfied
    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `AsRef<str>` is not implemented for `()`
    |
 note: required by a bound in `fmt_trait_bound_unsatisfied`
-  --> tests/ui/typeck.rs:71:35
+  --> tests/ui/typeck.rs:74:35
    |
-71 | fn fmt_trait_bound_unsatisfied<T: AsRef<str>>(_: &T, _: &mut Formatter<'_>) -> fmt::Result {
+74 | fn fmt_trait_bound_unsatisfied<T: AsRef<str>>(_: &T, _: &mut Formatter<'_>) -> fmt::Result {
    |                                   ^^^^^^^^^^ required by this bound in `fmt_trait_bound_unsatisfied`
 
 error[E0277]: `()` doesn't implement `std::fmt::Display`
@@ -80,9 +80,9 @@ error[E0277]: `()` doesn't implement `std::fmt::Display`
   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0308]: mismatched types
-  --> tests/ui/typeck.rs:35:24
+  --> tests/ui/typeck.rs:37:24
    |
-35 |     option_not_option: u8,
+37 |     option_not_option: u8,
    |                        ^^ expected enum `Option`, found `u8`
    |
    = note: expected reference `&Option<_>`
@@ -98,62 +98,62 @@ error[E0308]: mismatched types
              found reference `&u8`
   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
-error[E0308]: mismatched types
-  --> tests/ui/typeck.rs:40:24
+error[E0631]: type mismatch in function arguments
+  --> tests/ui/typeck.rs:42:24
    |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
+42 |     #[oauth1(skip_if = skip_if_arg_not_ref)]
+   |                        ^^^^^^^^^^^^^^^^^^^ expected signature of `for<'r> fn(&'r _) -> _`
 ...
-40 |     #[oauth1(skip_if = skip_if_arg_not_ref)]
-   |                        ^^^^^^^^^^^^^^^^^^^ expected reference, found `u8`
-   |
-   = note: expected fn pointer `for<'r> fn(&'r _) -> _`
-                 found fn item `fn(u8) -> _ {skip_if_arg_not_ref}`
+86 | fn skip_if_arg_not_ref(_: u8) -> bool {
+   | ------------------------------------- found signature of `fn(u8) -> _`
 
-error[E0308]: mismatched types
+error[E0277]: expected a `Fn<(&_,)>` closure, found `()`
+  --> tests/ui/typeck.rs:56:24
+   |
+56 |     #[oauth1(skip_if = NOT_FN)]
+   |                        ^^^^^^ expected an `Fn<(&_,)>` closure, found `()`
+   |
+   = help: the trait `for<'r> Fn<(&'r _,)>` is not implemented for `()`
+
+error[E0271]: type mismatch resolving `for<'r> <for<'s> fn(&'s u8) -> Option<()> {skip_if_ret_mismatch} as FnOnce<(&'r u8,)>>::Output == bool`
   --> tests/ui/typeck.rs:53:24
    |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
-...
-53 |     #[oauth1(skip_if = NOT_FN)]
-   |                        ^^^^^^ expected fn pointer, found `()`
+53 |     #[oauth1(skip_if = skip_if_ret_mismatch)]
+   |                        ^^^^^^^^^^^^^^^^^^^^ expected enum `Option`, found `bool`
    |
-   = note: expected fn pointer `for<'r> fn(&'r _) -> bool`
-               found unit type `()`
+   = note: expected enum `Option<()>`
+              found type `bool`
 
-error[E0308]: mismatched types
-  --> tests/ui/typeck.rs:50:24
+error[E0593]: function is expected to take 1 argument, but it takes 2 arguments
+  --> tests/ui/typeck.rs:39:24
    |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
+39 |     #[oauth1(skip_if = skip_if_too_many_args)]
+   |                        ^^^^^^^^^^^^^^^^^^^^^ expected function that takes 1 argument
 ...
-50 |     #[oauth1(skip_if = skip_if_ret_mismatch)]
-   |                        ^^^^^^^^^^^^^^^^^^^^ expected `bool`, found enum `Option`
-   |
-   = note: expected fn pointer `for<'r> fn(&'r _) -> bool`
-                 found fn item `for<'r> fn(&'r u8) -> Option<()> {skip_if_ret_mismatch}`
-
-error[E0308]: mismatched types
-  --> tests/ui/typeck.rs:37:24
-   |
-3  | #[derive(oauth1_request::Request)]
-   |          ----------------------- expected due to this
-...
-37 |     #[oauth1(skip_if = skip_if_too_many_args)]
-   |                        ^^^^^^^^^^^^^^^^^^^^^ incorrect number of function parameters
-   |
-   = note: expected fn pointer `for<'r> fn(&'r _) -> _`
-                 found fn item `for<'r> fn(&'r u8, ()) -> _ {skip_if_too_many_args}`
+82 | fn skip_if_too_many_args(_: &u8, _: ()) -> bool {
+   | ----------------------------------------------- takes 2 arguments
 
 error[E0277]: the trait bound `u8: AsRef<str>` is not satisfied
-  --> tests/ui/typeck.rs:47:24
+  --> tests/ui/typeck.rs:3:10
    |
-47 |     #[oauth1(skip_if = skip_if_trait_bound_unsatisfied)]
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ the trait `AsRef<str>` is not implemented for `u8`
+   |
+note: required by a bound in `skip_if_trait_bound_unsatisfied`
+  --> tests/ui/typeck.rs:94:39
+   |
+94 | fn skip_if_trait_bound_unsatisfied<T: AsRef<str>>(_: &T) -> bool {
+   |                                       ^^^^^^^^^^ required by this bound in `skip_if_trait_bound_unsatisfied`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `u8: AsRef<str>` is not satisfied
+  --> tests/ui/typeck.rs:49:24
+   |
+49 |     #[oauth1(skip_if = skip_if_trait_bound_unsatisfied)]
    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `AsRef<str>` is not implemented for `u8`
    |
 note: required by a bound in `skip_if_trait_bound_unsatisfied`
-  --> tests/ui/typeck.rs:91:39
+  --> tests/ui/typeck.rs:94:39
    |
-91 | fn skip_if_trait_bound_unsatisfied<T: AsRef<str>>(_: &T) -> bool {
+94 | fn skip_if_trait_bound_unsatisfied<T: AsRef<str>>(_: &T) -> bool {
    |                                       ^^^^^^^^^^ required by this bound in `skip_if_trait_bound_unsatisfied`

@@ -23,6 +23,8 @@ struct Test {
     fmt_arg_mismatch: (),
 
     #[oauth1(fmt = fmt_trait_bound_unsatisfied)]
+    //~^ ERROR: the trait bound `(): AsRef<str>` is not satisfied
+    //^ XXX: The error also appears at the call site.
     fmt_trait_bound_unsatisfied: (),
 
     #[oauth1(fmt = fmt_ret_mismatch)]
@@ -45,6 +47,7 @@ struct Test {
     skip_if_arg_mismatch: u8,
 
     #[oauth1(skip_if = skip_if_trait_bound_unsatisfied)]
+    // XXX: Same here.
     skip_if_trait_bound_unsatisfied: u8,
 
     #[oauth1(skip_if = skip_if_ret_mismatch)]

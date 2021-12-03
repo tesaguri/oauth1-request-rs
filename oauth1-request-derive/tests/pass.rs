@@ -305,11 +305,39 @@ assert_expand! {
     }
 }
 
+// Just checking that these compile.
+// Tests for the code generation around the internal `Helper` struct which `fmt` and `skip_if`
+// attributes share, checking that the attributes don't interfere with or depend on each other.
+#[derive(oauth::Request)]
+struct HasFmtAndSkipIf {
+    #[oauth1(fmt = fmt_ignore)]
+    fmt: (),
+    #[oauth1(skip_if = tautology)]
+    skip_if: u8,
+}
+#[derive(oauth::Request)]
+struct HasFmtOnly {
+    #[oauth1(fmt = fmt_ignore)]
+    fmt: (),
+}
+#[derive(oauth::Request)]
+struct HasSkipIfOnly {
+    #[oauth1(skip_if = tautology)]
+    skip_if: u8,
+}
+
 // Just checking that this compiles.
 #[derive(oauth::Request)]
 struct Hygiene {
+    // The expanded code defines a binding named `helper`. This attribute should not refer to that.
+    #[oauth1(fmt = helper)]
+    should_not_conflict_with_helper_binding: (),
+    // The expanded code defines `serializer` argument.
     #[oauth1(fmt = serializer)]
-    a: (),
+    should_not_conflict_with_serializer_arg: (),
+}
+fn helper(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
+    unimplemented!();
 }
 fn serializer(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
     unimplemented!();

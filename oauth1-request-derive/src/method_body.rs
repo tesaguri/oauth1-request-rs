@@ -1,3 +1,5 @@
+mod helper;
+
 use proc_macro2::{Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::spanned::Spanned;
@@ -5,6 +7,8 @@ use syn::{Ident, PathArguments, Type};
 
 use crate::field::Field;
 use crate::util::OAuthParameter;
+
+use self::helper::{FmtHelper, SkipIfHelper};
 
 pub struct MethodBody<'a> {
     fields: &'a [Field],
@@ -20,8 +24,33 @@ impl<'a> ToTokens for MethodBody<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let this = Ident::new("self", Span::mixed_site());
         let ser = Ident::new("serializer", Span::mixed_site());
+        let helper = Ident::new("helper", Span::mixed_site());
         // Name of destructured value inside an `Option` field value.
         let bind = Ident::new("value", Span::mixed_site());
+
+        let has_fmt = self.fields.iter().any(|f| f.meta.fmt.is_some());
+        let has_skip_if = self.fields.iter().any(|f| f.meta.skip_if.is_some());
+        if has_fmt || has_skip_if {
+            // TODO: Use `bool::then` when the minimum tested Rust version hits 1.50.
+            let fmt = if has_fmt { Some(FmtHelper) } else { None };
+            let skip_if = if has_skip_if {
+                Some(SkipIfHelper)
+            } else {
+                None
+            };
+            // The items resolve at call site, so define them in the ephemeral block to avoid
+            // name conflict, and "export" them through the unit struct `Helper`.
+            // TODO: Use def-site hygiene once it stabilizes.
+            quote!(
+                let #helper = {
+                    struct Helper;
+                    #fmt
+                    #skip_if
+                    Helper
+                };
+            )
+            .to_tokens(tokens);
+        }
 
         let mut next_param = OAuthParameter::default();
         for f in self.fields {
@@ -55,46 +84,16 @@ impl<'a> ToTokens for MethodBody<'a> {
             };
 
             let display = if let Some(ref fmt) = f.meta.fmt {
-                quote! {
-                    {
-                        use std::fmt::{Display, Formatter, Result};
-
-                        // We can't just use `f.ty` instead of `T` because doing so would lead
-                        // to E0412/E0261 if `f.ty` contains lifetime/type parameters.
-                        struct Adapter<'a, T: ?Sized, F>(&'a T, F);
-                        impl<'a, T: ?Sized, F> Display for Adapter<'a, T, F>
-                        where
-                            F: Fn(&T, &mut Formatter<'_>) -> Result,
-                        {
-                            fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-                                self.1(self.0, f)
-                            }
-                        }
-
-                        // A helper to make deref coertion from `&#f.ty` to `&T` work properly.
-                        struct MakeAdapter<F>(F);
-                        impl<F> MakeAdapter<F> {
-                            fn make_adapter<T: ?Sized>(self, t: &T) -> Adapter<'_, T, F>
-                            where
-                                for<'a> Adapter<'a, T, F>: Display,
-                            {
-                                Adapter(t, self.0)
-                            }
-                        }
-
-                        MakeAdapter
-                    }({
-                        let fmt: fn(&_, &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result =
-                            #fmt;
-                        fmt
-                    })
-                    .make_adapter(#unwrapped)
-                }
+                // Convert the function to an `impl Fn` so that type errors for it occurs only once.
+                let fmt = quote_spanned! {fmt.span()=>
+                    #helper.fmt_as_impl_fn(#fmt)
+                };
+                quote! { #helper.fmt(#fmt, #unwrapped) }
             } else {
                 unwrapped.clone()
             };
 
-            let mut stmt = if f.meta.encoded {
+            let mut stmts = if f.meta.encoded {
                 // Set the expression's span to `f.ty` so that a trait bound error will appear
                 // at the field's position.
                 //
@@ -114,19 +113,18 @@ impl<'a> ToTokens for MethodBody<'a> {
                 }
             };
             if let Some(ref skip_if) = f.meta.skip_if {
-                stmt = quote! {
-                    if !{
-                        let skip_if: fn(&_) -> bool = #skip_if;
-                        skip_if
-                    }(#unwrapped)
-                    {
-                        #stmt
+                let skip_if = quote_spanned! {skip_if.span()=>
+                    #helper.skip_if_as_impl_fn(#skip_if)
+                };
+                stmts = quote! {
+                    if !#skip_if(#unwrapped) {
+                        #stmts
                     }
                 };
             }
             if ty_is_option {
                 let tmp = Ident::new("tmp", f.ty.span());
-                stmt = quote! {
+                stmts = quote! {
                     if let ::std::option::Option::Some(#bind) = {
                         // Set the argument's span to `f.ty` so that a type error will appear
                         // at the field's position. The span resolves at call site, so we are
@@ -143,11 +141,11 @@ impl<'a> ToTokens for MethodBody<'a> {
                         let #tmp = &#this.#ident;
                         ::std::option::Option::as_ref(#tmp)
                     } {
-                        #stmt
+                        #stmts
                     }
                 };
             }
-            stmt.to_tokens(tokens);
+            stmts.to_tokens(tokens);
         }
 
         while next_param != OAuthParameter::None {
