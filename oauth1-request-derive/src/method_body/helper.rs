@@ -24,7 +24,7 @@ macro_rules! def_tokens_inner {
 
         impl ToTokens for $name {
             fn to_tokens(&self, tokens: &mut TokenStream) {
-                quote!($($tt)*).to_tokens(tokens);
+                tokens.extend(quote! { $($tt)* });
             }
         }
     };

@@ -41,15 +41,14 @@ impl<'a> ToTokens for MethodBody<'a> {
             // The items resolve at call site, so define them in the ephemeral block to avoid
             // name conflict, and "export" them through the unit struct `Helper`.
             // TODO: Use def-site hygiene once it stabilizes.
-            quote!(
+            tokens.extend(quote! {
                 let #helper = {
                     struct Helper;
                     #fmt
                     #skip_if
                     Helper
                 };
-            )
-            .to_tokens(tokens);
+            });
         }
 
         let mut next_param = OAuthParameter::default();
@@ -63,10 +62,9 @@ impl<'a> ToTokens for MethodBody<'a> {
             let name_string = name.string_value();
 
             while next_param < *name_string {
-                quote!(
+                tokens.extend(quote! {
                     #ser.#next_param();
-                )
-                .to_tokens(tokens);
+                });
                 next_param = next_param.next();
             }
 
@@ -145,20 +143,18 @@ impl<'a> ToTokens for MethodBody<'a> {
                     }
                 };
             }
-            stmts.to_tokens(tokens);
+            tokens.extend(stmts);
         }
 
         while next_param != OAuthParameter::None {
-            quote!(
+            tokens.extend(quote! {
                 #ser.#next_param();
-            )
-            .to_tokens(tokens);
+            });
             next_param = next_param.next();
         }
-        quote! (
+        tokens.extend(quote! {
             #ser.end()
-        )
-        .to_tokens(tokens);
+        });
     }
 }
 
