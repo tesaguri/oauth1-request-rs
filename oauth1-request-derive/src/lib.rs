@@ -104,12 +104,12 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
         const _: () = {
             extern crate #krate as _oauth1_request;
 
+            #[automatically_derived]
             impl #impl_generics _oauth1_request::Request for #name #ty_generics
                 #where_clause
             {
                 // `_S`'s span resolves at call site so prefix it with underscore to avoid conflict.
                 // TODO: Use def-site hygiene once it stabilizes.
-                #[automatically_derived]
                 fn serialize<_S>(&self, mut serializer: _S) -> _S::Output
                 where
                     _S: _oauth1_request::serializer::Serializer,
