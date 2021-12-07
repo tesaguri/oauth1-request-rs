@@ -1,6 +1,3 @@
-use std::cmp::Ordering;
-use std::fmt::{self, Display, Formatter};
-
 use proc_macro2::{Group, Literal, Span, TokenStream};
 use proc_macro_error::emit_error;
 use quote::{ToTokens, TokenStreamExt};
@@ -206,45 +203,13 @@ impl<'a> Name<'a> {
     }
 
     // This was not named `to_string` to avoid `clippy::inherent_to_string_shadow_display`.
+    // We are avoiding implementing `Display` because the underlying `Display` impls in
+    // `proc_macro` crate use `to_string` under the hood as of this writing.
     pub fn string_value(&self) -> String {
         match *self {
             Name::Original(ident) => ident.to_string(),
             Name::Renamed(lit) => lit.value(),
         }
-    }
-}
-
-impl<'a> Display for Name<'a> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match *self {
-            Name::Original(ident) => ident.fmt(f),
-            Name::Renamed(lit) => lit.value().fmt(f),
-        }
-    }
-}
-
-impl<'a> Eq for Name<'a> {}
-
-impl<'a> Ord for Name<'a> {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match (self, other) {
-            (Name::Original(i), Name::Original(j)) => i.cmp(j),
-            (Name::Original(i), Name::Renamed(l)) => i.to_string().cmp(&l.value()),
-            (Name::Renamed(l), Name::Original(i)) => l.value().cmp(&i.to_string()),
-            (Name::Renamed(l), Name::Renamed(m)) => l.value().cmp(&m.value()),
-        }
-    }
-}
-
-impl<'a> PartialEq for Name<'a> {
-    fn eq(&self, other: &Self) -> bool {
-        matches!(self.cmp(other), Ordering::Equal)
-    }
-}
-
-impl<'a> PartialOrd for Name<'a> {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
     }
 }
 
