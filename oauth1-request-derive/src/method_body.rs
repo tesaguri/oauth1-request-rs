@@ -134,13 +134,16 @@ impl<'a> ToTokens for MethodBody<'a> {
                 let skip_if = quote_spanned! {skip_if.span()=>
                     #helper.skip_if_as_impl_fn(#skip_if)
                 };
-                stmts = quote! {
-                    if !#skip_if({
+                let cond = quote_spanned! {f.ty.span()=>
+                    !#skip_if({
                         // The purpose of this binding is the same as the `#tmp` binding above,
                         // but this is done in the ephemeral block to avoid name conflict.
                         let #tmp = #unwrapped;
                         #tmp
-                    }) {
+                    })
+                };
+                stmts = quote! {
+                    if #cond {
                         #stmts
                     }
                 };

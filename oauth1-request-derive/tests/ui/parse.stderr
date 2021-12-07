@@ -41,10 +41,10 @@ error: expected `,`
    |                           ^^^^^
 
 error: unexpected end of input, expected expression
-  --> tests/ui/parse.rs:24:13
+  --> tests/ui/parse.rs:24:21
    |
 24 |     #[oauth1(name = )]
-   |             ^^^^^^^^^
+   |                     ^
 
 error: expected identifier
   --> tests/ui/parse.rs:27:14
