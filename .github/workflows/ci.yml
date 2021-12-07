@@ -44,9 +44,12 @@ jobs:
           - js,derive
           - js,hmac-sha1
         include:
-          - toolchain: '1.46.0'
-            components: ''
-          - components: clippy
+          - toolchain: stable
+            components: clippy
+          - toolchain: beta
+            components: clippy
+          - toolchain: nightly
+            components: clippy
           - toolchain: stable
             features: js
             target: wasm32-unknown-unknown
