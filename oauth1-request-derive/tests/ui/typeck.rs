@@ -1,16 +1,8 @@
 use std::fmt::{self, Formatter};
 
 #[derive(oauth1_request::Request)]
-//~^ ERROR: `()` doesn't implement `std::fmt::Display`
-//~| `()` cannot be formatted with the default formatter
-//~^^^ ERROR: mismatched types
-//~| expected `u8`, found `()`
-//~^^^^^ ERROR: mismatched types
-//~| expected `()`, found `u8`
-// FIXME: move these errors to (1) to (3) respectively
 struct Test {
     not_display: (),
-    //^ (1)
 
     #[oauth1(fmt = fmt_missing_arg)]
     fmt_missing_arg: (),
@@ -19,7 +11,6 @@ struct Test {
     fmt_arg_not_ref: (),
 
     #[oauth1(fmt = fmt_arg_mismatch)]
-    //^ (2)
     fmt_arg_mismatch: (),
 
     #[oauth1(fmt = fmt_trait_bound_unsatisfied)]
@@ -43,7 +34,6 @@ struct Test {
     skip_if_arg_not_ref: u8,
 
     #[oauth1(skip_if = skip_if_arg_mismatch)]
-    //^ (3)
     skip_if_arg_mismatch: u8,
 
     #[oauth1(skip_if = skip_if_trait_bound_unsatisfied)]

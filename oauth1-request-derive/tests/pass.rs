@@ -332,11 +332,18 @@ struct Hygiene {
     // The expanded code defines a binding named `helper`. This attribute should not refer to that.
     #[oauth1(fmt = helper)]
     should_not_conflict_with_helper_binding: (),
+    // The expanded code defines a binding named `tmp` for each field. In order for the test to
+    // make the fullest sense, the field's name should be after another field in alphabetical order.
+    #[oauth1(fmt = tmp)]
+    should_not_conflict_with_tmp_binding: (),
     // The expanded code defines `serializer` argument.
     #[oauth1(fmt = serializer)]
     should_not_conflict_with_serializer_arg: (),
 }
 fn helper(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
+    unimplemented!();
+}
+fn tmp(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
     unimplemented!();
 }
 fn serializer(_: &(), _: &mut Formatter<'_>) -> fmt::Result {

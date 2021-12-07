@@ -60,6 +60,8 @@ impl<'a> ToTokens for MethodBody<'a> {
             let ident = &f.ident;
             let name = f.name();
             let name_string = name.string_value();
+            // Name of temporary binds used to associate certain values to `f.ty`'s span.
+            let tmp = Ident::new("tmp", f.ty.span());
 
             while next_param < *name_string {
                 tokens.extend(quote! {
@@ -81,18 +83,38 @@ impl<'a> ToTokens for MethodBody<'a> {
                 quote! { &#this.#ident }
             };
 
+            // Set the value's span to `f.ty` so that a type error will appear at
+            // the field's position.
+            //
+            // ```
+            // #[derive(Request)] // <- Not here
+            // struct Foo {
+            //     field: (),
+            //     //     ^^ `()` doesn't implement `std::fmt::Display`
+            // }
+            // ```
+            let mut stmts = quote! { let #tmp = #unwrapped; };
+
             let display = if let Some(ref fmt) = f.meta.fmt {
                 // Convert the function to an `impl Fn` so that type errors for it occurs only once.
                 let fmt = quote_spanned! {fmt.span()=>
                     #helper.fmt_as_impl_fn(#fmt)
                 };
-                quote! { #helper.fmt(#fmt, #unwrapped) }
+                // Evaluate `#fmt` in advance so that the expression won't see the `#tmp` binding,
+                // which resolves at call site.
+                stmts = quote_spanned! {Span::mixed_site()=>
+                    let fmt = #fmt;
+                    #stmts
+                };
+                quote_spanned! {Span::mixed_site()=>
+                    #helper.fmt(fmt, #tmp)
+                }
             } else {
-                unwrapped.clone()
+                TokenStream::from(TokenTree::Ident(tmp.clone()))
             };
 
-            let mut stmts = if f.meta.encoded {
-                // Set the expression's span to `f.ty` so that a trait bound error will appear
+            let serialize_method = if f.meta.encoded {
+                // Set the method name's span to `f.ty` so that a trait bound error will point
                 // at the field's position.
                 //
                 // ```
@@ -102,40 +124,31 @@ impl<'a> ToTokens for MethodBody<'a> {
                 //     //~^ ERROR: `()` doesn't implement `std::fmt::Display`
                 // }
                 // ```
-                quote_spanned! {f.ty.span()=>
-                    #ser.serialize_parameter_encoded(#name, #display);
-                }
+                Ident::new("serialize_parameter_encoded", f.ty.span())
             } else {
-                quote_spanned! {f.ty.span()=>
-                    #ser.serialize_parameter(#name, #display);
-                }
+                Ident::new("serialize_parameter", f.ty.span())
             };
+            stmts.extend(quote! { #ser.#serialize_method(#name, #display); });
+
             if let Some(ref skip_if) = f.meta.skip_if {
                 let skip_if = quote_spanned! {skip_if.span()=>
                     #helper.skip_if_as_impl_fn(#skip_if)
                 };
                 stmts = quote! {
-                    if !#skip_if(#unwrapped) {
+                    if !#skip_if({
+                        // The purpose of this binding is the same as the `#tmp` binding above,
+                        // but this is done in the ephemeral block to avoid name conflict.
+                        let #tmp = #unwrapped;
+                        #tmp
+                    }) {
                         #stmts
                     }
                 };
             }
+
             if ty_is_option {
-                let tmp = Ident::new("tmp", f.ty.span());
                 stmts = quote! {
                     if let ::std::option::Option::Some(#bind) = {
-                        // Set the argument's span to `f.ty` so that a type error will appear
-                        // at the field's position. The span resolves at call site, so we are
-                        // binding `#tmp` to the ephemeral block to avoid name conflict.
-                        //
-                        // ```
-                        // #[derive(Request)] // <- Not here
-                        // struct Foo {
-                        //     #[oauth1(option = true)]
-                        //     field: (),
-                        //     //~^ expected enum `Option`, found `()`
-                        // }
-                        // ```
                         let #tmp = &#this.#ident;
                         ::std::option::Option::as_ref(#tmp)
                     } {
@@ -143,6 +156,12 @@ impl<'a> ToTokens for MethodBody<'a> {
                     }
                 };
             }
+
+            // Enclose the statements with a block if not any yet, to keep the `#tmp` binding local.
+            if f.meta.skip_if.is_none() && !ty_is_option {
+                stmts = quote! {{ #stmts }};
+            }
+
             tokens.extend(stmts);
         }
 
