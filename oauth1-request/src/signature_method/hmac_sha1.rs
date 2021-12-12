@@ -7,11 +7,12 @@
 use std::fmt::{self, Formatter};
 
 use base64::display::Base64Display;
-use hmac::{Hmac, Mac, NewMac};
+use hmac::{Hmac, Mac};
+use sha1::digest::core_api::BlockSizeUser;
 use sha1::digest::generic_array::sequence::GenericSequence;
-use sha1::digest::generic_array::{ArrayLength, GenericArray};
-use sha1::digest::{BlockInput, FixedOutput, Reset, Update};
-use sha1::Sha1;
+use sha1::digest::generic_array::GenericArray;
+use sha1::digest::OutputSizeUser;
+use sha1::{Digest, Sha1};
 
 use crate::util::PercentEncode;
 
@@ -29,18 +30,18 @@ pub struct HmacSha1Sign {
 
 /// A signature produced by an `HmacSha1Sign`.
 pub struct HmacSha1Signature {
-    signature: GenericArray<u8, <Sha1 as FixedOutput>::OutputSize>,
+    signature: GenericArray<u8, <Sha1 as OutputSizeUser>::OutputSize>,
 }
 
 struct MacWrite<'a, M>(&'a mut M);
 
 #[derive(Clone)]
-enum SigningKey<D: BlockInput> {
+enum SigningKey {
     Key {
-        buf: GenericArray<u8, D::BlockSize>,
+        buf: GenericArray<u8, <Sha1 as BlockSizeUser>::BlockSize>,
         pos: usize,
     },
-    Digest(D),
+    Digest(Sha1),
 }
 
 impl SignatureMethod for HmacSha1 {
@@ -105,12 +106,7 @@ impl<'a, M: Mac> Write for MacWrite<'a, M> {
     }
 }
 
-impl<D> SigningKey<D>
-where
-    D: BlockInput + FixedOutput + Reset + Update + Default + Clone,
-    D::BlockSize: ArrayLength<u8> + Clone,
-    D::OutputSize: ArrayLength<u8>,
-{
+impl SigningKey {
     fn new() -> Self {
         SigningKey::Key {
             buf: GenericArray::generate(|_| 0),
@@ -125,7 +121,7 @@ where
                 ref mut pos,
             } => {
                 if input.len() > buf.len() - *pos {
-                    let mut digest = D::default();
+                    let mut digest = Sha1::default();
                     digest.update(&buf[..*pos]);
                     digest.update(input);
                     SigningKey::Digest(digest)
@@ -142,20 +138,15 @@ where
         };
     }
 
-    fn into_hmac(self) -> Hmac<D> {
+    fn into_hmac(self) -> Hmac<Sha1> {
         match self {
             SigningKey::Key { ref buf, pos } => Hmac::new_from_slice(&buf[..pos]).unwrap(),
-            SigningKey::Digest(digest) => Hmac::new_from_slice(&digest.finalize_fixed()).unwrap(),
+            SigningKey::Digest(digest) => Hmac::new_from_slice(&digest.finalize()).unwrap(),
         }
     }
 }
 
-impl<D> Write for SigningKey<D>
-where
-    D: BlockInput + FixedOutput + Reset + Update + Default + Clone,
-    D::BlockSize: ArrayLength<u8> + Clone,
-    D::OutputSize: ArrayLength<u8>,
-{
+impl Write for SigningKey {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write(s.as_bytes());
         Ok(())
@@ -164,16 +155,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use hmac::crypto_mac::generic_array::typenum::Unsigned;
+    use sha1::digest::generic_array::typenum::Unsigned;
 
     use super::*;
 
     #[test]
     fn signing_key() {
-        let mut sk = SigningKey::<Sha1>::new();
+        let mut sk = SigningKey::new();
         let mut k = Vec::new();
 
-        for _ in 0..=<Sha1 as BlockInput>::BlockSize::to_usize() + 1 {
+        for _ in 0..=<Sha1 as BlockSizeUser>::BlockSize::to_usize() + 1 {
             sk.write(&[1]);
             k.extend(&[1]);
 
