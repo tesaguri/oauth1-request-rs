@@ -10,15 +10,17 @@ pub struct Plaintext;
 
 /// A `Sign` implementation that just returns the signing key used to construct it.
 #[derive(Clone, Debug)]
-pub struct PlaintextSign(String);
+pub struct PlaintextSign {
+    signing_key: String,
+}
 
 impl SignatureMethod for Plaintext {
     type Sign = PlaintextSign;
 
     fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> PlaintextSign {
-        let mut key = String::with_capacity(128);
-        write_signing_key(&mut key, client_secret, token_secret);
-        PlaintextSign(key)
+        let mut signing_key = String::with_capacity(128);
+        write_signing_key(&mut signing_key, client_secret, token_secret);
+        PlaintextSign { signing_key }
     }
 }
 
@@ -38,7 +40,7 @@ impl Sign for PlaintextSign {
     fn delimiter(&mut self) {}
 
     fn end(self) -> String {
-        self.0
+        self.signing_key
     }
 
     // The OAuth standard (section 3.1.) says that `oauth_timestamp` and `oauth_nonce` parameters
