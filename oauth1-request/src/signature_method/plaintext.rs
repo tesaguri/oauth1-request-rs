@@ -2,7 +2,7 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.4
 
-use super::*;
+use super::{write_signing_key, Sign, SignatureMethod};
 
 /// The `PLAINTEXT` signature method.
 #[derive(Copy, Clone, Debug, Default)]

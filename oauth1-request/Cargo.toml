@@ -28,10 +28,16 @@ rand = "0.8"
 # `derive` feature
 oauth1-request-derive = { version = "0.4", optional = true }
 
-# `hmac-sha1` feature
+# `either` feature
 either = { version = "1.2", optional = true }
+
+# `hmac-sha1` feature
+digest = { version = "0.10", optional = true }
 hmac = { version = "0.12", optional = true }
 sha-1 = { version = "0.10", optional = true }
+
+# `rsa-sha1` feature
+rsa = { version = "0.5", optional = true }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 # `js` feature
@@ -49,6 +55,7 @@ wasm-bindgen-test = "0.3"
 [features]
 default = ["derive", "hmac-sha1"]
 derive = ["oauth1-request-derive"]
-hmac-sha1 = ["hmac", "sha-1"]
+hmac-sha1 = ["digest", "hmac", "sha-1"]
+rsa-sha1 = ["digest", "rsa", "sha-1"]
 js = ["js-sys"]
 serde = ["oauth-credentials/serde"]

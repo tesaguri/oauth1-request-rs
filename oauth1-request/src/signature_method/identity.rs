@@ -1,6 +1,8 @@
 //! A pseudo signature method for debugging purpose.
 
-use super::*;
+use std::fmt::{Display, Write};
+
+use super::{Sign, SignatureMethod};
 
 /// A pseudo signature method that just returns the signature base string as the signature.
 #[derive(Copy, Clone, Debug, Default)]

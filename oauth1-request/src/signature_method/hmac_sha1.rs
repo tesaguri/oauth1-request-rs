@@ -4,19 +4,17 @@
 //!
 //! This module is only available when `hmac-sha1` feature is activated.
 
-use std::fmt::{self, Formatter};
+use std::fmt::{self, Display, Formatter, Write};
 
-use base64::display::Base64Display;
+use digest::core_api::BlockSizeUser;
+use digest::generic_array::sequence::GenericSequence;
+use digest::generic_array::GenericArray;
+use digest::OutputSizeUser;
 use hmac::{Hmac, Mac};
-use sha1::digest::core_api::BlockSizeUser;
-use sha1::digest::generic_array::sequence::GenericSequence;
-use sha1::digest::generic_array::GenericArray;
-use sha1::digest::OutputSizeUser;
 use sha1::{Digest, Sha1};
 
-use crate::util::PercentEncode;
-
-use super::*;
+use super::digest_common::{Base64PercentEncodeDisplay, UpdateSign};
+use super::{write_signing_key, Sign, SignatureMethod};
 
 /// The `HMAC-SHA1` signature method.
 #[derive(Copy, Clone, Debug, Default)]
@@ -25,15 +23,13 @@ pub struct HmacSha1;
 /// A type that signs a signature base string with the HMAC-SHA1 signature algorithm.
 #[derive(Clone, Debug)]
 pub struct HmacSha1Sign {
-    mac: Hmac<Sha1>,
+    inner: UpdateSign<Hmac<Sha1>>,
 }
 
 /// A signature produced by an `HmacSha1Sign`.
 pub struct HmacSha1Signature {
-    signature: GenericArray<u8, <Sha1 as OutputSizeUser>::OutputSize>,
+    inner: Base64PercentEncodeDisplay<GenericArray<u8, <Sha1 as OutputSizeUser>::OutputSize>>,
 }
-
-struct MacWrite<'a, M>(&'a mut M);
 
 #[derive(Clone)]
 enum SigningKey {
@@ -51,7 +47,7 @@ impl SignatureMethod for HmacSha1 {
         let mut key = SigningKey::new();
         write_signing_key(&mut key, client_secret, token_secret);
         HmacSha1Sign {
-            mac: key.into_hmac(),
+            inner: UpdateSign(key.into_hmac()),
         }
     }
 }
@@ -64,45 +60,31 @@ impl Sign for HmacSha1Sign {
     }
 
     fn request_method(&mut self, method: &str) {
-        self.mac.update(method.as_bytes());
-        self.mac.update(b"&");
+        self.inner.request_method(method)
     }
 
     fn uri<T: Display>(&mut self, uri: T) {
-        write!(MacWrite(&mut self.mac), "{}&", uri).unwrap();
+        self.inner.uri(uri)
     }
 
     fn parameter<V: Display>(&mut self, key: &str, value: V) {
-        self.mac.update(key.as_bytes());
-        self.mac.update(b"%3D"); // '='
-        write!(MacWrite(&mut self.mac), "{}", value).unwrap();
+        self.inner.parameter(key, value)
     }
 
     fn delimiter(&mut self) {
-        self.mac.update(b"%26"); // '&'
+        self.inner.delimiter()
     }
 
     fn end(self) -> HmacSha1Signature {
         HmacSha1Signature {
-            signature: self.mac.finalize().into_bytes(),
+            inner: Base64PercentEncodeDisplay(self.inner.0.finalize().into_bytes()),
         }
     }
 }
 
 impl Display for HmacSha1Signature {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let d = PercentEncode(Base64Display::with_config(
-            &self.signature,
-            base64::STANDARD,
-        ));
-        Display::fmt(&d, f)
-    }
-}
-
-impl<'a, M: Mac> Write for MacWrite<'a, M> {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.0.update(s.as_bytes());
-        Ok(())
+        self.inner.fmt(f)
     }
 }
 
@@ -155,7 +137,7 @@ impl Write for SigningKey {
 
 #[cfg(test)]
 mod tests {
-    use sha1::digest::generic_array::typenum::Unsigned;
+    use digest::generic_array::typenum::Unsigned;
 
     use super::*;
 

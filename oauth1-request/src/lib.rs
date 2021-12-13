@@ -400,9 +400,11 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
 
     /// Authorizes a request and consumes `self`.
     ///
-    /// This may be more efficient than `build` if the signature method holds a non-`Copy` data
-    /// (e.g. RSA private key). However, the cost is the same as `build` for the signature methods
-    /// bundled with this library (`HmacSha1` and `Plaintext`).
+    /// Unlike `build`, this does not clone the signature method and may be more efficient for
+    /// non-`Copy` signature methods like `RsaSha1`.
+    ///
+    /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
+    /// use `build` instead.
     pub fn consume<U: Display, R: Request + ?Sized>(
         self,
         method: &str,

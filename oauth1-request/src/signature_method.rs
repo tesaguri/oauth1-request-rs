@@ -10,7 +10,11 @@
 pub mod hmac_sha1;
 pub mod identity;
 pub mod plaintext;
+#[cfg(feature = "rsa-sha1")]
+pub mod rsa_sha1;
 
+#[cfg(any(feature = "hmac-sha1", feature = "rsa-sha1"))]
+mod digest_common;
 #[cfg(feature = "either")]
 mod either;
 
@@ -18,6 +22,8 @@ mod either;
 pub use self::hmac_sha1::HmacSha1;
 pub use self::identity::Identity;
 pub use self::plaintext::Plaintext;
+#[cfg(feature = "rsa-sha1")]
+pub use self::rsa_sha1::RsaSha1;
 
 use std::fmt::{Display, Write};
 
