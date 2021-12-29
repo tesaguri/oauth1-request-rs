@@ -307,6 +307,5 @@ fn gen_nonce(buf: &mut [u8; NONCE_LEN]) -> &str {
     let len = base64::encode_config_slice(&rand, base64::URL_SAFE_NO_PAD, buf);
     let buf = &buf[..len];
 
-    debug_assert!(str::from_utf8(buf).is_ok(), "buf={:?}", buf);
-    unsafe { str::from_utf8_unchecked(buf) }
+    str::from_utf8(buf).unwrap()
 }
