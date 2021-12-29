@@ -46,7 +46,7 @@ pub use skip_serialize_oauth_parameters;
 /// #
 /// use std::num::NonZeroU64;
 ///
-/// use oauth::serializer::auth::{self, HmacSha1Authorizer};
+/// use oauth::serializer::auth::{self, Authorizer};
 /// use oauth::serializer::{Serializer, SerializerExt};
 ///
 /// // Create an OAuth 1.0 `Authorization` header serializer.
@@ -55,12 +55,13 @@ pub use skip_serialize_oauth_parameters;
 /// let options = auth::Options::new();
 /// # let mut options = options;
 /// # options.nonce("mo8_whwD5c91").timestamp(NonZeroU64::new(1234567890));
-/// let mut serializer = HmacSha1Authorizer::new(
+/// let mut serializer = Authorizer::new(
 ///     "GET",
 ///     "https://example.com/api/v1/get.json",
 ///     client,
 ///     Some(token),
 ///     &options,
+///     oauth::HmacSha1,
 /// );
 ///
 /// // The parameters must be serialized in ascending ordering.
@@ -181,13 +182,12 @@ impl<S: Serializer> SerializerExt for S {
 #[cfg(test)]
 #[cfg(feature = "hmac-sha1")]
 mod tests {
-    use super::auth::{HmacSha1Authorizer, PlaintextAuthorizer};
     use super::*;
 
     use std::num::NonZeroU64;
 
     use crate::serializer::auth;
-    use crate::signature_method::{HmacSha1, Identity, Sign, SignatureMethod};
+    use crate::signature_method::{HmacSha1, Identity, Plaintext, Sign, SignatureMethod};
     use crate::Credentials;
 
     // These values are taken from Twitter's document:
@@ -213,7 +213,11 @@ mod tests {
     }
 
     #[derive(Clone, Debug)]
-    struct AssertImpl<'a>(HmacSha1Authorizer<'a>, PlaintextAuthorizer<'a>, Identity);
+    struct AssertImpl<'a>(
+        Authorizer<'a, HmacSha1>,
+        Authorizer<'a, Identity>,
+        Authorizer<'a, Plaintext>,
+    );
 
     impl<S: Sign> Sign for InspectSign<S> {
         type Signature = S::Signature;
@@ -259,13 +263,13 @@ mod tests {
                     options.nonce($nonce)
                         .timestamp($timestamp)
                         .version(true);
-                    let mut auth = Authorizer::with_signature_method(
-                        Inspect(HmacSha1),
+                    let mut auth = Authorizer::new(
                         $method,
                         $ep,
                         client,
                         Some(token),
                         &options,
+                        Inspect(HmacSha1),
                     );
 
                     test_inner! { auth; $($param1)* }
@@ -363,7 +367,7 @@ mod tests {
         let client = Credentials::new(CK, CS);
         let token = Credentials::new(AK, AS);
         let options = auth::Options::default();
-        let mut ser = PlaintextAuthorizer::new("", "", client, Some(token), &options);
+        let mut ser = Authorizer::new("", "", client, Some(token), &options, Plaintext);
         ser.serialize_parameter_encoded("foo", true);
         ser.serialize_parameter("bar", "ばー！");
     }

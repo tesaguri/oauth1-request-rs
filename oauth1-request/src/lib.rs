@@ -386,13 +386,13 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     where
         SM: Clone,
     {
-        let serializer = Authorizer::with_signature_method(
-            self.signature_method.clone(),
+        let serializer = Authorizer::new(
             method,
             uri,
             self.client.as_ref(),
             self.token.as_ref().map(Credentials::as_ref),
             &self.options,
+            self.signature_method.clone(),
         );
 
         request.serialize(serializer)
@@ -411,13 +411,13 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         uri: U,
         request: &R,
     ) -> String {
-        let serializer = Authorizer::with_signature_method(
-            self.signature_method,
+        let serializer = Authorizer::new(
             method,
             uri,
             self.client.as_ref(),
             self.token.as_ref().map(Credentials::as_ref),
             &self.options,
+            self.signature_method,
         );
 
         request.serialize(serializer)

@@ -73,7 +73,14 @@ macro_rules! assert_expand {
             let client = Credentials::new("", "");
             let mut opts = auth::Options::new();
             opts.nonce("nonce").timestamp(NonZeroU64::new(9999999999));
-            let auth = Authorizer::<Identity>::new("GET", "https://example.com/get", client, None, &opts);
+            let auth = Authorizer::new(
+                "GET",
+                "https://example.com/get",
+                client,
+                None,
+                &opts,
+                Identity,
+            );
             let authorization = oauth::Request::serialize(&x, auth.clone());
             let expected = x.expected(auth);
 

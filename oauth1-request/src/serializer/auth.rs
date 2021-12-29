@@ -6,7 +6,7 @@ use std::str;
 
 use rand::prelude::*;
 
-use crate::signature_method::{Plaintext, Sign, SignatureMethod};
+use crate::signature_method::{Sign, SignatureMethod};
 use crate::util::*;
 use crate::Credentials;
 
@@ -50,13 +50,6 @@ options! {
     }
 }
 
-/// A version of `Signer` that uses the `PLAINTEXT` signature method.
-pub type PlaintextAuthorizer<'a> = Authorizer<'a, Plaintext>;
-
-/// A version of `Signer` that uses the `HMAC-SHA1` signature method.
-#[cfg(feature = "hmac-sha1")]
-pub type HmacSha1Authorizer<'a> = Authorizer<'a, crate::signature_method::HmacSha1>;
-
 impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     /// Creates an `Authorizer`.
     ///
@@ -72,21 +65,7 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
         client: Credentials<&'a str>,
         token: Option<Credentials<&'a str>>,
         options: &'a Options<'a>,
-    ) -> Self
-    where
-        SM: Default,
-    {
-        Self::with_signature_method(Default::default(), method, uri, client, token, options)
-    }
-
-    /// Same as `new` except that this uses `signature_method` as the signature method.
-    pub fn with_signature_method<T: Display>(
         signature_method: SM,
-        method: &str,
-        uri: T,
-        client: Credentials<&'a str>,
-        token: Option<Credentials<&'a str>>,
-        options: &'a Options<'a>,
     ) -> Self {
         let mut sign = signature_method.sign_with(client.secret, token.map(|t| t.secret));
 
