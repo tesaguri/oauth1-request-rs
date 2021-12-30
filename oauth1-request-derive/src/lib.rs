@@ -50,12 +50,21 @@ pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::To
 fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
     let name = &input.ident;
 
-    let krate = match proc_macro_crate::crate_name("oauth1-request").unwrap() {
-        FoundCrate::Name(krate) => krate,
+    let krate;
+    let krate = match proc_macro_crate::crate_name("oauth1-request") {
+        Ok(FoundCrate::Name(k)) => {
+            krate = k;
+            &*krate
+        }
         // This is used in `oauth1_request`'s doctests.
-        FoundCrate::Itself => std::env::var("CARGO_CRATE_NAME").unwrap(),
+        Ok(FoundCrate::Itself) => {
+            krate = std::env::var("CARGO_CRATE_NAME").unwrap();
+            &*krate
+        }
+        Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request",
+        Err(e) => Err(e).unwrap(),
     };
-    let krate = Ident::new(&krate, Span::call_site());
+    let krate = Ident::new(krate, Span::call_site());
 
     add_trait_bounds(&mut input.generics);
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
