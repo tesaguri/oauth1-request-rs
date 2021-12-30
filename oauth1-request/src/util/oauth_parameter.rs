@@ -1,4 +1,4 @@
-use std::cmp::{Ordering, PartialEq, PartialOrd};
+use core::cmp::{Ordering, PartialEq, PartialOrd};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OAuthParameter {

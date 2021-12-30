@@ -42,9 +42,9 @@
 //!     oauth::Token::from_parts("consumer_key", "consumer_secret", "token", "token_secret");
 //!
 //! // Create the `Authorization` header.
-//! let authorization_header = oauth::post(uri, &request, &token, oauth::HmacSha1);
+//! let authorization_header = oauth::post(uri, &request, &token, oauth::HmacSha1::new());
 //! # // Override the above value to pin the nonce and timestamp value.
-//! # let mut builder = oauth::Builder::new(token.client, oauth::HmacSha1);
+//! # let mut builder = oauth::Builder::new(token.client, oauth::HmacSha1::new());
 //! # builder.token(token.token);
 //! # builder.nonce("Dk-OGluFEQ4f").timestamp(std::num::NonZeroU64::new(1234567890));
 //! # let authorization_header = builder.post(uri, &request);
@@ -80,7 +80,8 @@
 //! If you want to authorize a request with dynamic keys, you can use a
 //! [`BTreeSet<(K, V)>`][std::collections::BTreeSet]:
 //!
-//! ```
+#![cfg_attr(feature = "alloc", doc = " ```")]
+#![cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
 //! # extern crate oauth1_request as oauth;
 //! #
 //! use std::collections::BTreeSet;
@@ -101,8 +102,8 @@
 //!
 //! Use [`oauth::Builder`][Builder] if you need to specify a callback URI or verifier:
 //!
-#![cfg_attr(feature = "hmac-sha1", doc = " ```")]
-#![cfg_attr(not(feature = "hmac-sha1"), doc = " ```ignore")]
+#![cfg_attr(all(feature = "alloc", feature = "hmac-sha1"), doc = " ```")]
+#![cfg_attr(not(all(feature = "alloc", feature = "hmac-sha1")), doc = " ```ignore")]
 //! # extern crate oauth1_request as oauth;
 //! #
 //! let uri = "https://example.com/oauth/request_temp_credentials";
@@ -110,7 +111,7 @@
 //!
 //! let client = oauth::Credentials::new("consumer_key", "consumer_secret");
 //!
-//! let authorization_header = oauth::Builder::<_, _>::new(client, oauth::HmacSha1)
+//! let authorization_header = oauth::Builder::<_, _>::new(client, oauth::HmacSha1::new())
 //!     .callback(callback)
 //!     .post(uri, &());
 //! ```
@@ -120,6 +121,10 @@
 // Prevent `oauth-credentials/alloc` feature from showing up on re-exports.
 #![cfg_attr(docsrs, doc(cfg_hide(feature = "alloc")))]
 #![warn(missing_docs, rust_2018_idioms)]
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 #[macro_use]
 mod util;
@@ -136,7 +141,8 @@ mod request;
 ///
 /// ## Example
 ///
-/// ```
+#[cfg_attr(feature = "alloc", doc = " ```")]
+#[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
 /// # extern crate oauth1_request as oauth;
 /// #
 /// #[derive(oauth::Request)]
@@ -202,17 +208,25 @@ pub use self::request::Request;
 pub use self::signature_method::HmacSha1;
 pub use self::signature_method::Plaintext;
 
-use std::fmt::{Debug, Display};
-use std::num::NonZeroU64;
-use std::str;
+#[cfg(feature = "alloc")]
+use alloc::string::String;
+use core::fmt::Debug;
+use core::fmt::{Display, Write};
+use core::num::NonZeroU64;
+use core::str;
 
-use self::serializer::auth::{self, Authorizer};
-use self::serializer::Urlencoder;
+use self::serializer::auth;
 use self::signature_method::SignatureMethod;
 
 /// A builder for OAuth `Authorization` header string.
 #[derive(Clone, Debug)]
-pub struct Builder<'a, SM, C = String, T = C> {
+pub struct Builder<
+    'a,
+    SM,
+    #[cfg(feature = "alloc")] C = String,
+    #[cfg(not(feature = "alloc"))] C,
+    T = C,
+> {
     signature_method: SM,
     client: Credentials<C>,
     token: Option<Credentials<T>>,
@@ -287,6 +301,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `GET` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn get<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -297,6 +312,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `PUT` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn put<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -307,6 +323,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `POST` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn post<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -317,6 +334,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `DELETE` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn delete<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -327,6 +345,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes an `OPTIONS` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn options<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -337,6 +356,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `HEAD` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn head<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -347,6 +367,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `CONNECT` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn connect<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -357,6 +378,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `PATCH` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn patch<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -367,6 +389,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a `TRACE` request to `uri`.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn trace<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
     where
         SM: Clone,
@@ -377,6 +400,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     /// Authorizes a request to `uri` with a custom HTTP request method.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
     pub fn build<U: Display, R: Request + ?Sized>(
         &self,
         method: &str,
@@ -386,7 +410,32 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     where
         SM: Clone,
     {
-        let serializer = Authorizer::new(
+        let serializer = serializer::auth::Authorizer::new(
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method.clone(),
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Same as `build` except that this writes the resulting `Authorization` header value
+    /// into `buf`.
+    pub fn build_with_buf<W: Write, U: Display, R: Request + ?Sized>(
+        &self,
+        buf: W,
+        method: &str,
+        uri: U,
+        request: &R,
+    ) -> W
+    where
+        SM: Clone,
+    {
+        let serializer = serializer::auth::Authorizer::with_buf(
+            buf,
             method,
             uri,
             self.client.as_ref(),
@@ -405,13 +454,39 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     ///
     /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
     /// use `build` instead.
+    #[cfg(feature = "alloc")]
     pub fn consume<U: Display, R: Request + ?Sized>(
         self,
         method: &str,
         uri: U,
         request: &R,
     ) -> String {
-        let serializer = Authorizer::new(
+        let serializer = serializer::auth::Authorizer::new(
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method,
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Same as `consume` except that this writes the resulting `Authorization` header value
+    /// into `buf`.
+    pub fn consume_with_buf<W: Write, U: Display, R: Request + ?Sized>(
+        self,
+        buf: W,
+        method: &str,
+        uri: U,
+        request: &R,
+    ) -> W
+    where
+        SM: Clone,
+    {
+        let serializer = serializer::auth::Authorizer::with_buf(
+            buf,
             method,
             uri,
             self.client.as_ref(),
@@ -427,6 +502,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
 macro_rules! def_shorthand {
     ($($(#[$attr:meta])* $name:ident($method:expr);)*) => {$(
         $(#[$attr])*
+        #[cfg(feature = "alloc")]
         pub fn $name<U, R, C, T, SM>(
             uri: U,
             request: &R,
@@ -495,6 +571,7 @@ def_shorthand! {
 /// Authorizes a request to `uri` using the given credentials.
 ///
 /// `uri` must not contain a query part, which would result in a wrong signature.
+#[cfg(feature = "alloc")]
 pub fn authorize<U, R, C, T, SM>(
     method: &str,
     uri: U,
@@ -527,20 +604,22 @@ where
 }
 
 /// Turns a `Request` into an `x-www-form-urlencoded` string.
+#[cfg(feature = "alloc")]
 pub fn to_form_urlencoded<R>(request: &R) -> String
 where
     R: Request + ?Sized,
 {
-    request.serialize(Urlencoder::form())
+    request.serialize(serializer::Urlencoder::form())
 }
 
 /// Turns a `Request` to a query string and appends it to the given URI.
 ///
 /// This function naively concatenates a query string to `uri` and if `uri` already has
 /// a query part, it will have a duplicate query part like `?foo=bar?baz=qux`.
+#[cfg(feature = "alloc")]
 pub fn to_uri_query<R>(uri: String, request: &R) -> String
 where
     R: Request + ?Sized,
 {
-    request.serialize(Urlencoder::query(uri))
+    request.serialize(serializer::Urlencoder::query(uri))
 }

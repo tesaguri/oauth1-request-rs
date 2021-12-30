@@ -4,11 +4,14 @@
 //!
 //! This module is only available when `rsa-sha1` feature is activated.
 
+extern crate alloc;
+
 pub use rsa::pkcs8::FromPrivateKey;
 pub use rsa::RsaPrivateKey;
 
-use std::fmt::{self, Display, Formatter};
-use std::mem;
+use alloc::vec::Vec;
+use core::fmt::{self, Display, Formatter};
+use core::mem;
 
 use digest::Digest;
 use rsa::{Hash, PaddingScheme};
@@ -158,6 +161,8 @@ impl Display for RsaSha1Signature {
 
 #[cfg(test)]
 mod tests {
+    use alloc::string::ToString;
+
     use crate::util::percent_encode;
 
     use super::*;

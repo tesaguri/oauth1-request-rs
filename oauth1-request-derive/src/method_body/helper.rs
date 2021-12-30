@@ -34,7 +34,7 @@ macro_rules! def_tokens_inner {
 struct Helper;
 
 def_tokens! {FmtHelper;
-    use ::std::fmt::{Display, Formatter, Result};
+    use ::core::fmt::{Display, Formatter, Result};
 
     struct Fmt<T, F>(T, F);
 

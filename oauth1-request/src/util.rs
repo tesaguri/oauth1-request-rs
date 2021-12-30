@@ -1,10 +1,10 @@
+#[cfg(feature = "alloc")]
 mod oauth_parameter;
 mod percent_encoding;
 
+#[cfg(feature = "alloc")]
 pub use self::oauth_parameter::OAuthParameter;
 pub use self::percent_encoding::{percent_encode, DoublePercentEncode, PercentEncode};
-
-use crate::serializer::Serializer;
 
 macro_rules! options {
     ($(
@@ -63,8 +63,9 @@ macro_rules! impl_setters {
 #[derive(Clone, Debug)]
 pub enum Never {}
 
+#[cfg(feature = "alloc")]
 impl OAuthParameter {
-    pub fn serialize<S: Serializer>(self, serializer: &mut S) {
+    pub fn serialize<S: crate::serializer::Serializer>(self, serializer: &mut S) {
         match self {
             OAuthParameter::Callback => serializer.serialize_oauth_callback(),
             OAuthParameter::ConsumerKey => serializer.serialize_oauth_consumer_key(),

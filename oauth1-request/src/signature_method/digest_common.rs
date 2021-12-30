@@ -1,4 +1,4 @@
-use std::fmt::{self, Display, Formatter, Write};
+use core::fmt::{self, Display, Formatter, Write};
 
 use base64::display::Base64Display;
 use digest::Update;

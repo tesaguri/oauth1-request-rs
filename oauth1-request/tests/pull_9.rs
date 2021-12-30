@@ -9,6 +9,6 @@ fn pull_9() {
         "",
         &(),
         &oauth_credentials::Token::from_parts("", "", "", ""),
-        oauth1_request::Plaintext,
+        oauth1_request::Plaintext::new(),
     );
 }

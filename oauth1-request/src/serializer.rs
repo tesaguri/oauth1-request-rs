@@ -6,7 +6,7 @@ pub mod urlencode;
 pub use auth::Authorizer;
 pub use urlencode::Urlencoder;
 
-use std::fmt::Display;
+use core::fmt::Display;
 
 /// Helper macro for implementors of `Serializer` which generates blank implementation of
 /// `serialize_oauth_*` methods.
@@ -40,8 +40,8 @@ pub use skip_serialize_oauth_parameters;
 ///
 /// [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.1
 ///
-#[cfg_attr(feature = "hmac-sha1", doc = " ```")]
-#[cfg_attr(not(feature = "hmac-sha1"), doc = " ```ignore")]
+#[cfg_attr(all(feature = "alloc", feature = "hmac-sha1"), doc = " ```")]
+#[cfg_attr(not(all(feature = "alloc", feature = "hmac-sha1")), doc = " ```ignore")]
 /// # extern crate oauth1_request as oauth;
 /// #
 /// use std::num::NonZeroU64;
@@ -61,7 +61,7 @@ pub use skip_serialize_oauth_parameters;
 ///     client,
 ///     Some(token),
 ///     &options,
-///     oauth::HmacSha1,
+///     oauth::HmacSha1::new(),
 /// );
 ///
 /// // The parameters must be serialized in ascending ordering.
@@ -182,9 +182,14 @@ impl<S: Serializer> SerializerExt for S {
 #[cfg(test)]
 #[cfg(feature = "hmac-sha1")]
 mod tests {
-    use super::*;
+    extern crate std;
 
-    use std::num::NonZeroU64;
+    use core::num::NonZeroU64;
+    use std::format;
+    use std::println;
+    use std::string::{String, ToString};
+
+    use super::*;
 
     use crate::serializer::auth;
     use crate::signature_method::{HmacSha1, Identity, Plaintext, Sign, SignatureMethod};
@@ -214,9 +219,9 @@ mod tests {
 
     #[derive(Clone, Debug)]
     struct AssertImpl<'a>(
-        Authorizer<'a, HmacSha1>,
-        Authorizer<'a, Identity>,
-        Authorizer<'a, Plaintext>,
+        Authorizer<'a, HmacSha1, String>,
+        Authorizer<'a, Identity<String>, String>,
+        Authorizer<'a, Plaintext<String>, String>,
     );
 
     impl<S: Sign> Sign for InspectSign<S> {
@@ -263,13 +268,14 @@ mod tests {
                     options.nonce($nonce)
                         .timestamp($timestamp)
                         .version(true);
-                    let mut auth = Authorizer::new(
+                    let mut auth = Authorizer::with_buf(
+                        String::new(),
                         $method,
                         $ep,
                         client,
                         Some(token),
                         &options,
-                        Inspect(HmacSha1),
+                        Inspect(HmacSha1::new()),
                     );
 
                     test_inner! { auth; $($param1)* }
@@ -356,7 +362,7 @@ mod tests {
         }
     }
 
-    #[cfg(debug_assertions)]
+    #[cfg(all(feature = "alloc", debug_assertions))]
     #[test]
     #[should_panic(
         expected = "appended key is less than previously appended one in dictionary order\
@@ -367,7 +373,15 @@ mod tests {
         let client = Credentials::new(CK, CS);
         let token = Credentials::new(AK, AS);
         let options = auth::Options::default();
-        let mut ser = Authorizer::new("", "", client, Some(token), &options, Plaintext);
+        let mut ser = Authorizer::with_buf(
+            String::new(),
+            "",
+            "",
+            client,
+            Some(token),
+            &options,
+            Plaintext::<String>::with_buf(),
+        );
         ser.serialize_parameter_encoded("foo", true);
         ser.serialize_parameter("bar", "ばー！");
     }

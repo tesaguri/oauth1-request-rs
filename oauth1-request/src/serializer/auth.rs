@@ -1,8 +1,8 @@
 //! An OAuth 1.0 `Authorization` header serializer.
 
-use std::fmt::{Display, Write};
-use std::num::NonZeroU64;
-use std::str;
+use core::fmt::{self, Display, Write};
+use core::num::NonZeroU64;
+use core::str;
 
 use rand::prelude::*;
 
@@ -15,15 +15,20 @@ use super::Serializer;
 /// A `Serializer` that produces an HTTP `Authorization` header string by signing a request
 /// in OAuth 1.0 protocol.
 #[derive(Clone, Debug)]
-pub struct Authorizer<'a, SM: SignatureMethod> {
+pub struct Authorizer<
+    'a,
+    SM: SignatureMethod,
+    #[cfg(feature = "alloc")] W = alloc::string::String,
+    #[cfg(not(feature = "alloc"))] W,
+> {
     consumer_key: &'a str,
     token: Option<&'a str>,
     options: &'a Options<'a>,
-    authorization: String,
+    authorization: W,
     sign: SM::Sign,
     append_delim_to_sign: bool,
-    #[cfg(debug_assertions)]
-    prev_key: String,
+    #[cfg(all(feature = "alloc", debug_assertions))]
+    prev_key: alloc::string::String,
 }
 
 options! {
@@ -50,6 +55,7 @@ options! {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     /// Creates an `Authorizer`.
     ///
@@ -67,43 +73,71 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
         options: &'a Options<'a>,
         signature_method: SM,
     ) -> Self {
+        Authorizer::with_buf(
+            alloc::string::String::with_capacity(512),
+            method,
+            uri,
+            client,
+            token,
+            options,
+            signature_method,
+        )
+    }
+}
+
+impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
+    /// Same as `new` except that this writes the resulting `Authorization` header value into `buf`.
+    pub fn with_buf<T: Display>(
+        mut buf: W,
+        method: &str,
+        uri: T,
+        client: Credentials<&'a str>,
+        token: Option<Credentials<&'a str>>,
+        options: &'a Options<'a>,
+        signature_method: SM,
+    ) -> Self {
         let mut sign = signature_method.sign_with(client.secret, token.map(|t| t.secret));
 
-        let mut authorization = String::with_capacity(512);
-        authorization.push_str("OAuth ");
+        buf.write_str("OAuth ").unwrap();
 
         sign.request_method(method);
 
+        // This is a no_alloc-equivalent of `assert!(!uri.to_string().contains('?'))`.
         // We can determine if the URI contains a query part by just checking if it containsa `'?'`
         // character, because the scheme and authority part of a valid URI does not contain
         // that character.
-        debug_assert!(
-            !uri.to_string().contains('?'),
-            "`uri` must not contain a query part",
-        );
+        #[cfg(debug_assertions)]
+        {
+            struct AssertNotContainQuestion;
+            impl Write for AssertNotContainQuestion {
+                #[track_caller]
+                fn write_str(&mut self, uri: &str) -> fmt::Result {
+                    assert!(!uri.contains('?'), "`uri` must not contain a query part");
+                    Ok(())
+                }
+            }
+            write!(AssertNotContainQuestion, "{}", uri).unwrap();
+        }
 
         sign.uri(PercentEncode(uri));
 
-        {
-            #[cfg(debug_assertions)]
-            {
-                Self {
+        cfg_if::cfg_if! {
+            if #[cfg(all(feature = "alloc", debug_assertions))] {
+                Authorizer {
                     consumer_key: client.identifier,
                     token: token.map(|t| t.identifier),
                     options,
-                    authorization,
+                    authorization: buf,
                     sign,
                     append_delim_to_sign: false,
-                    prev_key: String::new(),
+                    prev_key: alloc::string::String::new(),
                 }
-            }
-            #[cfg(not(debug_assertions))]
-            {
-                Self {
+            } else {
+                Authorizer {
                     consumer_key: client.identifier,
                     token: token.map(|t| t.identifier),
                     options,
-                    authorization,
+                    authorization: buf,
                     sign,
                     append_delim_to_sign: false,
                 }
@@ -112,7 +146,7 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     }
 }
 
-impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
+impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
     fn append_to_header_encoded<V: Display>(&mut self, k: &str, v: V) {
         self.check_dictionary_order(k);
         write!(self.authorization, r#"{}="{}","#, k, v).unwrap();
@@ -128,7 +162,7 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     }
 
     fn check_dictionary_order(&mut self, _k: &str) {
-        #[cfg(debug_assertions)]
+        #[cfg(all(feature = "alloc", debug_assertions))]
         {
             assert!(
                 *self.prev_key <= *_k,
@@ -161,8 +195,8 @@ macro_rules! append_to_header {
     }};
 }
 
-impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
-    type Output = String;
+impl<'a, SM: SignatureMethod, W: Write> Serializer for Authorizer<'a, SM, W> {
+    type Output = W;
 
     fn serialize_parameter<V: Display>(&mut self, k: &str, v: V) {
         self.check_dictionary_order(k);
@@ -192,7 +226,7 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
                 append_to_header!(self, nonce, n);
             } else {
                 let mut nonce_buf = Default::default();
-                append_to_header!(self, encoded nonce, gen_nonce(&mut nonce_buf));
+                append_to_header!(self, encoded nonce, gen_nonce(&mut nonce_buf, &mut get_rng()));
             }
         }
     }
@@ -233,14 +267,14 @@ impl<'a, SM: SignatureMethod> Serializer for Authorizer<'a, SM> {
         }
     }
 
-    fn end(self) -> String {
+    fn end(self) -> W {
         let Self {
             mut authorization,
             sign,
             ..
         } = self;
 
-        authorization.push_str("oauth_signature=");
+        authorization.write_str("oauth_signature=").unwrap();
         write!(authorization, r#""{}""#, sign.end()).unwrap();
 
         authorization
@@ -252,12 +286,29 @@ fn get_current_timestamp() -> u64 {
         // `std::time::SystemTime::now` is not supported and panics on `wasm32-unknown-unknown` target
         if #[cfg(all(feature = "js", target_arch = "wasm32", target_os = "unknown"))] {
             (js_sys::Date::now() / 1000.0) as u64
-        } else {
+        } else if #[cfg(feature = "std")] {
             use std::time::{SystemTime, UNIX_EPOCH};
             match SystemTime::now().duration_since(UNIX_EPOCH) {
                 Ok(d) => d.as_secs(),
                 Err(_) => 1,
             }
+        } else {
+            panic!(
+                "Attempted to get current timestamp in `no_std` mode. You must either use a \
+                signature method that do not use timestamp (i.e. SignatureMethod::Sign::timestamp` \
+                returns `true`) or explicitly set the timestamp via `Builder::timestamp` or \
+                `serializer::auth::Options::timestamp`",
+            );
+        }
+    }
+}
+
+fn get_rng() -> impl RngCore + CryptoRng {
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "std")] {
+            thread_rng()
+        } else {
+            rand::rngs::OsRng
         }
     }
 }
@@ -273,9 +324,7 @@ fn get_current_timestamp() -> u64 {
 // the same timestamp is 1/P.
 const NONCE_LEN: usize = 12;
 
-fn gen_nonce(buf: &mut [u8; NONCE_LEN]) -> &str {
-    let mut rng = thread_rng();
-
+fn gen_nonce<'a, R: RngCore + CryptoRng>(buf: &'a mut [u8; NONCE_LEN], rng: &mut R) -> &'a str {
     let mut rand = [0u8; NONCE_LEN * 3 / 4];
     rng.fill_bytes(&mut rand);
 

@@ -151,9 +151,9 @@ impl<'a> ToTokens for MethodBody<'a> {
 
             if ty_is_option {
                 stmts = quote! {
-                    if let ::std::option::Option::Some(#bind) = {
+                    if let ::core::option::Option::Some(#bind) = {
                         let #tmp = &#this.#ident;
-                        ::std::option::Option::as_ref(#tmp)
+                        ::core::option::Option::as_ref(#tmp)
                     } {
                         #stmts
                     }

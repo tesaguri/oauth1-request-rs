@@ -1,6 +1,6 @@
-use std::fmt::{self, Display, Formatter, Write};
-use std::mem;
-use std::str;
+use core::fmt::{self, Display, Formatter, Write};
+use core::mem;
+use core::str;
 
 use percent_encoding::AsciiSet;
 
@@ -118,12 +118,16 @@ const fn get_bit(bits: &BitArray, i: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    extern crate alloc;
 
-    use percent_encoding::percent_encode_byte;
+    use alloc::string::ToString;
+
+    use super::*;
 
     #[test]
     fn double_percent_encode() {
+        use percent_encoding::percent_encode_byte;
+
         for b in 0u8..=0xFF {
             assert_eq!(
                 double_encode_byte(b),

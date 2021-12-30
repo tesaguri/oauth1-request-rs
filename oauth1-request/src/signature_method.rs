@@ -25,7 +25,7 @@ pub use self::plaintext::Plaintext;
 #[cfg(feature = "rsa-sha1")]
 pub use self::rsa_sha1::RsaSha1;
 
-use std::fmt::{Display, Write};
+use core::fmt::{self, Display, Write};
 
 use crate::util::percent_encode;
 
@@ -91,9 +91,10 @@ stringify!($name), "\"` as the first argument."
 ///
 /// ...is represented by a series of method calls like the following (`sign` is the `Sign` object):
 ///
-/// ```
+#[cfg_attr(feature = "alloc", doc = " ```")]
+#[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
 /// # use oauth1_request::signature_method::{Plaintext, Sign, SignatureMethod};
-/// # let mut sign = Plaintext.sign_with("", Some(""));
+/// # let mut sign = Plaintext::new().sign_with("", Some(""));
 /// sign.request_method("POST");
 /// sign.uri("http%3A%2F%2Fexample.com%2Frequest");
 /// sign.parameter("a", "r%2520b");
@@ -186,10 +187,15 @@ pub trait Sign {
     }
 }
 
-fn write_signing_key<W: Write>(dst: &mut W, client_secret: &str, token_secret: Option<&str>) {
-    write!(dst, "{}", percent_encode(client_secret)).unwrap();
-    dst.write_str("&").unwrap();
+fn write_signing_key<W: Write>(
+    dst: &mut W,
+    client_secret: &str,
+    token_secret: Option<&str>,
+) -> fmt::Result {
+    write!(dst, "{}", percent_encode(client_secret))?;
+    dst.write_str("&")?;
     if let Some(ts) = token_secret {
-        write!(dst, "{}", percent_encode(ts)).unwrap();
+        write!(dst, "{}", percent_encode(ts))?;
     }
+    Ok(())
 }

@@ -1,9 +1,6 @@
 //! Requests to be authorized with OAuth.
 
-use std::collections::BTreeSet;
-
 use crate::serializer::{Serializer, SerializerExt};
-use crate::util::OAuthParameter;
 
 /// Types that represent an HTTP request to be authorized with OAuth.
 ///
@@ -56,11 +53,14 @@ impl Request for () {
     }
 }
 
-impl<K: AsRef<str>, V: AsRef<str>> Request for BTreeSet<(K, V)> {
+#[cfg(feature = "alloc")]
+impl<K: AsRef<str>, V: AsRef<str>> Request for alloc::collections::BTreeSet<(K, V)> {
     fn serialize<S>(&self, mut serializer: S) -> S::Output
     where
         S: Serializer,
     {
+        use crate::util::OAuthParameter;
+
         let mut next_param = OAuthParameter::default();
 
         for (k, v) in self {

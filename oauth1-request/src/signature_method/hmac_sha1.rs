@@ -4,7 +4,7 @@
 //!
 //! This module is only available when `hmac-sha1` feature is activated.
 
-use std::fmt::{self, Display, Formatter, Write};
+use core::fmt::{self, Debug, Display, Formatter, Write};
 
 use digest::core_api::BlockSizeUser;
 use digest::generic_array::sequence::GenericSequence;
@@ -17,8 +17,10 @@ use super::digest_common::{Base64PercentEncodeDisplay, UpdateSign};
 use super::{write_signing_key, Sign, SignatureMethod};
 
 /// The `HMAC-SHA1` signature method.
-#[derive(Copy, Clone, Debug, Default)]
-pub struct HmacSha1;
+#[derive(Copy, Clone, Default)]
+pub struct HmacSha1 {
+    _priv: (),
+}
 
 /// A type that signs a signature base string with the HMAC-SHA1 signature algorithm.
 #[derive(Clone, Debug)]
@@ -40,12 +42,27 @@ enum SigningKey {
     Digest(Sha1),
 }
 
+impl HmacSha1 {
+    /// Creates a new `HmacSha1`.
+    pub fn new() -> Self {
+        HmacSha1::default()
+    }
+}
+
+impl Debug for HmacSha1 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        #[derive(Debug)]
+        struct HmacSha1;
+        HmacSha1.fmt(f)
+    }
+}
+
 impl SignatureMethod for HmacSha1 {
     type Sign = HmacSha1Sign;
 
     fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> HmacSha1Sign {
         let mut key = SigningKey::new();
-        write_signing_key(&mut key, client_secret, token_secret);
+        write_signing_key(&mut key, client_secret, token_secret).unwrap();
         HmacSha1Sign {
             inner: UpdateSign(key.into_hmac()),
         }
@@ -137,6 +154,10 @@ impl Write for SigningKey {
 
 #[cfg(test)]
 mod tests {
+    extern crate alloc;
+
+    use alloc::vec::Vec;
+
     use digest::generic_array::typenum::Unsigned;
 
     use super::*;

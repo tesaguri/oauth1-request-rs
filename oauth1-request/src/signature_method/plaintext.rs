@@ -2,30 +2,99 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-3.4.4
 
+use core::fmt::{self, Debug, Display, Formatter, Write};
+use core::marker::PhantomData;
+
 use super::{write_signing_key, Sign, SignatureMethod};
 
 /// The `PLAINTEXT` signature method.
-#[derive(Copy, Clone, Debug, Default)]
-pub struct Plaintext;
+#[derive(Copy)]
+pub struct Plaintext<
+    #[cfg(feature = "alloc")] W = alloc::string::String,
+    #[cfg(not(feature = "alloc"))] W,
+> {
+    marker: PhantomData<fn() -> W>,
+}
 
 /// A `Sign` implementation that just returns the signing key used to construct it.
 #[derive(Clone, Debug)]
-pub struct PlaintextSign {
-    signing_key: String,
+pub struct PlaintextSign<
+    #[cfg(feature = "alloc")] W = alloc::string::String,
+    #[cfg(not(feature = "alloc"))] W,
+> {
+    signing_key: W,
 }
 
-impl SignatureMethod for Plaintext {
-    type Sign = PlaintextSign;
+#[cfg(feature = "alloc")]
+impl Plaintext {
+    /// Creates a new `Plaintext`.
+    pub fn new() -> Self {
+        Plaintext {
+            marker: PhantomData,
+        }
+    }
+}
 
-    fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> PlaintextSign {
-        let mut signing_key = String::with_capacity(128);
-        write_signing_key(&mut signing_key, client_secret, token_secret);
+impl<W> Plaintext<W>
+where
+    W: Default + Display + Write,
+{
+    // We separate constructors for the case of `W = String` and the generic case because
+    // `Plaintext::new_with_buf` would result in a type inference error due to current limitation of
+    // defaulted type parameters. This would be fixed if default type parameter fallback landed.
+    // <https://github.com/rust-lang/rust/issues/27336>
+
+    /// Creates a new `Plaintext` that writes the resulting signatures into `W` values.
+    pub fn with_buf() -> Self {
+        Plaintext {
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<W> Clone for Plaintext<W> {
+    fn clone(&self) -> Self {
+        Plaintext {
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<W> Debug for Plaintext<W> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        #[derive(Debug)]
+        struct Plaintext;
+        Plaintext.fmt(f)
+    }
+}
+
+impl<W> Default for Plaintext<W>
+where
+    W: Default + Display + Write,
+{
+    fn default() -> Self {
+        Self::with_buf()
+    }
+}
+
+impl<W> SignatureMethod for Plaintext<W>
+where
+    W: Default + Display + Write,
+{
+    type Sign = PlaintextSign<W>;
+
+    fn sign_with(self, client_secret: &str, token_secret: Option<&str>) -> Self::Sign {
+        let mut signing_key = W::default();
+        write_signing_key(&mut signing_key, client_secret, token_secret).unwrap();
         PlaintextSign { signing_key }
     }
 }
 
-impl Sign for PlaintextSign {
-    type Signature = String;
+impl<W> Sign for PlaintextSign<W>
+where
+    W: Display + Write,
+{
+    type Signature = W;
 
     fn get_signature_method_name(&self) -> &'static str {
         "PLAINTEXT"
@@ -39,7 +108,7 @@ impl Sign for PlaintextSign {
 
     fn delimiter(&mut self) {}
 
-    fn end(self) -> String {
+    fn end(self) -> W {
         self.signing_key
     }
 
