@@ -1,6 +1,7 @@
 use proc_macro2::{Group, Literal, Span, TokenStream};
 use proc_macro_error::emit_error;
 use quote::{ToTokens, TokenStreamExt};
+use syn::ext::IdentExt;
 use syn::parse::{Parse, ParseStream, Parser};
 use syn::spanned::Spanned;
 use syn::{Attribute, Expr, ExprLit, ExprPath, Ident, Lit, LitBool, LitStr, Path, Token, Type};
@@ -140,7 +141,7 @@ impl Field {
             attrs, ident, ty, ..
         } = field;
         let meta = FieldMeta::new(attrs);
-        let ident = ident.unwrap();
+        let ident = ident.unwrap().unraw();
         Self { ident, ty, meta }
     }
 
