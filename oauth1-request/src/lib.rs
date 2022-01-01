@@ -77,21 +77,19 @@
 //!
 //! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
 //!
-//! If you want to authorize a request with dynamic keys, you can use a
-//! [`BTreeSet<(K, V)>`][std::collections::BTreeSet]:
+//! If you want to authorize a request with dynamic keys, use [`request::ParameterList`].
 //!
-#![cfg_attr(feature = "alloc", doc = " ```")]
-#![cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
+//! ```
 //! # extern crate oauth1_request as oauth;
 //! #
-//! use std::collections::BTreeSet;
+//! use std::fmt::Display;
 //!
-//! let request: BTreeSet<_> = vec![
-//!     ("article_id", "123456789"),
-//!     ("text", "A request signed with OAuth & Rust 🦀 🔏"),
-//! ]
-//! .into_iter()
-//! .collect();
+//! use oauth::request::ParameterList;
+//!
+//! let request = ParameterList::new([
+//!     ("article_id", &123456789 as &dyn Display),
+//!     ("text", &"A request signed with OAuth & Rust 🦀 🔏"),
+//! ]);
 //!
 //! let form = oauth::to_form_urlencoded(&request);
 //! assert_eq!(
@@ -129,10 +127,9 @@ extern crate alloc;
 #[macro_use]
 mod util;
 
+pub mod request;
 pub mod serializer;
 pub mod signature_method;
-
-mod request;
 
 /// A derive macro for [`Request`] trait.
 ///
