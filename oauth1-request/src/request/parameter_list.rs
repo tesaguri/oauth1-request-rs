@@ -88,6 +88,13 @@ where
     }
 }
 
+impl<K, V, A, P> ParameterList<K, V, A, P> {
+    /// Consumes the `ParameterList`, returning the wrapped value.
+    pub fn into_inner(self) -> A {
+        self.list
+    }
+}
+
 impl<K, V, A, P> ParameterList<K, V, A, P>
 where
     K: AsRef<str>,
