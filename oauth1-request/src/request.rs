@@ -1,6 +1,6 @@
 //! Requests to be authorized with OAuth.
 
-mod parameter_list;
+pub mod parameter_list;
 
 pub use self::parameter_list::ParameterList;
 

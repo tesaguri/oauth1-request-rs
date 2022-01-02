@@ -1,3 +1,5 @@
+//! A [`Request`] with dynamic list of key-value parameter pairs.
+
 use core::borrow::Borrow;
 use core::cmp::Ordering;
 use core::fmt::Display;
