@@ -114,6 +114,15 @@ where
     }
 }
 
+impl<K, V, A, P> AsRef<[P]> for ParameterList<K, V, A, P>
+where
+    A: AsRef<[P]>,
+{
+    fn as_ref(&self) -> &[P] {
+        self.list.as_ref()
+    }
+}
+
 impl<K, V, A, P> Default for ParameterList<K, V, A, P>
 where
     K: AsRef<str>,
