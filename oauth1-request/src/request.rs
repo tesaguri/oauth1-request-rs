@@ -4,7 +4,10 @@ pub mod parameter_list;
 
 pub use self::parameter_list::ParameterList;
 
+use core::fmt::Display;
+
 use crate::serializer::{Serializer, SerializerExt};
+use crate::util::OAuthParameter;
 
 /// Types that represent an HTTP request to be authorized with OAuth.
 ///
@@ -21,6 +24,41 @@ pub trait Request {
     where
         S: Serializer;
 }
+
+/// A wrapper type that implements [`Request`] with key-value pairs returned by the wrapped
+/// iterator.
+///
+/// The key-value pairs must be sorted as required by the [`Serializer`] trait. Otherwise, the
+/// behavior of this wrapper is unspecified.
+///
+/// Note that the required ordering is alphabetical ordering of `AsRef<str>` value of the key and
+/// `Display` representation of the value and does not necessarily match that of the one provided by
+/// the [`Ord`] trait, which may provide, for example, numerical ordering instead.
+///
+/// If you have a slice instead of an iterator, consider using [`ParameterList`], which guarantees
+/// the correct ordering.
+///
+/// ## Example
+///
+/// ```edition2021
+/// # extern crate oauth1_request as oauth;
+/// #
+/// use std::collections::BTreeMap;
+///
+/// let request = BTreeMap::from_iter([
+///     ("article_id", "123456789"),
+///     ("text", "A request signed with OAuth & Rust 🦀 🔏"),
+/// ]);
+/// let request = oauth::request::AssertSorted(request.iter());
+///
+/// let form = oauth::to_form_urlencoded(&request);
+/// assert_eq!(
+///     form,
+///     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
+/// );
+/// ```
+#[derive(Debug, Clone, Copy, Default)]
+pub struct AssertSorted<I>(pub I);
 
 impl<'a, R> Request for &'a R
 where
@@ -68,5 +106,35 @@ impl<R: Request> Request for Option<R> {
             serializer.serialize_oauth_parameters();
             serializer.end()
         }
+    }
+}
+
+impl<I, K, V> Request for AssertSorted<I>
+where
+    I: Clone + Iterator<Item = (K, V)>,
+    K: AsRef<str>,
+    V: Display,
+{
+    fn serialize<S>(&self, mut serializer: S) -> S::Output
+    where
+        S: Serializer,
+    {
+        let mut next_param = OAuthParameter::default();
+
+        for (k, v) in self.0.clone() {
+            let k = k.as_ref();
+            while next_param < *k {
+                next_param.serialize(&mut serializer);
+                next_param = next_param.next();
+            }
+            serializer.serialize_parameter(k, v);
+        }
+
+        while next_param != OAuthParameter::None {
+            next_param.serialize(&mut serializer);
+            next_param = next_param.next();
+        }
+
+        serializer.end()
     }
 }

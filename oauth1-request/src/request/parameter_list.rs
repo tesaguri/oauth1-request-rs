@@ -8,7 +8,6 @@ use core::marker::PhantomData;
 
 use super::Request;
 use crate::serializer::Serializer;
-use crate::util::OAuthParameter;
 
 /// A [`Request`] with dynamic list of key-value parameter pairs.
 ///
@@ -199,31 +198,18 @@ where
     {
         return inner::<S, K, V, P>(self.list.as_ref(), serializer);
 
-        fn inner<S, K, V, P>(this: &[P], mut serializer: S) -> S::Output
+        fn inner<S, K, V, P>(this: &[P], serializer: S) -> S::Output
         where
             S: Serializer,
             K: AsRef<str>,
             V: Display,
             P: Borrow<(K, V)>,
         {
-            let mut next_param = OAuthParameter::default();
-
-            for pair in this {
-                let (k, v) = pair.borrow();
-                let k = k.as_ref();
-                while next_param < *k {
-                    next_param.serialize(&mut serializer);
-                    next_param = next_param.next();
-                }
-                serializer.serialize_parameter(k, v);
-            }
-
-            while next_param != OAuthParameter::None {
-                next_param.serialize(&mut serializer);
-                next_param = next_param.next();
-            }
-
-            serializer.end()
+            super::AssertSorted(this.iter().map(|pair| {
+                let (ref k, ref v) = *pair.borrow();
+                (k, v)
+            }))
+            .serialize(serializer)
         }
     }
 }
