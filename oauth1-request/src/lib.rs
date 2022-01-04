@@ -77,16 +77,15 @@
 //!
 //! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
 //!
-//! If you want to authorize a request with dynamic keys, use [`request::ParameterList`].
+//! If you want to authorize a request with dynamic keys, use
+//! [`oauth::ParameterList`][ParameterList].
 //!
 //! ```
 //! # extern crate oauth1_request as oauth;
 //! #
 //! use std::fmt::Display;
 //!
-//! use oauth::request::ParameterList;
-//!
-//! let request = ParameterList::new([
+//! let request = oauth::ParameterList::new([
 //!     ("article_id", &123456789 as &dyn Display),
 //!     ("text", &"A request signed with OAuth & Rust 🦀 🔏"),
 //! ]);
@@ -200,6 +199,7 @@ pub use oauth1_request_derive::Request;
 #[doc(no_inline)]
 pub use oauth_credentials::{Credentials, Token};
 
+pub use self::request::ParameterList;
 pub use self::request::Request;
 #[cfg(feature = "hmac-sha1")]
 pub use self::signature_method::HmacSha1;

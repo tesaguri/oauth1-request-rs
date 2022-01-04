@@ -19,9 +19,7 @@ use crate::util::OAuthParameter;
 /// ```
 /// # extern crate oauth1_request as oauth;
 /// #
-/// use oauth::request::ParameterList;
-///
-/// let request = ParameterList::new([
+/// let request = oauth::ParameterList::new([
 ///     ("foo", 123),
 ///     ("bar", 23),
 ///     ("foo", 3),
