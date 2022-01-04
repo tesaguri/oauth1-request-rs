@@ -19,7 +19,7 @@ where
     B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
 {
     let uri = http::Uri::from_static("http://127.0.0.1:8080/request_temp_credentials");
-    let authorization = oauth::Builder::<_, _>::new(client.as_ref(), oauth::HmacSha1)
+    let authorization = oauth::Builder::<_, _>::new(client.as_ref(), oauth::HmacSha1::new())
         .callback(callback)
         .post(&uri, &());
     let body = send_request(uri, authorization, http).await;
@@ -41,7 +41,7 @@ where
     B: http_body::Body<Error = S::Error> + Default + From<Vec<u8>>,
 {
     let uri = http::Uri::from_static("http://127.0.0.1:8080/request_token");
-    let authorization = oauth::Builder::new(client.as_ref(), oauth::HmacSha1)
+    let authorization = oauth::Builder::new(client.as_ref(), oauth::HmacSha1::new())
         .token(temporary.as_ref())
         .verifier(verifier)
         .post(&uri, &());
