@@ -71,7 +71,7 @@ macro_rules! assert_expand {
             let client = Credentials::new("", "");
             let mut opts = auth::Options::new();
             opts.nonce("nonce").timestamp(NonZeroU64::new(9999999999));
-            let auth = Authorizer::new(
+            let auth = Authorizer::authorization(
                 "GET",
                 "https://example.com/get",
                 client,

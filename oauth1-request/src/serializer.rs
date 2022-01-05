@@ -55,7 +55,7 @@ pub use skip_serialize_oauth_parameters;
 /// let options = auth::Options::new();
 /// # let mut options = options;
 /// # options.nonce("mo8_whwD5c91").timestamp(NonZeroU64::new(1234567890));
-/// let mut serializer = Authorizer::new(
+/// let mut serializer = Authorizer::authorization(
 ///     "GET",
 ///     "https://example.com/api/v1/get.json",
 ///     client,
@@ -268,7 +268,7 @@ mod tests {
                     options.nonce($nonce)
                         .timestamp($timestamp)
                         .version(true);
-                    let mut auth = Authorizer::with_buf(
+                    let mut auth = Authorizer::authorization_with_buf(
                         String::new(),
                         $method,
                         $ep,
@@ -373,7 +373,7 @@ mod tests {
         let client = Credentials::new(CK, CS);
         let token = Credentials::new(AK, AS);
         let options = auth::Options::default();
-        let mut ser = Authorizer::with_buf(
+        let mut ser = Authorizer::authorization_with_buf(
             String::new(),
             "",
             "",

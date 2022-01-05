@@ -10,10 +10,13 @@ use crate::signature_method::{Sign, SignatureMethod};
 use crate::util::*;
 use crate::Credentials;
 
-use super::Serializer;
+use super::{Serializer, Urlencoder};
 
-/// A `Serializer` that produces an HTTP `Authorization` header string by signing a request
-/// in OAuth 1.0 protocol.
+/// A `Serializer` that signs a request and produces OAuth 1.0 `oauth_*` parameter values.
+///
+/// The resulting parameter values are either written to an HTTP `Authorization` header value or
+/// URI query/`x-www-form-urlencoded` string (along with the other request parameters) depending on
+/// the constructor you use.
 #[derive(Clone, Debug)]
 pub struct Authorizer<
     'a,
@@ -24,11 +27,17 @@ pub struct Authorizer<
     consumer_key: &'a str,
     token: Option<&'a str>,
     options: &'a Options<'a>,
-    authorization: W,
+    data: Data<W>,
     sign: SM::Sign,
     append_delim_to_sign: bool,
     #[cfg(all(feature = "alloc", debug_assertions))]
     prev_key: alloc::string::String,
+}
+
+#[derive(Clone, Debug)]
+enum Data<W> {
+    Authorization(W),
+    Urlencode(Urlencoder<W>),
 }
 
 options! {
@@ -57,7 +66,7 @@ options! {
 
 #[cfg(feature = "alloc")]
 impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
-    /// Creates an `Authorizer`.
+    /// Creates an `Authorizer` that produces an HTTP `Authorization header value.
     ///
     /// `uri` must not contain a query part.
     /// Otherwise, the serializer will produce a wrong signature.
@@ -65,7 +74,7 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
     /// # Panics
     ///
     /// In debug builds, panics if `uri` contains a `'?'` character.
-    pub fn new<T: Display>(
+    pub fn authorization<T: Display>(
         method: &str,
         uri: T,
         client: Credentials<&'a str>,
@@ -73,8 +82,9 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
         options: &'a Options<'a>,
         signature_method: SM,
     ) -> Self {
-        Authorizer::with_buf(
-            alloc::string::String::with_capacity(512),
+        let buf = alloc::string::String::with_capacity(512);
+        Authorizer::authorization_with_buf(
+            buf,
             method,
             uri,
             client,
@@ -83,11 +93,56 @@ impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
             signature_method,
         )
     }
+
+    /// Creates an `Authorizer` that produces an `x-www-form-urlencoded` string.
+    ///
+    /// `uri` must not contain a query part.
+    /// Otherwise, the serializer will produce a wrong signature.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, panics if `uri` contains a `'?'` character.
+    pub fn form<T: Display>(
+        method: &str,
+        uri: T,
+        client: Credentials<&'a str>,
+        token: Option<Credentials<&'a str>>,
+        options: &'a Options<'a>,
+        signature_method: SM,
+    ) -> Self {
+        let buf = alloc::string::String::with_capacity(512);
+        Authorizer::form_with_buf(buf, method, uri, client, token, options, signature_method)
+    }
 }
 
 impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
-    /// Same as `new` except that this writes the resulting `Authorization` header value into `buf`.
-    pub fn with_buf<T: Display>(
+    /// Creates an `Authorizer` that appends a query part to `uri`.
+    ///
+    /// `uri` must not contain a query part.
+    /// Otherwise, the serializer will produce a wrong signature.
+    ///
+    /// # Panics
+    ///
+    /// In debug builds, panics if `uri` contains a `'?'` character.
+    pub fn query(
+        method: &str,
+        uri: W,
+        client: Credentials<&'a str>,
+        token: Option<Credentials<&'a str>>,
+        options: &'a Options<'a>,
+        signature_method: SM,
+    ) -> Self
+    where
+        W: Display,
+    {
+        let sign = make_sign(method, &uri, client, token, signature_method);
+        let data = Data::Urlencode(Urlencoder::query(uri));
+        Authorizer::new_(data, sign, client, token, options)
+    }
+
+    /// Same as `authorization` except that this writes the resulting `Authorization` header value
+    /// into `buf`.
+    pub fn authorization_with_buf<T: Display>(
         mut buf: W,
         method: &str,
         uri: T,
@@ -96,38 +151,41 @@ impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
         options: &'a Options<'a>,
         signature_method: SM,
     ) -> Self {
-        let mut sign = signature_method.sign_with(client.secret, token.map(|t| t.secret));
-
         buf.write_str("OAuth ").unwrap();
+        let data = Data::Authorization(buf);
+        let sign = make_sign(method, uri, client, token, signature_method);
+        Authorizer::new_(data, sign, client, token, options)
+    }
 
-        sign.request_method(method);
+    /// Same with `form` except that this writes the resulting form string into `buf`.
+    pub fn form_with_buf<T: Display>(
+        buf: W,
+        method: &str,
+        uri: T,
+        client: Credentials<&'a str>,
+        token: Option<Credentials<&'a str>>,
+        options: &'a Options<'a>,
+        signature_method: SM,
+    ) -> Self {
+        let data = Data::Urlencode(Urlencoder::form_with_buf(buf));
+        let sign = make_sign(method, uri, client, token, signature_method);
+        Authorizer::new_(data, sign, client, token, options)
+    }
 
-        // This is a no_alloc-equivalent of `assert!(!uri.to_string().contains('?'))`.
-        // We can determine if the URI contains a query part by just checking if it containsa `'?'`
-        // character, because the scheme and authority part of a valid URI does not contain
-        // that character.
-        #[cfg(debug_assertions)]
-        {
-            struct AssertNotContainQuestion;
-            impl Write for AssertNotContainQuestion {
-                #[track_caller]
-                fn write_str(&mut self, uri: &str) -> fmt::Result {
-                    assert!(!uri.contains('?'), "`uri` must not contain a query part");
-                    Ok(())
-                }
-            }
-            write!(AssertNotContainQuestion, "{}", uri).unwrap();
-        }
-
-        sign.uri(PercentEncode(uri));
-
+    fn new_(
+        data: Data<W>,
+        sign: SM::Sign,
+        client: Credentials<&'a str>,
+        token: Option<Credentials<&'a str>>,
+        options: &'a Options<'a>,
+    ) -> Self {
         cfg_if::cfg_if! {
             if #[cfg(all(feature = "alloc", debug_assertions))] {
                 Authorizer {
                     consumer_key: client.identifier,
                     token: token.map(|t| t.identifier),
                     options,
-                    authorization: buf,
+                    data,
                     sign,
                     append_delim_to_sign: false,
                     prev_key: alloc::string::String::new(),
@@ -137,7 +195,7 @@ impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
                     consumer_key: client.identifier,
                     token: token.map(|t| t.identifier),
                     options,
-                    authorization: buf,
+                    data,
                     sign,
                     append_delim_to_sign: false,
                 }
@@ -146,10 +204,44 @@ impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
     }
 }
 
+fn make_sign<SM: SignatureMethod, T: Display>(
+    method: &str,
+    uri: T,
+    client: Credentials<&str>,
+    token: Option<Credentials<&str>>,
+    signature_method: SM,
+) -> SM::Sign {
+    // This is a no_alloc-equivalent of `assert!(!uri.to_string().contains('?'))`.
+    // We can determine if the URI contains a query part by just checking if it containsa `'?'`
+    // character, because the scheme and authority part of a valid URI does not contain
+    // that character.
+    #[cfg(debug_assertions)]
+    {
+        struct AssertNotContainQuestion;
+        impl Write for AssertNotContainQuestion {
+            #[track_caller]
+            fn write_str(&mut self, uri: &str) -> fmt::Result {
+                assert!(!uri.contains('?'), "`uri` must not contain a query part");
+                Ok(())
+            }
+        }
+        write!(AssertNotContainQuestion, "{}", uri).unwrap();
+    }
+
+    let mut ret = signature_method.sign_with(client.secret, token.map(|t| t.secret));
+    ret.request_method(method);
+    ret.uri(PercentEncode(uri));
+
+    ret
+}
+
 impl<'a, SM: SignatureMethod, W: Write> Authorizer<'a, SM, W> {
     fn append_to_header_encoded<V: Display>(&mut self, k: &str, v: V) {
         self.check_dictionary_order(k);
-        write!(self.authorization, r#"{}="{}","#, k, v).unwrap();
+        match self.data {
+            Data::Authorization(ref mut header) => write!(header, r#"{}="{}","#, k, v).unwrap(),
+            Data::Urlencode(ref mut encoder) => encoder.serialize_parameter_encoded(k, v),
+        }
         self.sign_delimiter();
     }
 
@@ -268,16 +360,19 @@ impl<'a, SM: SignatureMethod, W: Write> Serializer for Authorizer<'a, SM, W> {
     }
 
     fn end(self) -> W {
-        let Self {
-            mut authorization,
-            sign,
-            ..
-        } = self;
+        let Self { data, sign, .. } = self;
 
-        authorization.write_str("oauth_signature=").unwrap();
-        write!(authorization, r#""{}""#, sign.end()).unwrap();
-
-        authorization
+        match data {
+            Data::Authorization(mut header) => {
+                header.write_str("oauth_signature=").unwrap();
+                write!(header, r#""{}""#, sign.end()).unwrap();
+                header
+            }
+            Data::Urlencode(mut encoder) => {
+                encoder.serialize_parameter_encoded("oauth_signature", sign.end());
+                encoder.end()
+            }
+        }
     }
 }
 

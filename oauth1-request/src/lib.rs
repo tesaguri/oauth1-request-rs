@@ -407,7 +407,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     where
         SM: Clone,
     {
-        let serializer = serializer::auth::Authorizer::new(
+        let serializer = serializer::auth::Authorizer::authorization(
             method,
             uri,
             self.client.as_ref(),
@@ -431,7 +431,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     where
         SM: Clone,
     {
-        let serializer = serializer::auth::Authorizer::with_buf(
+        let serializer = serializer::auth::Authorizer::authorization_with_buf(
             buf,
             method,
             uri,
@@ -458,7 +458,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         uri: U,
         request: &R,
     ) -> String {
-        let serializer = serializer::auth::Authorizer::new(
+        let serializer = serializer::auth::Authorizer::authorization(
             method,
             uri,
             self.client.as_ref(),
@@ -482,7 +482,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     where
         SM: Clone,
     {
-        let serializer = serializer::auth::Authorizer::with_buf(
+        let serializer = serializer::auth::Authorizer::authorization_with_buf(
             buf,
             method,
             uri,
