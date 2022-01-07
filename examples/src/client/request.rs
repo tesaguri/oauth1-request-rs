@@ -68,7 +68,7 @@ where
     let mut builder = oauth::Builder::new(token.client, oauth::HmacSha1::new());
     builder.token(token.token);
 
-    let authorization = builder.build(SR::METHOD.as_str(), SR::URI, &request);
+    let authorization = builder.authorize(SR::METHOD.as_str(), SR::URI, &request);
 
     let is_post = SR::METHOD == http::Method::POST;
     let req = http::Request::builder()

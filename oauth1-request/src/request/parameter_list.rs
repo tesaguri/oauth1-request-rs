@@ -15,7 +15,8 @@ use crate::serializer::Serializer;
 ///
 /// ## Example
 ///
-/// ```
+#[cfg_attr(feature = "alloc", doc = " ```")]
+#[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
 /// # extern crate oauth1_request as oauth;
 /// #
 /// let request = oauth::ParameterList::new([
@@ -30,7 +31,7 @@ use crate::serializer::Serializer;
 pub struct ParameterList<
     K,
     V,
-    #[cfg(feature = "alloc")] A = Vec<(K, V)>,
+    #[cfg(feature = "alloc")] A = alloc::vec::Vec<(K, V)>,
     #[cfg(not(feature = "alloc"))] A,
     P = (K, V),
 > {

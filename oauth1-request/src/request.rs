@@ -40,7 +40,8 @@ pub trait Request {
 ///
 /// ## Example
 ///
-/// ```edition2021
+#[cfg_attr(feature = "alloc", doc = " ```edition2021")]
+#[cfg_attr(not(feature = "alloc"), doc = " ```edition2021,ignore")]
 /// # extern crate oauth1_request as oauth;
 /// #
 /// use std::collections::BTreeMap;

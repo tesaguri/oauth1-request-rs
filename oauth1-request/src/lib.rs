@@ -80,7 +80,8 @@
 //! If you want to authorize a request with dynamic keys, use
 //! [`oauth::ParameterList`][ParameterList].
 //!
-//! ```
+#![cfg_attr(feature = "alloc", doc = " ```")]
+#![cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
 //! # extern crate oauth1_request as oauth;
 //! #
 //! use std::fmt::Display;
