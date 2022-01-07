@@ -1,4 +1,4 @@
-//! Types to convert a `Request` to a signature or a URI query/form string.
+//! Low-level machinery to convert a `Request` to a signature or a URI query/form string.
 
 pub mod auth;
 pub mod urlencode;
