@@ -230,6 +230,60 @@ pub struct Builder<
     options: auth::Options<'a>,
 }
 
+macro_rules! builder_authorize_shorthand {
+    ($($name:ident($method:expr);)*) => {$(
+        #[doc = concat!("Authorizes a `", $method, "` request to `uri`,")]
+        /// returning an HTTP `Authorization` header value.
+        ///
+        /// `uri` must not contain a query part, which would result in a wrong signature.
+        #[cfg(feature = "alloc")]
+        pub fn $name<U, R>(&self, uri: U, request: &R) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+            SM: Clone,
+        {
+            self.authorize($method, uri, request)
+        }
+    )*};
+}
+
+macro_rules! builder_to_form_shorthand {
+    ($($name:ident($method:expr);)*) => {$(
+        #[doc = concat!("Authorizes a `", $method, "` request to `uri`,")]
+        /// writing the OAuth protocol parameters to an `x-www-form-urlencoded` string
+        /// along with the other request parameters.
+        ///
+        /// `uri` must not contain a query part, which would result in a wrong signature.
+        #[cfg(feature = "alloc")]
+        pub fn $name<U, R>(&self, uri: U, request: &R) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+            SM: Clone,
+        {
+            self.to_form($method, uri, request)
+        }
+    )*};
+}
+
+macro_rules! builder_to_query_shorthand {
+    ($($name:ident($method:expr);)*) => {$(
+        #[doc = concat!("Authorizes a `", $method, "` request to `uri`, appending")]
+        /// the OAuth protocol parameters to `uri` along with the other request parameters.
+        ///
+        /// `uri` must not contain a query part, which would result in a wrong signature.
+        pub fn $name<W, R>(&self, uri: W, request: &R) -> W
+        where
+            W: Display + Write,
+            R: Request + ?Sized,
+            SM: Clone,
+        {
+            self.to_query($method, uri, request)
+        }
+    )*};
+}
+
 impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T> {
     /// Creates a `Builder` that signs requests using the specified client credentials
     /// and signature method.
@@ -280,7 +334,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
 
     /// Sets/unsets the `oauth_timestamp` value.
     ///
-    /// By default, `Builder` uses the timestamp of the time when `build`(-like) method is called.
+    /// By default, `Builder` uses the timestamp of the time when `authorize`-like method is called.
     /// This method overrides that behavior and forces the `Builder` to use the specified timestamp.
     ///
     /// This method is for debugging/testing purpose only and should not be used in production.
@@ -295,116 +349,46 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         self
     }
 
-    /// Authorizes a `GET` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn get<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("GET", uri, request)
+    builder_authorize_shorthand! {
+        get("GET");
+        put("PUT");
+        post("POST");
+        delete("DELETE");
+        options("OPTIONS");
+        head("HEAD");
+        connect("CONNECT");
+        patch("PATCH");
+        trace("TRACE");
     }
 
-    /// Authorizes a `PUT` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn put<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("PUT", uri, request)
+    builder_to_form_shorthand! {
+        put_form("PUT");
+        post_form("POST");
+        options_form("OPTIONS");
+        patch_form("PATCH");
     }
 
-    /// Authorizes a `POST` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn post<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("POST", uri, request)
+    builder_to_query_shorthand! {
+        get_query("GET");
+        put_query("PUT");
+        post_query("POST");
+        delete_query("DELETE");
+        options_query("OPTIONS");
+        head_query("HEAD");
+        connect_query("CONNECT");
+        patch_query("PATCH");
+        trace_query("TRACE");
     }
 
-    /// Authorizes a `DELETE` request to `uri`.
+    /// Authorizes a request to `uri` with a custom HTTP request method,
+    /// returning an HTTP `Authorization` header value.
     ///
     /// `uri` must not contain a query part, which would result in a wrong signature.
     #[cfg(feature = "alloc")]
-    pub fn delete<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
+    pub fn authorize<U, R>(&self, method: &str, uri: U, request: &R) -> String
     where
-        SM: Clone,
-    {
-        self.build("DELETE", uri, request)
-    }
-
-    /// Authorizes an `OPTIONS` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn options<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("OPTIONS", uri, request)
-    }
-
-    /// Authorizes a `HEAD` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn head<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("HEAD", uri, request)
-    }
-
-    /// Authorizes a `CONNECT` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn connect<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("CONNECT", uri, request)
-    }
-
-    /// Authorizes a `PATCH` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn patch<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("PATCH", uri, request)
-    }
-
-    /// Authorizes a `TRACE` request to `uri`.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn trace<U: Display, R: Request + ?Sized>(&self, uri: U, request: &R) -> String
-    where
-        SM: Clone,
-    {
-        self.build("TRACE", uri, request)
-    }
-
-    /// Authorizes a request to `uri` with a custom HTTP request method.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn build<U: Display, R: Request + ?Sized>(
-        &self,
-        method: &str,
-        uri: U,
-        request: &R,
-    ) -> String
-    where
+        U: Display,
+        R: Request + ?Sized,
         SM: Clone,
     {
         let serializer = serializer::auth::Authorizer::authorization(
@@ -419,16 +403,58 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         request.serialize(serializer)
     }
 
-    /// Same as `build` except that this writes the resulting `Authorization` header value
-    /// into `buf`.
-    pub fn build_with_buf<W: Write, U: Display, R: Request + ?Sized>(
-        &self,
-        buf: W,
-        method: &str,
-        uri: U,
-        request: &R,
-    ) -> W
+    /// Authorizes a request to `uri` with a custom HTTP request method, writing the OAuth protocol
+    /// parameters to an `x-www-form-urlencoded` string along with the other request parameters.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
+    pub fn to_form<U, R>(&self, method: &str, uri: U, request: &R) -> String
     where
+        U: Display,
+        R: Request + ?Sized,
+        SM: Clone,
+    {
+        let serializer = serializer::auth::Authorizer::form(
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method.clone(),
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Authorizes a request to `uri` with a custom HTTP request method, appending the OAuth
+    /// protocol parameters to `uri` along with the other request parameters.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    pub fn to_query<W, R>(&self, method: &str, uri: W, request: &R) -> W
+    where
+        W: Display + Write,
+        R: Request + ?Sized,
+        SM: Clone,
+    {
+        let serializer = serializer::auth::Authorizer::query(
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method.clone(),
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Same as `authorize` except that this writes the resulting `Authorization` header value
+    /// into `buf`.
+    pub fn authorize_with_buf<W, U, R>(&self, buf: W, method: &str, uri: U, request: &R) -> W
+    where
+        W: Write,
+        U: Display,
+        R: Request + ?Sized,
         SM: Clone,
     {
         let serializer = serializer::auth::Authorizer::authorization_with_buf(
@@ -444,20 +470,42 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         request.serialize(serializer)
     }
 
-    /// Authorizes a request and consumes `self`.
+    /// Same as `to_form` except that this writes the resulting `x-www-form-urlencoded` string
+    /// into `buf`.
+    #[cfg(feature = "alloc")]
+    pub fn to_form_with_buf<W, U, R>(&self, buf: W, method: &str, uri: U, request: &R) -> W
+    where
+        W: Write,
+        U: Display,
+        R: Request + ?Sized,
+        SM: Clone,
+    {
+        let serializer = serializer::auth::Authorizer::form_with_buf(
+            buf,
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method.clone(),
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Authorizes a request and consumes `self`, returning an HTTP `Authorization` header value.
     ///
-    /// Unlike `build`, this does not clone the signature method and may be more efficient for
+    /// Unlike `authorize`, this does not clone the signature method and may be more efficient for
     /// non-`Copy` signature methods like `RsaSha1`.
     ///
     /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
-    /// use `build` instead.
+    /// use `authorize` instead.
     #[cfg(feature = "alloc")]
-    pub fn consume<U: Display, R: Request + ?Sized>(
-        self,
-        method: &str,
-        uri: U,
-        request: &R,
-    ) -> String {
+    pub fn into_authorization<U, R>(self, method: &str, uri: U, request: &R) -> String
+    where
+        U: Display,
+        R: Request + ?Sized,
+    {
         let serializer = serializer::auth::Authorizer::authorization(
             method,
             uri,
@@ -470,9 +518,60 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         request.serialize(serializer)
     }
 
-    /// Same as `consume` except that this writes the resulting `Authorization` header value
-    /// into `buf`.
-    pub fn consume_with_buf<W: Write, U: Display, R: Request + ?Sized>(
+    /// Authorizes a request and consumes `self`, writing the OAuth protocol parameters to
+    /// an `x-www-form-urlencoded` string along with the other request parameters.
+    ///
+    /// Unlike `to_form`, this does not clone the signature method and may be more efficient for
+    /// non-`Copy` signature methods like `RsaSha1`.
+    ///
+    /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
+    /// use `to_form` instead.
+    #[cfg(feature = "alloc")]
+    pub fn into_form<U, R>(self, method: &str, uri: U, request: &R) -> String
+    where
+        U: Display,
+        R: Request + ?Sized,
+    {
+        let serializer = serializer::auth::Authorizer::form(
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method,
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Authorizes a request and consumes `self`, appending the OAuth protocol parameters to
+    /// `uri` along with the other request parameters.
+    ///
+    /// Unlike `to_query`, this does not clone the signature method and may be more efficient for
+    /// non-`Copy` signature methods like `RsaSha1`.
+    ///
+    /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
+    /// use `to_query` instead.
+    pub fn into_query<W, R>(self, method: &str, uri: W, request: &R) -> W
+    where
+        W: Display + Write,
+        R: Request + ?Sized,
+    {
+        let serializer = serializer::auth::Authorizer::query(
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method,
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Same as `into_authorization` except that this writes the resulting `Authorization` header
+    /// value into `buf`.
+    pub fn into_authorization_with_buf<W, U, R>(
         self,
         buf: W,
         method: &str,
@@ -480,9 +579,33 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         request: &R,
     ) -> W
     where
+        W: Write,
+        U: Display,
+        R: Request + ?Sized,
         SM: Clone,
     {
         let serializer = serializer::auth::Authorizer::authorization_with_buf(
+            buf,
+            method,
+            uri,
+            self.client.as_ref(),
+            self.token.as_ref().map(Credentials::as_ref),
+            &self.options,
+            self.signature_method,
+        );
+
+        request.serialize(serializer)
+    }
+
+    /// Same as `into_form` except that this writes the resulting `x-www-form-urlencoded` string
+    /// into `buf`.
+    pub fn into_form_with_buf<W, U, R>(self, buf: W, method: &str, uri: U, request: &R) -> W
+    where
+        W: Write,
+        U: Display,
+        R: Request + ?Sized,
+    {
+        let serializer = serializer::auth::Authorizer::form_with_buf(
             buf,
             method,
             uri,
@@ -496,9 +619,13 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
     }
 }
 
-macro_rules! def_shorthand {
-    ($($(#[$attr:meta])* $name:ident($method:expr);)*) => {$(
-        $(#[$attr])*
+macro_rules! authorize_shorthand {
+    ($($name:ident($method:expr);)*) => {$(
+        #[doc = concat!("Authorizes a `", $method, "` request to `uri` with the given credentials.")]
+        ///
+        /// This returns an HTTP `Authorization` header value.
+        ///
+        /// `uri` must not contain a query part, which would result in a wrong signature.
         #[cfg(feature = "alloc")]
         pub fn $name<U, R, C, T, SM>(
             uri: U,
@@ -518,54 +645,21 @@ macro_rules! def_shorthand {
     )*};
 }
 
-def_shorthand! {
-    /// Authorizes a `GET` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
+authorize_shorthand! {
     get("GET");
-
-    /// Authorizes a `PUT` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     put("PUT");
-
-    /// Authorizes a `POST` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     post("POST");
-
-    /// Authorizes a `DELETE` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     delete("DELETE");
-
-    /// Authorizes an `OPTIONS` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     options("OPTIONS");
-
-    /// Authorizes a `HEAD` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     head("HEAD");
-
-    /// Authorizes a `CONNECT` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     connect("CONNECT");
-
-    /// Authorizes a `PATCH` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     patch("PATCH");
-
-    /// Authorizes a `TRACE` request to `uri` using the given credentials.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
     trace("TRACE");
 }
 
-/// Authorizes a request to `uri` using the given credentials.
+/// Authorizes a request to `uri` with the given credentials.
+///
+/// This returns an HTTP `Authorization` header value.
 ///
 /// `uri` must not contain a query part, which would result in a wrong signature.
 #[cfg(feature = "alloc")]
@@ -595,12 +689,12 @@ where
         R: Request + ?Sized,
         SM: SignatureMethod,
     {
-        Builder::with_token(token, signature_method).consume(method, uri, request)
+        Builder::with_token(token, signature_method).into_authorization(method, uri, request)
     }
     inner(method, uri, request, token.as_ref(), signature_method)
 }
 
-/// Turns a `Request` into an `x-www-form-urlencoded` string.
+/// Serializes a `Request` to an `x-www-form-urlencoded` string.
 #[cfg(feature = "alloc")]
 pub fn to_form_urlencoded<R>(request: &R) -> String
 where
@@ -609,7 +703,7 @@ where
     request.serialize(serializer::Urlencoder::form())
 }
 
-/// Turns a `Request` to a query string and appends it to the given URI.
+/// Serializes a `Request` to a query string and appends it to the given URI.
 ///
 /// This function naively concatenates a query string to `uri` and if `uri` already has
 /// a query part, it will have a duplicate query part like `?foo=bar?baz=qux`.
