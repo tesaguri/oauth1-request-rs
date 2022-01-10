@@ -68,3 +68,4 @@ serde = ["oauth-credentials/serde"]
 # Note: `percent-encoding` depends on `std` until servo/rust-url#691 lands.
 # <https://github.com/servo/rust-url/pull/691>
 std = ["alloc", "oauth-credentials/std", "rand/std", "rand/std_rng"]
+test = []

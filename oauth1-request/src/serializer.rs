@@ -180,7 +180,7 @@ impl<S: Serializer> SerializerExt for S {
 }
 
 #[cfg(test)]
-#[cfg(feature = "hmac-sha1")]
+#[cfg(all(feature = "hmac-sha1", feature = "test"))]
 mod tests {
     extern crate std;
 
