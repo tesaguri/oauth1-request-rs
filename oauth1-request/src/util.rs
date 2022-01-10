@@ -4,6 +4,39 @@ mod percent_encoding;
 pub use self::oauth_parameter::OAuthParameter;
 pub use self::percent_encoding::{percent_encode, DoublePercentEncode, PercentEncode};
 
+/// A macro to replicate `#[feature(doc_auto_cfg)]` behavior.
+// The real `doc_auto_cfg` as of this writing shows feature flags in other crates when re-exporting
+// items from them, which is undesirable.
+// TODO: Remove this macro once the issue is resolved.
+macro_rules! doc_auto_cfg {
+    // Add `#[doc(cfg($pred))]` for each `#[cfg($pred)]`.
+    (@inner $(#[$accum:meta])* { #[cfg($pred:meta)] $($rest:tt)+ }) => {
+        doc_auto_cfg! {@inner
+            $(#[$accum])*
+            #[cfg_attr(docsrs, doc(cfg($pred)))]
+            #[cfg($pred)]
+            { $($rest)+ }
+        }
+    };
+    // Pass through other attributes.
+    (@inner $(#[$accum:meta])* { #[$attr:meta] $($rest:tt)+ }) => {
+        doc_auto_cfg! {@inner
+            $(#[$accum])*
+            #[$attr]
+            { $($rest)+ }
+        }
+    };
+    (@inner $(#[$accum:meta])* { $item:item $($rest:tt)* }) => {
+        $(#[$accum])*
+        $item
+        doc_auto_cfg! {@inner { $($rest)* }}
+    };
+    (@inner {}) => {};
+    ($($arg:tt)*) => {
+        doc_auto_cfg! {@inner { $($arg)* }}
+    };
+}
+
 macro_rules! options {
     ($(
         $(#[$attr:meta])*

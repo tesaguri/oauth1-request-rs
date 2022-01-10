@@ -64,54 +64,56 @@ options! {
     }
 }
 
-#[cfg(feature = "alloc")]
-impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
-    /// Creates an `Authorizer` that produces an HTTP `Authorization header value.
-    ///
-    /// `uri` must not contain a query part.
-    /// Otherwise, the serializer will produce a wrong signature.
-    ///
-    /// # Panics
-    ///
-    /// In debug builds, panics if `uri` contains a `'?'` character.
-    pub fn authorization<T: Display>(
-        method: &str,
-        uri: T,
-        client: Credentials<&'a str>,
-        token: Option<Credentials<&'a str>>,
-        options: &'a Options<'a>,
-        signature_method: SM,
-    ) -> Self {
-        let buf = alloc::string::String::with_capacity(512);
-        Authorizer::authorization_with_buf(
-            buf,
-            method,
-            uri,
-            client,
-            token,
-            options,
-            signature_method,
-        )
-    }
+doc_auto_cfg! {
+    #[cfg(feature = "alloc")]
+    impl<'a, SM: SignatureMethod> Authorizer<'a, SM> {
+        /// Creates an `Authorizer` that produces an HTTP `Authorization header value.
+        ///
+        /// `uri` must not contain a query part.
+        /// Otherwise, the serializer will produce a wrong signature.
+        ///
+        /// # Panics
+        ///
+        /// In debug builds, panics if `uri` contains a `'?'` character.
+        pub fn authorization<T: Display>(
+            method: &str,
+            uri: T,
+            client: Credentials<&'a str>,
+            token: Option<Credentials<&'a str>>,
+            options: &'a Options<'a>,
+            signature_method: SM,
+        ) -> Self {
+            let buf = alloc::string::String::with_capacity(512);
+            Authorizer::authorization_with_buf(
+                buf,
+                method,
+                uri,
+                client,
+                token,
+                options,
+                signature_method,
+            )
+        }
 
-    /// Creates an `Authorizer` that produces an `x-www-form-urlencoded` string.
-    ///
-    /// `uri` must not contain a query part.
-    /// Otherwise, the serializer will produce a wrong signature.
-    ///
-    /// # Panics
-    ///
-    /// In debug builds, panics if `uri` contains a `'?'` character.
-    pub fn form<T: Display>(
-        method: &str,
-        uri: T,
-        client: Credentials<&'a str>,
-        token: Option<Credentials<&'a str>>,
-        options: &'a Options<'a>,
-        signature_method: SM,
-    ) -> Self {
-        let buf = alloc::string::String::with_capacity(512);
-        Authorizer::form_with_buf(buf, method, uri, client, token, options, signature_method)
+        /// Creates an `Authorizer` that produces an `x-www-form-urlencoded` string.
+        ///
+        /// `uri` must not contain a query part.
+        /// Otherwise, the serializer will produce a wrong signature.
+        ///
+        /// # Panics
+        ///
+        /// In debug builds, panics if `uri` contains a `'?'` character.
+        pub fn form<T: Display>(
+            method: &str,
+            uri: T,
+            client: Credentials<&'a str>,
+            token: Option<Credentials<&'a str>>,
+            options: &'a Options<'a>,
+            signature_method: SM,
+        ) -> Self {
+            let buf = alloc::string::String::with_capacity(512);
+            Authorizer::form_with_buf(buf, method, uri, client, token, options, signature_method)
+        }
     }
 }
 

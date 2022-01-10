@@ -6,24 +6,28 @@
 //! So the module provides an abstraction over signature methods so that users can implement those
 //! custom methods by themselves.
 
-#[cfg(feature = "hmac-sha1")]
-pub mod hmac_sha1;
-pub mod identity;
-pub mod plaintext;
-#[cfg(feature = "rsa-sha1")]
-pub mod rsa_sha1;
+doc_auto_cfg! {
+    #[cfg(feature = "hmac-sha1")]
+    pub mod hmac_sha1;
+    pub mod identity;
+    pub mod plaintext;
+    #[cfg(feature = "rsa-sha1")]
+    pub mod rsa_sha1;
+}
 
 #[cfg(any(feature = "hmac-sha1", feature = "rsa-sha1"))]
 mod digest_common;
 #[cfg(feature = "either")]
 mod either;
 
-#[cfg(feature = "hmac-sha1")]
-pub use self::hmac_sha1::HmacSha1;
-pub use self::identity::Identity;
-pub use self::plaintext::Plaintext;
-#[cfg(feature = "rsa-sha1")]
-pub use self::rsa_sha1::RsaSha1;
+doc_auto_cfg! {
+    #[cfg(feature = "hmac-sha1")]
+    pub use self::hmac_sha1::HmacSha1;
+    pub use self::identity::Identity;
+    pub use self::plaintext::Plaintext;
+    #[cfg(feature = "rsa-sha1")]
+    pub use self::rsa_sha1::RsaSha1;
+}
 
 use core::fmt::{self, Display, Write};
 

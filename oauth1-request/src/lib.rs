@@ -114,10 +114,8 @@
 //!     .post(uri, &());
 //! ```
 
-#![cfg_attr(docsrs, feature(doc_cfg, doc_cfg_hide))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.1")]
-// Prevent `oauth-credentials/alloc` feature from showing up on re-exports.
-#![cfg_attr(docsrs, doc(cfg_hide(feature = "alloc")))]
 #![warn(missing_docs, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -131,80 +129,84 @@ pub mod request;
 pub mod serializer;
 pub mod signature_method;
 
-/// A derive macro for [`Request`] trait.
-///
-/// The derive macro uses the struct's field names and `Display` implementation of the values as
-/// the keys and values of the parameter pairs of the `Request`.
-///
-/// ## Example
-///
-#[cfg_attr(feature = "alloc", doc = " ```")]
-#[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
-/// # extern crate oauth1_request as oauth;
-/// #
-/// #[derive(oauth::Request)]
-/// struct CreateItem<'a> {
-///     name: &'a str,
-///     #[oauth1(rename = "type")]
-///     kind: Option<u32>,
-///     #[oauth1(skip_if = str::is_empty)]
-///     note: &'a str,
-/// }
-///
-/// let request = CreateItem {
-///     name: "test",
-///     kind: Some(42),
-///     note: "",
-/// };
-///
-/// assert_eq!(oauth::to_form_urlencoded(&request), "name=test&type=42");
-/// ```
-///
-/// ## Field attributes
-///
-/// You can customize the behavior of the derive macro with the following field attributes:
-///
-/// - `#[oauth1(encoded)]`
-///
-/// Do not percent encode the value when serializing it.
-///
-/// - `#[oauth1(fmt = path)]`
-///
-/// Use the formatting function at `path` instead of `Display::fmt` when serializing the value.
-/// The function must be callable as `fn(&T, &mut Formatter<'_>) -> fmt::Result`
-/// (same as `Display::fmt`).
-///
-/// - `#[oauth1(option = true)]` (or `#[oauth1(option = false)]`)
-///
-/// If set to `true`, skip the field when the value is `None` or use the unwrapped value otherwise.
-/// The value's type must be `Option<T>` in this case.
-///
-/// When the field's type name is `Option<_>`, the attribute is implicitly set to `true`.
-/// Use `#[oauth1(option = false)]` if you need to opt out of that behavior.
-///
-/// - `#[oauth1(rename = "name")]`
-///
-/// Use the given string as the parameter's key. The given string must be URI-safe.
-///
-/// - `#[oauth1(skip)]`
-///
-/// Do not serialize the field.
-///
-/// - `#[oauth1(skip_if = path)]`
-///
-/// Call the function at `path` and do not serialize the field if the function returns `true`.
-/// The function must be callable as `fn(&T) -> bool`.
-#[cfg(feature = "derive")]
-#[doc(inline)]
-pub use oauth1_request_derive::Request;
+doc_auto_cfg! {
+    /// A derive macro for [`Request`] trait.
+    ///
+    /// The derive macro uses the struct's field names and `Display` implementation of the values as
+    /// the keys and values of the parameter pairs of the `Request`.
+    ///
+    /// ## Example
+    ///
+    #[cfg_attr(feature = "alloc", doc = " ```")]
+    #[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
+    /// # extern crate oauth1_request as oauth;
+    /// #
+    /// #[derive(oauth::Request)]
+    /// struct CreateItem<'a> {
+    ///     name: &'a str,
+    ///     #[oauth1(rename = "type")]
+    ///     kind: Option<u32>,
+    ///     #[oauth1(skip_if = str::is_empty)]
+    ///     note: &'a str,
+    /// }
+    ///
+    /// let request = CreateItem {
+    ///     name: "test",
+    ///     kind: Some(42),
+    ///     note: "",
+    /// };
+    ///
+    /// assert_eq!(oauth::to_form_urlencoded(&request), "name=test&type=42");
+    /// ```
+    ///
+    /// ## Field attributes
+    ///
+    /// You can customize the behavior of the derive macro with the following field attributes:
+    ///
+    /// - `#[oauth1(encoded)]`
+    ///
+    /// Do not percent encode the value when serializing it.
+    ///
+    /// - `#[oauth1(fmt = path)]`
+    ///
+    /// Use the formatting function at `path` instead of `Display::fmt` when serializing the value.
+    /// The function must be callable as `fn(&T, &mut Formatter<'_>) -> fmt::Result`
+    /// (same as `Display::fmt`).
+    ///
+    /// - `#[oauth1(option = true)]` (or `#[oauth1(option = false)]`)
+    ///
+    /// If set to `true`, skip the field when the value is `None` or use the unwrapped value otherwise.
+    /// The value's type must be `Option<T>` in this case.
+    ///
+    /// When the field's type name is `Option<_>`, the attribute is implicitly set to `true`.
+    /// Use `#[oauth1(option = false)]` if you need to opt out of that behavior.
+    ///
+    /// - `#[oauth1(rename = "name")]`
+    ///
+    /// Use the given string as the parameter's key. The given string must be URI-safe.
+    ///
+    /// - `#[oauth1(skip)]`
+    ///
+    /// Do not serialize the field.
+    ///
+    /// - `#[oauth1(skip_if = path)]`
+    ///
+    /// Call the function at `path` and do not serialize the field if the function returns `true`.
+    /// The function must be callable as `fn(&T) -> bool`.
+    #[cfg(feature = "derive")]
+    #[doc(inline)]
+    pub use oauth1_request_derive::Request;
+}
 #[doc(no_inline)]
 pub use oauth_credentials::{Credentials, Token};
 
-pub use self::request::ParameterList;
-pub use self::request::Request;
-#[cfg(feature = "hmac-sha1")]
-pub use self::signature_method::HmacSha1;
-pub use self::signature_method::Plaintext;
+doc_auto_cfg! {
+    pub use self::request::ParameterList;
+    pub use self::request::Request;
+    #[cfg(feature = "hmac-sha1")]
+    pub use self::signature_method::HmacSha1;
+    pub use self::signature_method::Plaintext;
+}
 
 #[cfg(feature = "alloc")]
 use alloc::string::String;
@@ -232,7 +234,7 @@ pub struct Builder<
 }
 
 macro_rules! builder_authorize_shorthand {
-    ($($name:ident($method:expr);)*) => {$(
+    ($($name:ident($method:expr);)*) => {doc_auto_cfg! {$(
         #[doc = concat!("Authorizes a `", $method, "` request to `uri`,")]
         /// returning an HTTP `Authorization` header value.
         ///
@@ -246,11 +248,11 @@ macro_rules! builder_authorize_shorthand {
         {
             self.authorize($method, uri, request)
         }
-    )*};
+    )*}};
 }
 
 macro_rules! builder_to_form_shorthand {
-    ($($name:ident($method:expr);)*) => {$(
+    ($($name:ident($method:expr);)*) => {doc_auto_cfg! {$(
         #[doc = concat!("Authorizes a `", $method, "` request to `uri`,")]
         /// writing the OAuth protocol parameters to an `x-www-form-urlencoded` string
         /// along with the other request parameters.
@@ -265,7 +267,7 @@ macro_rules! builder_to_form_shorthand {
         {
             self.to_form($method, uri, request)
         }
-    )*};
+    )*}};
 }
 
 macro_rules! builder_to_query_shorthand {
@@ -381,50 +383,52 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         trace_query("TRACE");
     }
 
-    /// Authorizes a request to `uri` with a custom HTTP request method,
-    /// returning an HTTP `Authorization` header value.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn authorize<U, R>(&self, method: &str, uri: U, request: &R) -> String
-    where
-        U: Display,
-        R: Request + ?Sized,
-        SM: Clone,
-    {
-        let serializer = serializer::auth::Authorizer::authorization(
-            method,
-            uri,
-            self.client.as_ref(),
-            self.token.as_ref().map(Credentials::as_ref),
-            &self.options,
-            self.signature_method.clone(),
-        );
+    doc_auto_cfg! {
+        /// Authorizes a request to `uri` with a custom HTTP request method,
+        /// returning an HTTP `Authorization` header value.
+        ///
+        /// `uri` must not contain a query part, which would result in a wrong signature.
+        #[cfg(feature = "alloc")]
+        pub fn authorize<U, R>(&self, method: &str, uri: U, request: &R) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+            SM: Clone,
+        {
+            let serializer = serializer::auth::Authorizer::authorization(
+                method,
+                uri,
+                self.client.as_ref(),
+                self.token.as_ref().map(Credentials::as_ref),
+                &self.options,
+                self.signature_method.clone(),
+            );
 
-        request.serialize(serializer)
-    }
+            request.serialize(serializer)
+        }
 
-    /// Authorizes a request to `uri` with a custom HTTP request method, writing the OAuth protocol
-    /// parameters to an `x-www-form-urlencoded` string along with the other request parameters.
-    ///
-    /// `uri` must not contain a query part, which would result in a wrong signature.
-    #[cfg(feature = "alloc")]
-    pub fn to_form<U, R>(&self, method: &str, uri: U, request: &R) -> String
-    where
-        U: Display,
-        R: Request + ?Sized,
-        SM: Clone,
-    {
-        let serializer = serializer::auth::Authorizer::form(
-            method,
-            uri,
-            self.client.as_ref(),
-            self.token.as_ref().map(Credentials::as_ref),
-            &self.options,
-            self.signature_method.clone(),
-        );
+        /// Authorizes a request to `uri` with a custom HTTP request method, writing the OAuth protocol
+        /// parameters to an `x-www-form-urlencoded` string along with the other request parameters.
+        ///
+        /// `uri` must not contain a query part, which would result in a wrong signature.
+        #[cfg(feature = "alloc")]
+        pub fn to_form<U, R>(&self, method: &str, uri: U, request: &R) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+            SM: Clone,
+        {
+            let serializer = serializer::auth::Authorizer::form(
+                method,
+                uri,
+                self.client.as_ref(),
+                self.token.as_ref().map(Credentials::as_ref),
+                &self.options,
+                self.signature_method.clone(),
+            );
 
-        request.serialize(serializer)
+            request.serialize(serializer)
+        }
     }
 
     /// Authorizes a request to `uri` with a custom HTTP request method, appending the OAuth
@@ -471,78 +475,80 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
         request.serialize(serializer)
     }
 
-    /// Same as `to_form` except that this writes the resulting `x-www-form-urlencoded` string
-    /// into `buf`.
-    #[cfg(feature = "alloc")]
-    pub fn to_form_with_buf<W, U, R>(&self, buf: W, method: &str, uri: U, request: &R) -> W
-    where
-        W: Write,
-        U: Display,
-        R: Request + ?Sized,
-        SM: Clone,
-    {
-        let serializer = serializer::auth::Authorizer::form_with_buf(
-            buf,
-            method,
-            uri,
-            self.client.as_ref(),
-            self.token.as_ref().map(Credentials::as_ref),
-            &self.options,
-            self.signature_method.clone(),
-        );
+    doc_auto_cfg! {
+        /// Same as `to_form` except that this writes the resulting `x-www-form-urlencoded` string
+        /// into `buf`.
+        #[cfg(feature = "alloc")]
+        pub fn to_form_with_buf<W, U, R>(&self, buf: W, method: &str, uri: U, request: &R) -> W
+        where
+            W: Write,
+            U: Display,
+            R: Request + ?Sized,
+            SM: Clone,
+        {
+            let serializer = serializer::auth::Authorizer::form_with_buf(
+                buf,
+                method,
+                uri,
+                self.client.as_ref(),
+                self.token.as_ref().map(Credentials::as_ref),
+                &self.options,
+                self.signature_method.clone(),
+            );
 
-        request.serialize(serializer)
-    }
+            request.serialize(serializer)
+        }
 
-    /// Authorizes a request and consumes `self`, returning an HTTP `Authorization` header value.
-    ///
-    /// Unlike `authorize`, this does not clone the signature method and may be more efficient for
-    /// non-`Copy` signature methods like `RsaSha1`.
-    ///
-    /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
-    /// use `authorize` instead.
-    #[cfg(feature = "alloc")]
-    pub fn into_authorization<U, R>(self, method: &str, uri: U, request: &R) -> String
-    where
-        U: Display,
-        R: Request + ?Sized,
-    {
-        let serializer = serializer::auth::Authorizer::authorization(
-            method,
-            uri,
-            self.client.as_ref(),
-            self.token.as_ref().map(Credentials::as_ref),
-            &self.options,
-            self.signature_method,
-        );
+        /// Authorizes a request and consumes `self`, returning an HTTP `Authorization` header value.
+        ///
+        /// Unlike `authorize`, this does not clone the signature method and may be more efficient for
+        /// non-`Copy` signature methods like `RsaSha1`.
+        ///
+        /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
+        /// use `authorize` instead.
+        #[cfg(feature = "alloc")]
+        pub fn into_authorization<U, R>(self, method: &str, uri: U, request: &R) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+        {
+            let serializer = serializer::auth::Authorizer::authorization(
+                method,
+                uri,
+                self.client.as_ref(),
+                self.token.as_ref().map(Credentials::as_ref),
+                &self.options,
+                self.signature_method,
+            );
 
-        request.serialize(serializer)
-    }
+            request.serialize(serializer)
+        }
 
-    /// Authorizes a request and consumes `self`, writing the OAuth protocol parameters to
-    /// an `x-www-form-urlencoded` string along with the other request parameters.
-    ///
-    /// Unlike `to_form`, this does not clone the signature method and may be more efficient for
-    /// non-`Copy` signature methods like `RsaSha1`.
-    ///
-    /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
-    /// use `to_form` instead.
-    #[cfg(feature = "alloc")]
-    pub fn into_form<U, R>(self, method: &str, uri: U, request: &R) -> String
-    where
-        U: Display,
-        R: Request + ?Sized,
-    {
-        let serializer = serializer::auth::Authorizer::form(
-            method,
-            uri,
-            self.client.as_ref(),
-            self.token.as_ref().map(Credentials::as_ref),
-            &self.options,
-            self.signature_method,
-        );
+        /// Authorizes a request and consumes `self`, writing the OAuth protocol parameters to
+        /// an `x-www-form-urlencoded` string along with the other request parameters.
+        ///
+        /// Unlike `to_form`, this does not clone the signature method and may be more efficient for
+        /// non-`Copy` signature methods like `RsaSha1`.
+        ///
+        /// For `HmacSha1`, `&RsaSha1` and `Plaintext`, cloning is no-op or very cheap so you should
+        /// use `to_form` instead.
+        #[cfg(feature = "alloc")]
+        pub fn into_form<U, R>(self, method: &str, uri: U, request: &R) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+        {
+            let serializer = serializer::auth::Authorizer::form(
+                method,
+                uri,
+                self.client.as_ref(),
+                self.token.as_ref().map(Credentials::as_ref),
+                &self.options,
+                self.signature_method,
+            );
 
-        request.serialize(serializer)
+            request.serialize(serializer)
+        }
     }
 
     /// Authorizes a request and consumes `self`, appending the OAuth protocol parameters to
@@ -621,7 +627,7 @@ impl<'a, SM: SignatureMethod, C: AsRef<str>, T: AsRef<str>> Builder<'a, SM, C, T
 }
 
 macro_rules! authorize_shorthand {
-    ($($name:ident($method:expr);)*) => {$(
+    ($($name:ident($method:expr);)*) => {doc_auto_cfg! {$(
         #[doc = concat!("Authorizes a `", $method, "` request to `uri` with the given credentials.")]
         ///
         /// This returns an HTTP `Authorization` header value.
@@ -643,7 +649,7 @@ macro_rules! authorize_shorthand {
         {
             authorize($method, uri, request, token, signature_method)
         }
-    )*};
+    )*}};
 }
 
 authorize_shorthand! {
@@ -658,60 +664,62 @@ authorize_shorthand! {
     trace("TRACE");
 }
 
-/// Authorizes a request to `uri` with the given credentials.
-///
-/// This returns an HTTP `Authorization` header value.
-///
-/// `uri` must not contain a query part, which would result in a wrong signature.
-#[cfg(feature = "alloc")]
-pub fn authorize<U, R, C, T, SM>(
-    method: &str,
-    uri: U,
-    request: &R,
-    token: &Token<C, T>,
-    signature_method: SM,
-) -> String
-where
-    U: Display,
-    R: Request + ?Sized,
-    C: AsRef<str>,
-    T: AsRef<str>,
-    SM: SignatureMethod,
-{
-    fn inner<U, R, SM>(
+doc_auto_cfg! {
+    /// Authorizes a request to `uri` with the given credentials.
+    ///
+    /// This returns an HTTP `Authorization` header value.
+    ///
+    /// `uri` must not contain a query part, which would result in a wrong signature.
+    #[cfg(feature = "alloc")]
+    pub fn authorize<U, R, C, T, SM>(
         method: &str,
         uri: U,
         request: &R,
-        token: Token<&str, &str>,
+        token: &Token<C, T>,
         signature_method: SM,
     ) -> String
     where
         U: Display,
         R: Request + ?Sized,
+        C: AsRef<str>,
+        T: AsRef<str>,
         SM: SignatureMethod,
     {
-        Builder::with_token(token, signature_method).into_authorization(method, uri, request)
+        fn inner<U, R, SM>(
+            method: &str,
+            uri: U,
+            request: &R,
+            token: Token<&str, &str>,
+            signature_method: SM,
+        ) -> String
+        where
+            U: Display,
+            R: Request + ?Sized,
+            SM: SignatureMethod,
+        {
+            Builder::with_token(token, signature_method).into_authorization(method, uri, request)
+        }
+        inner(method, uri, request, token.as_ref(), signature_method)
     }
-    inner(method, uri, request, token.as_ref(), signature_method)
-}
 
-/// Serializes a `Request` to an `x-www-form-urlencoded` string.
-#[cfg(feature = "alloc")]
-pub fn to_form_urlencoded<R>(request: &R) -> String
-where
-    R: Request + ?Sized,
-{
-    request.serialize(serializer::Urlencoder::form())
-}
+    /// Serializes a `Request` to an `x-www-form-urlencoded` string.
+    #[cfg(feature = "alloc")]
+    pub fn to_form_urlencoded<R>(request: &R) -> String
+    where
+        R: Request + ?Sized,
+    {
+        request.serialize(serializer::Urlencoder::form())
+    }
 
-/// Serializes a `Request` to a query string and appends it to the given URI.
-///
-/// This function naively concatenates a query string to `uri` and if `uri` already has
-/// a query part, it will have a duplicate query part like `?foo=bar?baz=qux`.
-#[cfg(feature = "alloc")]
-pub fn to_uri_query<R>(uri: String, request: &R) -> String
-where
-    R: Request + ?Sized,
-{
-    request.serialize(serializer::Urlencoder::query(uri))
+    /// Serializes a `Request` to a query string and appends it to the given URI.
+    ///
+    /// This function naively concatenates a query string to `uri` and if `uri` already has
+    /// a query part, it will have a duplicate query part like `?foo=bar?baz=qux`.
+    #[cfg(feature = "alloc")]
+    pub fn to_uri_query<R>(uri: String, request: &R) -> String
+    where
+        R: Request + ?Sized,
+    {
+        request.serialize(serializer::Urlencoder::query(uri))
+    }
 }
