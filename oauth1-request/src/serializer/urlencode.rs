@@ -23,21 +23,23 @@ enum Append {
     Ampersand,
 }
 
+doc_auto_cfg! {
+    #[cfg(feature = "alloc")]
+    impl Urlencoder {
+        /// Creates a `Urlencoder` that produces an `x-www-form-urlencoded` string.
+        pub fn form() -> Self {
+            Urlencoder {
+                data: alloc::string::String::new(),
+                next_append: Append::None,
+            }
+        }
+    }
+}
+
 impl<W> Urlencoder<W>
 where
     W: Write,
 {
-    /// Creates a `Urlencoder` that produces an `x-www-form-urlencoded` string.
-    pub fn form() -> Self
-    where
-        W: Default,
-    {
-        Urlencoder {
-            data: W::default(),
-            next_append: Append::None,
-        }
-    }
-
     /// Same with `form` but writes the resulting form string into `buf`.
     pub fn form_with_buf(buf: W) -> Self {
         Urlencoder {

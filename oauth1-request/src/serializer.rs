@@ -301,7 +301,7 @@ mod tests {
                     assert_eq!(authorization, expected);
 
                     let mut urlencoded = if $method == "POST" {
-                        Urlencoder::form()
+                        Urlencoder::form_with_buf(String::new())
                     } else {
                         Urlencoder::query($ep.to_string())
                     };
