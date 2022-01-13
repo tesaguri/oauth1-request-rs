@@ -148,8 +148,10 @@ pub trait Sign {
 
     provide! { callback, consumer_key, nonce, }
 
-    /// If this method returns `false`, `Signer` will not emit the `oauth_nonce` part of the
-    /// signature base string.
+    /// Whether the signature method uses the `oauth_nonce` parameter.
+    ///
+    /// If this method returns `false`, `Serializer` implementations should not emit the
+    /// `oauth_nonce` part of the signature base string.
     ///
     /// The default implementation returns `true`.
     fn use_nonce(&self) -> bool {
@@ -174,8 +176,10 @@ pub trait Sign {
         self.parameter("oauth_timestamp", value);
     }
 
-    /// If this method returns `false`, `Signer` will not emit the `oauth_nonce` part of the
-    /// signature base string.
+    /// Whether the signature method uses the `oauth_nonce` parameter.
+    ///
+    /// If this method returns `false`, `Serializer` implementations should not emit the
+    /// `oauth_nonce` part of the signature base string.
     ///
     /// The default implementation returns `true`.
     fn use_timestamp(&self) -> bool {
