@@ -25,7 +25,7 @@ use crate::serializer::Serializer;
 ///     ("foo", 3),
 /// ]);
 ///
-/// let form = oauth::to_form_urlencoded(&request);
+/// let form = oauth::to_form(&request);
 /// assert_eq!(form, "bar=23&foo=123&foo=3");
 /// ```
 pub struct ParameterList<

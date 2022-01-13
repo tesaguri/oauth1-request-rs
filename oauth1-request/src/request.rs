@@ -52,7 +52,7 @@ pub trait Request {
 /// ]);
 /// let request = oauth::request::AssertSorted(request.iter());
 ///
-/// let form = oauth::to_form_urlencoded(&request);
+/// let form = oauth::to_form(&request);
 /// assert_eq!(
 ///     form,
 ///     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",

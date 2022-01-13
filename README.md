@@ -52,13 +52,13 @@ assert_eq!(
 
 // You can create an `x-www-form-urlencoded` string or a URI with query pairs from the request.
 
-let form = oauth::to_form_urlencoded(&request);
+let form = oauth::to_form(&request);
 assert_eq!(
     form,
     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
 );
 
-let uri = oauth::to_uri_query(uri.to_owned(), &request);
+let uri = oauth::to_query(uri.to_owned(), &request);
 assert_eq!(
     uri,
     "https://example.com/api/v1/comments/create.json?article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",

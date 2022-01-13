@@ -62,13 +62,13 @@
 //!
 //! // You can create an `x-www-form-urlencoded` string or a URI with query pairs from the request.
 //!
-//! let form = oauth::to_form_urlencoded(&request);
+//! let form = oauth::to_form(&request);
 //! assert_eq!(
 //!     form,
 //!     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
 //! );
 //!
-//! let uri = oauth::to_uri_query(uri.to_owned(), &request);
+//! let uri = oauth::to_query(uri.to_owned(), &request);
 //! assert_eq!(
 //!     uri,
 //!     "https://example.com/api/v1/comments/create.json?article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
@@ -91,7 +91,7 @@
 //!     ("text", &"A request signed with OAuth & Rust 🦀 🔏"),
 //! ]);
 //!
-//! let form = oauth::to_form_urlencoded(&request);
+//! let form = oauth::to_form(&request);
 //! assert_eq!(
 //!     form,
 //!     "article_id=123456789&text=A%20request%20signed%20with%20OAuth%20%26%20Rust%20%F0%9F%A6%80%20%F0%9F%94%8F",
@@ -156,7 +156,7 @@ doc_auto_cfg! {
     ///     note: "",
     /// };
     ///
-    /// assert_eq!(oauth::to_form_urlencoded(&request), "name=test&type=42");
+    /// assert_eq!(oauth::to_form(&request), "name=test&type=42");
     /// ```
     ///
     /// ## Field attributes
@@ -706,7 +706,7 @@ doc_auto_cfg! {
 
     /// Serializes a `Request` to an `x-www-form-urlencoded` string.
     #[cfg(feature = "alloc")]
-    pub fn to_form_urlencoded<R>(request: &R) -> String
+    pub fn to_form<R>(request: &R) -> String
     where
         R: Request + ?Sized,
     {
@@ -718,7 +718,7 @@ doc_auto_cfg! {
     /// This function naively concatenates a query string to `uri` and if `uri` already has
     /// a query part, it will have a duplicate query part like `?foo=bar?baz=qux`.
     #[cfg(feature = "alloc")]
-    pub fn to_uri_query<R>(uri: String, request: &R) -> String
+    pub fn to_query<R>(uri: String, request: &R) -> String
     where
         R: Request + ?Sized,
     {

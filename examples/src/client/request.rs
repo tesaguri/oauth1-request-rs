@@ -77,13 +77,13 @@ where
 
     let req = if is_post {
         let x_www_form_urlencoded = HeaderValue::from_static("application/x-www-form-urlencoded");
-        let data = oauth::to_form_urlencoded(&request).into_bytes();
+        let data = oauth::to_form(&request).into_bytes();
         req.uri(uri)
             .header(CONTENT_TYPE, x_www_form_urlencoded)
             .body(data.into())
             .unwrap()
     } else {
-        let uri = oauth::to_uri_query(SR::URI.to_owned(), &request);
+        let uri = oauth::to_query(SR::URI.to_owned(), &request);
         req.uri(uri).body(Default::default()).unwrap()
     };
 
