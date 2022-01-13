@@ -121,7 +121,7 @@ stringify!($name), "\"` as the first argument."
 /// let _ = sign.end();
 /// ```
 pub trait Sign {
-    /// The representation of `oauth_signature` string the algorithm produces.
+    /// The URL-encoded representation of `oauth_signature` string the algorithm produces.
     type Signature: Display;
 
     /// Returns the `oauth_signature_method` string for the signature method associated with the
