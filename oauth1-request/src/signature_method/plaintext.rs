@@ -25,13 +25,19 @@ pub struct PlaintextSign<
     signing_key: W,
 }
 
+/// The `PLAINTEXT` signature method with a default configuration.
+#[cfg(feature = "alloc")]
+pub const PLAINTEXT: Plaintext = Plaintext::new();
+
 #[cfg(feature = "alloc")]
 impl Plaintext {
     /// Creates a new `Plaintext`.
-    pub fn new() -> Self {
-        Plaintext {
-            marker: PhantomData,
-        }
+    pub const fn new() -> Self {
+        // `PhantomData::<fn() -> _>`s, which (rustc thinks to) contain a function pointer,
+        // cannot appear in constant functions directly as of Rust 1.57, but this somehow works.
+        // cf. <https://github.com/rust-lang/rust/issues/67649>
+        const MARKER: PhantomData<fn() -> alloc::string::String> = PhantomData;
+        Plaintext { marker: MARKER }
     }
 }
 

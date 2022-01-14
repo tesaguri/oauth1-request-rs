@@ -61,7 +61,7 @@ pub use skip_serialize_oauth_parameters;
 ///     client,
 ///     Some(token),
 ///     &options,
-///     oauth::HmacSha1::new(),
+///     oauth::HMAC_SHA1,
 /// );
 ///
 /// // The parameters must be serialized in ascending ordering.
@@ -275,7 +275,7 @@ mod tests {
                         client,
                         Some(token),
                         &options,
-                        Inspect(HmacSha1::new()),
+                        Inspect(crate::HMAC_SHA1),
                     );
 
                     test_inner! { auth; $($param1)* }

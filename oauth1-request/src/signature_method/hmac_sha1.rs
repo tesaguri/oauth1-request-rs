@@ -33,6 +33,9 @@ pub struct HmacSha1Signature {
     inner: Base64PercentEncodeDisplay<GenericArray<u8, <Sha1 as OutputSizeUser>::OutputSize>>,
 }
 
+/// The `HMAC-SHA1` signature method with a default configuration.
+pub const HMAC_SHA1: HmacSha1 = HmacSha1::new();
+
 #[derive(Clone)]
 enum SigningKey {
     Key {
@@ -44,8 +47,10 @@ enum SigningKey {
 
 impl HmacSha1 {
     /// Creates a new `HmacSha1`.
-    pub fn new() -> Self {
-        HmacSha1::default()
+    pub const fn new() -> Self {
+        HmacSha1 {
+            _priv: (),
+        }
     }
 }
 

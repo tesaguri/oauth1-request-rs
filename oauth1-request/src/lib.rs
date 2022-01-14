@@ -42,9 +42,9 @@
 //!     oauth::Token::from_parts("consumer_key", "consumer_secret", "token", "token_secret");
 //!
 //! // Create the `Authorization` header.
-//! let authorization_header = oauth::post(uri, &request, &token, oauth::HmacSha1::new());
+//! let authorization_header = oauth::post(uri, &request, &token, oauth::HMAC_SHA1);
 //! # // Override the above value to pin the nonce and timestamp value.
-//! # let mut builder = oauth::Builder::new(token.client, oauth::HmacSha1::new());
+//! # let mut builder = oauth::Builder::new(token.client, oauth::HMAC_SHA1);
 //! # builder.token(token.token);
 //! # builder.nonce("Dk-OGluFEQ4f").timestamp(std::num::NonZeroU64::new(1234567890));
 //! # let authorization_header = builder.post(uri, &request);
@@ -208,6 +208,10 @@ doc_auto_cfg! {
     pub use self::signature_method::Plaintext;
     #[cfg(feature = "rsa-sha1")]
     pub use self::signature_method::RsaSha1;
+    #[cfg(feature = "hmac-sha1")]
+    pub use self::signature_method::HMAC_SHA1;
+    #[cfg(feature = "alloc")]
+    pub use self::signature_method::PLAINTEXT;
 }
 
 #[cfg(feature = "alloc")]

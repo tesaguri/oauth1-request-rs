@@ -24,9 +24,13 @@ mod either;
 doc_auto_cfg! {
     #[cfg(feature = "hmac-sha1")]
     pub use self::hmac_sha1::HmacSha1;
+    #[cfg(feature = "hmac-sha1")]
+    pub use self::hmac_sha1::HMAC_SHA1;
     #[cfg(feature = "test")]
     pub use self::identity::Identity;
     pub use self::plaintext::Plaintext;
+    #[cfg(feature = "alloc")]
+    pub use self::plaintext::PLAINTEXT;
     #[cfg(feature = "rsa-sha1")]
     pub use self::rsa_sha1::RsaSha1;
 }
@@ -99,8 +103,8 @@ stringify!($name), "\"` as the first argument."
 ///
 #[cfg_attr(feature = "alloc", doc = " ```")]
 #[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
-/// # use oauth1_request::signature_method::{Plaintext, Sign, SignatureMethod};
-/// # let mut sign = Plaintext::new().sign_with("", Some(""));
+/// # use oauth1_request::signature_method::{Sign, SignatureMethod, PLAINTEXT};
+/// # let mut sign = PLAINTEXT.sign_with("", Some(""));
 /// sign.request_method("POST");
 /// sign.uri("http%3A%2F%2Fexample.com%2Frequest");
 /// sign.parameter("a", "r%2520b");

@@ -41,7 +41,7 @@ pub struct RsaSha1Signature {
 
 impl RsaSha1 {
     /// Creates a new `RsaSha1` that signs a signature base string with the given RSA private key.
-    pub fn new(key: RsaPrivateKey) -> Self {
+    pub const fn new(key: RsaPrivateKey) -> Self {
         RsaSha1 { key }
     }
 }

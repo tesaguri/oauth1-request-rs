@@ -24,10 +24,9 @@ pub struct IdentitySign<
 #[cfg(feature = "alloc")]
 impl Identity {
     /// Creates a new `Identity`.
-    pub fn new() -> Self {
-        Identity {
-            marker: PhantomData,
-        }
+    pub const fn new() -> Self {
+        const MARKER: PhantomData<fn() -> alloc::string::String> = PhantomData;
+        Identity { marker: MARKER }
     }
 }
 
