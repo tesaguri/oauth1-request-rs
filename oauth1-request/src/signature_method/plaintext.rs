@@ -8,7 +8,6 @@ use core::marker::PhantomData;
 use super::{write_signing_key, Sign, SignatureMethod};
 
 /// The `PLAINTEXT` signature method.
-#[derive(Copy)]
 pub struct Plaintext<
     #[cfg(feature = "alloc")] W = alloc::string::String,
     #[cfg(not(feature = "alloc"))] W,
@@ -65,6 +64,8 @@ impl<W> Clone for Plaintext<W> {
         }
     }
 }
+
+impl<W> Copy for Plaintext<W> {}
 
 impl<W> Debug for Plaintext<W> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

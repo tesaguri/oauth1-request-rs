@@ -6,7 +6,6 @@ use core::marker::PhantomData;
 use super::{Sign, SignatureMethod};
 
 /// A pseudo signature method that just returns the signature base string as the signature.
-#[derive(Copy)]
 pub struct Identity<
     #[cfg(feature = "alloc")] W = alloc::string::String,
     #[cfg(not(feature = "alloc"))] W,
@@ -52,6 +51,8 @@ impl<W> Clone for Identity<W> {
         }
     }
 }
+
+impl<W> Copy for Identity<W> {}
 
 impl<W> Debug for Identity<W> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
