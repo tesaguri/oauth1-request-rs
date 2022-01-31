@@ -76,10 +76,11 @@ where
         .header(AUTHORIZATION, authorization);
 
     let req = if is_post {
-        let x_www_form_urlencoded = HeaderValue::from_static("application/x-www-form-urlencoded");
+        const X_WWW_FORM_URLENCODED: HeaderValue =
+            HeaderValue::from_static("application/x-www-form-urlencoded");
         let data = oauth::to_form(&request).into_bytes();
         req.uri(uri)
-            .header(CONTENT_TYPE, x_www_form_urlencoded)
+            .header(CONTENT_TYPE, X_WWW_FORM_URLENCODED)
             .body(data.into())
             .unwrap()
     } else {

@@ -238,7 +238,10 @@ where
 {
     let (ref kl, ref vl) = *lhs.borrow();
     let (ref kr, ref vr) = *rhs.borrow();
-    (kl.as_ref(), fmt_cmp::Cmp(vl)).cmp(&(kr.as_ref(), fmt_cmp::Cmp(vr)))
+    return inner(kl.as_ref(), vl, kr.as_ref(), vr);
+    fn inner<V: Display>(kl: &str, vl: &V, kr: &str, vr: &V) -> Ordering {
+        (kl, fmt_cmp::Cmp(vl)).cmp(&(kr, fmt_cmp::Cmp(vr)))
+    }
 }
 
 // TODO: Use `<[T]>::is_sorted_by` once it's stable.

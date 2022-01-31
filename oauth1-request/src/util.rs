@@ -149,11 +149,6 @@ macro_rules! impl_setters {
     () => {};
 }
 
-// TODO: Use `!` type once it's stable and we've bumped minimum supported Rust version.
-#[allow(clippy::empty_enum)]
-#[derive(Clone, Debug)]
-pub enum Never {}
-
 impl OAuthParameter {
     pub fn serialize<S: crate::serializer::Serializer>(self, serializer: &mut S) {
         match self {

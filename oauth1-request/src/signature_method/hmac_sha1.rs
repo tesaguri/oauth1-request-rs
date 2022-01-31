@@ -17,7 +17,7 @@ use super::digest_common::{Base64PercentEncodeDisplay, UpdateSign};
 use super::{write_signing_key, Sign, SignatureMethod};
 
 /// The `HMAC-SHA1` signature method.
-#[derive(Copy, Clone, Default)]
+#[derive(Clone, Copy, Default)]
 pub struct HmacSha1 {
     _priv: (),
 }
@@ -48,9 +48,7 @@ enum SigningKey {
 impl HmacSha1 {
     /// Creates a new `HmacSha1`.
     pub const fn new() -> Self {
-        HmacSha1 {
-            _priv: (),
-        }
+        HmacSha1 { _priv: () }
     }
 }
 
@@ -82,19 +80,19 @@ impl Sign for HmacSha1Sign {
     }
 
     fn request_method(&mut self, method: &str) {
-        self.inner.request_method(method)
+        self.inner.request_method(method);
     }
 
     fn uri<T: Display>(&mut self, uri: T) {
-        self.inner.uri(uri)
+        self.inner.uri(uri);
     }
 
     fn parameter<V: Display>(&mut self, key: &str, value: V) {
-        self.inner.parameter(key, value)
+        self.inner.parameter(key, value);
     }
 
     fn delimiter(&mut self) {
-        self.inner.delimiter()
+        self.inner.delimiter();
     }
 
     fn end(self) -> HmacSha1Signature {

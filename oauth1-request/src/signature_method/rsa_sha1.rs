@@ -11,7 +11,6 @@ pub use rsa::RsaPrivateKey;
 
 use alloc::vec::Vec;
 use core::fmt::{self, Display, Formatter};
-use core::mem;
 
 use digest::Digest;
 use rsa::{Hash, PaddingScheme};
@@ -54,13 +53,14 @@ impl From<RsaPrivateKey> for RsaSha1 {
 
 impl AsRef<RsaSha1> for RsaPrivateKey {
     fn as_ref(&self) -> &RsaSha1 {
+        #[allow(clippy::needless_lifetimes)] // Adding the lifetime annotations just to be sure.
         fn inner<'a>(key: &'a RsaPrivateKey) -> &'a RsaSha1 {
             // Safety:
             // - The `#[repr(transparent)]` attribute ensures that `RsaSha1` has the same layout as
             //   `RsaPrivateKey`.
             // - The lifetime annotations ensure that the output lives for the same lifetime as
             //   the input.
-            unsafe { mem::transmute::<&'a RsaPrivateKey, &'a RsaSha1>(key) }
+            unsafe { &*(key as *const RsaPrivateKey).cast::<RsaSha1>() }
         }
         inner(self)
     }
@@ -96,19 +96,19 @@ impl<'a> Sign for RsaSha1Sign {
     }
 
     fn request_method(&mut self, method: &str) {
-        self.inner.request_method(method)
+        self.inner.request_method(method);
     }
 
     fn uri<T: Display>(&mut self, uri: T) {
-        self.inner.uri(uri)
+        self.inner.uri(uri);
     }
 
     fn parameter<V: Display>(&mut self, key: &str, value: V) {
-        self.inner.parameter(key, value)
+        self.inner.parameter(key, value);
     }
 
     fn delimiter(&mut self) {
-        self.inner.delimiter()
+        self.inner.delimiter();
     }
 
     fn end(self) -> RsaSha1Signature {
@@ -128,19 +128,19 @@ impl<'a> Sign for RsaSha1Sign<&'a RsaPrivateKey> {
     }
 
     fn request_method(&mut self, method: &str) {
-        self.inner.request_method(method)
+        self.inner.request_method(method);
     }
 
     fn uri<T: Display>(&mut self, uri: T) {
-        self.inner.uri(uri)
+        self.inner.uri(uri);
     }
 
     fn parameter<V: Display>(&mut self, key: &str, value: V) {
-        self.inner.parameter(key, value)
+        self.inner.parameter(key, value);
     }
 
     fn delimiter(&mut self) {
-        self.inner.delimiter()
+        self.inner.delimiter();
     }
 
     fn end(self) -> RsaSha1Signature {

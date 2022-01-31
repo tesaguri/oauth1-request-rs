@@ -424,7 +424,7 @@ fn get_rng() -> impl RngCore + CryptoRng {
 const NONCE_LEN: usize = 12;
 
 fn gen_nonce<'a, R: RngCore + CryptoRng>(buf: &'a mut [u8; NONCE_LEN], rng: &mut R) -> &'a str {
-    let mut rand = [0u8; NONCE_LEN * 3 / 4];
+    let mut rand = [0_u8; NONCE_LEN * 3 / 4];
     rng.fill_bytes(&mut rand);
 
     // Trim leading zeroes to be stingy.

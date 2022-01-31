@@ -18,7 +18,7 @@ use crate::util::OAuthParameter;
 /// [`#[derive(Request)]`][oauth1_request_derive::Request] derive macro.
 /// In most cases, you won't need to implement it manually.
 pub trait Request {
-    /// Feeds a [`Serializer`] implementation with the key-value pair of the request
+    /// Feeds a [`Serializer`] implementation with the key-value pairs of the request
     /// and returns the serializer's output.
     fn serialize<S>(&self, serializer: S) -> S::Output
     where

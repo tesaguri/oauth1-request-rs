@@ -90,9 +90,7 @@ const SECRET: &'static str = "oauth_token_secret";
 
 impl<'de, T: Deserialize<'de>> Deserialize<'de> for Credentials<T> {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        struct Visitor<T> {
-            marker: PhantomData<T>,
-        }
+        struct Visitor<T>(PhantomData<T>);
 
         impl<'de, T: Deserialize<'de>> de::Visitor<'de> for Visitor<T> {
             type Value = Credentials<T>;
@@ -119,20 +117,15 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Credentials<T> {
                             }
                             secret = Some(try!(map.next_value()));
                         }
-                        _ => {
+                        Field::Other => {
                             try!(map.next_value::<de::IgnoredAny>());
                         }
                     }
                 }
 
-                let identifier = match identifier {
-                    Some(identifier) => identifier,
-                    None => return Err(de::Error::missing_field(IDENTIFIER)),
-                };
-                let secret = match secret {
-                    Some(secret) => secret,
-                    None => return Err(de::Error::missing_field(SECRET)),
-                };
+                let identifier =
+                    try!(identifier.ok_or_else(|| de::Error::missing_field(IDENTIFIER)));
+                let secret = try!(secret.ok_or_else(|| de::Error::missing_field(SECRET)));
 
                 Ok(Credentials {
                     identifier: identifier,
@@ -142,10 +135,7 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Credentials<T> {
         }
 
         const FIELDS: &'static [&'static str] = &[IDENTIFIER, SECRET];
-        let visitor = Visitor {
-            marker: PhantomData,
-        };
-        d.deserialize_struct(CREDENTIALS, FIELDS, visitor)
+        d.deserialize_struct(CREDENTIALS, FIELDS, Visitor(PhantomData))
     }
 }
 
@@ -249,6 +239,14 @@ impl<'de> Deserialize<'de> for Field {
     fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
         struct Visitor;
 
+        fn visit_bytes(v: &[u8]) -> Field {
+            match v {
+                b"oauth_token" => Field::Identifier,
+                b"oauth_token_secret" => Field::Secret,
+                _ => Field::Other,
+            }
+        }
+
         impl<'de> de::Visitor<'de> for Visitor {
             type Value = Field;
 
@@ -257,19 +255,11 @@ impl<'de> Deserialize<'de> for Field {
             }
 
             fn visit_str<E>(self, v: &str) -> Result<Field, E> {
-                match v {
-                    IDENTIFIER => Ok(Field::Identifier),
-                    SECRET => Ok(Field::Secret),
-                    _ => Ok(Field::Other),
-                }
+                Ok(visit_bytes(v.as_bytes()))
             }
 
-            fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E> {
-                match v {
-                    b"oauth_token" => Ok(Field::Identifier),
-                    b"oauth_token_secret" => Ok(Field::Secret),
-                    _ => Ok(Field::Other),
-                }
+            fn visit_bytes<E>(self, v: &[u8]) -> Result<Field, E> {
+                Ok(visit_bytes(v))
             }
         }
 

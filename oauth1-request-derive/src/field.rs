@@ -36,16 +36,14 @@ macro_rules! add_meta_impl {
         add_meta_impl! { @accum ($self, $meta) { $($rest)* } -> {
             $($arms)*
             stringify!($name) => {
-                match $meta.kind {
-                    MetaKind::Path => {}
-                    _ => return Err(syn::Error::new($meta.span(), "expected meta word")),
+                if !matches!($meta.kind, MetaKind::Path) {
+                    return Err(syn::Error::new($meta.span(), "expected meta word"));
                 }
                 if $self.$name {
                     let message = concat!("duplicate attribute `", stringify!($name), "`");
                     return Err(syn::Error::new($meta.path.span(), message));
-                } else {
-                    $self.$name = true;
                 }
+                $self.$name = true;
                 Ok(())
             }
         } }
@@ -221,7 +219,7 @@ impl<'a> ToTokens for Name<'a> {
             Name::Original(ident) => {
                 let mut lit = Literal::string(&ident.to_string());
                 lit.set_span(ident.span());
-                tokens.append(lit)
+                tokens.append(lit);
             }
             Name::Renamed(lit) => lit.to_tokens(tokens),
         }

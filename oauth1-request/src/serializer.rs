@@ -180,28 +180,36 @@ impl<S: Serializer> SerializerExt for S {
 }
 
 #[cfg(test)]
-#[cfg(all(feature = "hmac-sha1", feature = "test"))]
 mod tests {
+    #[cfg(not(feature = "std"))]
     extern crate std;
 
-    use core::num::NonZeroU64;
-    use std::format;
     use std::println;
     use std::string::{String, ToString};
 
     use super::*;
 
-    use crate::serializer::auth;
-    use crate::signature_method::{HmacSha1, Identity, Plaintext, Sign, SignatureMethod};
+    #[cfg(feature = "hmac-sha1")]
+    use crate::signature_method::HmacSha1;
+    #[cfg(feature = "test")]
+    use crate::signature_method::Identity;
+    use crate::signature_method::{Plaintext, Sign, SignatureMethod};
+    #[cfg(any(feature = "alloc", feature = "hmac-sha1"))]
     use crate::Credentials;
 
     // These values are taken from Twitter's document:
     // https://developer.twitter.com/en/docs/basics/authentication/guides/creating-a-signature.html
-    const CK: &str = "xvz1evFS4wEEPTGEFPHBog";
-    const CS: &str = "kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw";
-    const AK: &str = "370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb";
-    const AS: &str = "LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE";
+    cfg_if::cfg_if! {
+        if #[cfg(any(feature = "alloc", feature = "hmac-sha1"))] {
+            const CK: &str = "xvz1evFS4wEEPTGEFPHBog";
+            const CS: &str = "kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw";
+            const AK: &str = "370773112-GmHxMAgYyLbNEtIKZeRNFsMKPR9EyMZeS9weJAEb";
+            const AS: &str = "LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE";
+        }
+    }
+    #[cfg(feature = "hmac-sha1")]
     const NONCE: &str = "kYjzVBB8Y0ZFabxSWbWovY3uYSQ2pTgmZeNu2VS4cg";
+    #[cfg(feature = "hmac-sha1")]
     const TIMESTAMP: u64 = 1318622958;
 
     struct Inspect<SM>(SM);
@@ -219,8 +227,8 @@ mod tests {
 
     #[derive(Clone, Debug)]
     struct AssertImpl<'a>(
-        Authorizer<'a, HmacSha1, String>,
-        Authorizer<'a, Identity<String>, String>,
+        #[cfg(feature = "hmac-sha1")] Authorizer<'a, HmacSha1, String>,
+        #[cfg(feature = "test")] Authorizer<'a, Identity<String>, String>,
         Authorizer<'a, Plaintext<String>, String>,
     );
 
@@ -252,8 +260,14 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "hmac-sha1")]
     #[test]
     fn serialize() {
+        use core::num::NonZeroU64;
+        use std::format;
+
+        use crate::serializer::auth;
+
         macro_rules! test {
             ($((
                 $method:expr, $ep:expr,

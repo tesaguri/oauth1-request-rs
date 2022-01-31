@@ -18,7 +18,7 @@ const BITS_PER_BLOCK: usize = 8 * mem::size_of::<BitBlock>();
 ///
 /// Every character that is not an "unreserved character" in RFC 3986 should be encoded.
 /// <https://tools.ietf.org/html/rfc3986#section-2.3>
-const ENCODE_MAP: BitArray = [0xFFFFFFFF, 0xFC009FFF, 0x78000001, 0xB8000001];
+const ENCODE_MAP: BitArray = [0xFFFF_FFFF, 0xFC00_9FFF, 0x7800_0001, 0xB800_0001];
 
 const RESERVED: &AsciiSet = &percent_encoding::NON_ALPHANUMERIC
     .remove(b'-')
@@ -128,7 +128,7 @@ mod tests {
     fn double_percent_encode() {
         use percent_encoding::percent_encode_byte;
 
-        for b in 0u8..=0xFF {
+        for b in 0_u8..=0xFF {
             assert_eq!(
                 double_encode_byte(b),
                 &percent_encode(percent_encode_byte(b)).to_string(),
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn encode_map() {
-        for b in 0u8..=0xFF {
+        for b in 0..=0xFF {
             assert_eq!(
                 should_percent_encode(b),
                 // Unreserved characters
