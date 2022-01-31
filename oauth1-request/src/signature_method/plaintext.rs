@@ -15,13 +15,15 @@ pub struct Plaintext<
     marker: PhantomData<fn() -> W>,
 }
 
-/// A `Sign` implementation that just returns the signing key used to construct it.
-#[derive(Clone, Debug)]
-pub struct PlaintextSign<
-    #[cfg(feature = "alloc")] W = alloc::string::String,
-    #[cfg(not(feature = "alloc"))] W,
-> {
-    signing_key: W,
+cfg_type_param_hack! {
+    /// A `Sign` implementation that just returns the signing key used to construct it.
+    #[derive(Clone, Debug)]
+    pub struct PlaintextSign<
+        #[cfg(feature = "alloc")] W = alloc::string::String,
+        #[cfg(not(feature = "alloc"))] W,
+    > {
+        signing_key: W,
+    }
 }
 
 /// The `PLAINTEXT` signature method with a default configuration.

@@ -13,12 +13,14 @@ pub struct Identity<
     marker: PhantomData<fn() -> W>,
 }
 
-/// A pseudo `Sign` implementation that just returns the signature base string.
-#[derive(Clone, Debug)]
-pub struct IdentitySign<
-    #[cfg(feature = "alloc")] W = alloc::string::String,
-    #[cfg(not(feature = "alloc"))] W,
->(pub W);
+cfg_type_param_hack! {
+    /// A pseudo `Sign` implementation that just returns the signature base string.
+    #[derive(Clone, Debug)]
+    pub struct IdentitySign<
+        #[cfg(feature = "alloc")] W = alloc::string::String,
+        #[cfg(not(feature = "alloc"))] W,
+    >(pub W);
+}
 
 #[cfg(feature = "alloc")]
 impl Identity {

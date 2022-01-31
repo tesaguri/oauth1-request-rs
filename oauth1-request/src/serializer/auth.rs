@@ -12,26 +12,28 @@ use crate::Credentials;
 
 use super::{Serializer, Urlencoder};
 
-/// A `Serializer` that signs a request and produces OAuth 1.0 `oauth_*` parameter values.
-///
-/// The resulting parameter values are either written to an HTTP `Authorization` header value or
-/// URI query/`x-www-form-urlencoded` string (along with the other request parameters) depending on
-/// the constructor you use.
-#[derive(Clone, Debug)]
-pub struct Authorizer<
-    'a,
-    SM: SignatureMethod,
-    #[cfg(feature = "alloc")] W = alloc::string::String,
-    #[cfg(not(feature = "alloc"))] W,
-> {
-    consumer_key: &'a str,
-    token: Option<&'a str>,
-    options: &'a Options<'a>,
-    data: Data<W>,
-    sign: SM::Sign,
-    append_delim_to_sign: bool,
-    #[cfg(all(feature = "alloc", debug_assertions))]
-    prev_key: alloc::string::String,
+cfg_type_param_hack! {
+    /// A `Serializer` that signs a request and produces OAuth 1.0 `oauth_*` parameter values.
+    ///
+    /// The resulting parameter values are either written to an HTTP `Authorization` header value or
+    /// URI query/`x-www-form-urlencoded` string (along with the other request parameters)
+    /// depending on the constructor you use.
+    #[derive(Clone, Debug)]
+    pub struct Authorizer<
+        'a,
+        SM: SignatureMethod,
+        #[cfg(feature = "alloc")] W = alloc::string::String,
+        #[cfg(not(feature = "alloc"))] W,
+    > {
+        consumer_key: &'a str,
+        token: Option<&'a str>,
+        options: &'a Options<'a>,
+        data: Data<W>,
+        sign: SM::Sign,
+        append_delim_to_sign: bool,
+        #[cfg(all(feature = "alloc", debug_assertions))]
+        prev_key: alloc::string::String,
+    }
 }
 
 #[derive(Clone, Debug)]

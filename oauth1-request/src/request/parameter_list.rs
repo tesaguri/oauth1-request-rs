@@ -59,10 +59,14 @@ where
     ///
     /// Returns `None` if `list` is not sorted.
     pub fn from_sorted(list: A) -> Option<Self> {
-        is_sorted_by(list.as_ref(), cmp).then(|| ParameterList {
-            list,
-            marker: PhantomData,
-        })
+        if is_sorted_by(list.as_ref(), cmp) {
+            Some(ParameterList {
+                list,
+                marker: PhantomData,
+            })
+        } else {
+            None
+        }
     }
 }
 
@@ -245,5 +249,5 @@ where
 {
     slice
         .windows(2)
-        .all(|slice| cmp(&slice[1], &slice[0]).is_ge())
+        .all(|slice| !matches!(cmp(&slice[1], &slice[0]), Ordering::Less))
 }

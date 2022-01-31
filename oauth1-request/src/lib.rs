@@ -224,19 +224,21 @@ use core::str;
 use self::serializer::auth;
 use self::signature_method::SignatureMethod;
 
-/// A builder for OAuth `Authorization` header string.
-#[derive(Clone, Debug)]
-pub struct Builder<
-    'a,
-    SM,
-    #[cfg(feature = "alloc")] C = String,
-    #[cfg(not(feature = "alloc"))] C,
-    T = C,
-> {
-    signature_method: SM,
-    client: Credentials<C>,
-    token: Option<Credentials<T>>,
-    options: auth::Options<'a>,
+cfg_type_param_hack! {
+    /// A builder for OAuth `Authorization` header string.
+    #[derive(Clone, Debug)]
+    pub struct Builder<
+        'a,
+        SM,
+        #[cfg(feature = "alloc")] C = String,
+        #[cfg(not(feature = "alloc"))] C,
+        T = C,
+    > {
+        signature_method: SM,
+        client: Credentials<C>,
+        token: Option<Credentials<T>>,
+        options: auth::Options<'a>,
+    }
 }
 
 macro_rules! builder_authorize_shorthand {
@@ -278,17 +280,19 @@ macro_rules! builder_to_form_shorthand {
 
 macro_rules! builder_to_query_shorthand {
     ($($name:ident($method:expr);)*) => {$(
-        #[doc = concat!("Authorizes a `", $method, "` request to `uri`, appending")]
-        /// the OAuth protocol parameters to `uri` along with the other request parameters.
-        ///
-        /// `uri` must not contain a query part, which would result in a wrong signature.
-        pub fn $name<W, R>(&self, uri: W, request: &R) -> W
-        where
-            W: Display + Write,
-            R: Request + ?Sized,
-            SM: Clone,
-        {
-            self.to_query($method, uri, request)
+        doc_coerce_expr! {
+            #[doc = concat!("Authorizes a `", $method, "` request to `uri`, appending")]
+            /// the OAuth protocol parameters to `uri` along with the other request parameters.
+            ///
+            /// `uri` must not contain a query part, which would result in a wrong signature.
+            pub fn $name<W, R>(&self, uri: W, request: &R) -> W
+            where
+                W: Display + Write,
+                R: Request + ?Sized,
+                SM: Clone,
+            {
+                self.to_query($method, uri, request)
+            }
         }
     )*};
 }

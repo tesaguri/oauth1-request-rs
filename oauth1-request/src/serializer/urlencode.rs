@@ -6,14 +6,17 @@ use crate::util::PercentEncode;
 
 use super::Serializer;
 
-/// A `Serializer` that produces a URI query or an `x-www-form-urlencoded` string from a request.
-#[derive(Clone, Debug)]
-pub struct Urlencoder<
-    #[cfg(feature = "alloc")] W = alloc::string::String,
-    #[cfg(not(feature = "alloc"))] W,
-> {
-    data: W,
-    next_append: Append,
+cfg_type_param_hack! {
+    /// A `Serializer` that produces a URI query or an `x-www-form-urlencoded` string from a
+    /// request.
+    #[derive(Clone, Debug)]
+    pub struct Urlencoder<
+        #[cfg(feature = "alloc")] W = alloc::string::String,
+        #[cfg(not(feature = "alloc"))] W,
+    > {
+        data: W,
+        next_append: Append,
+    }
 }
 
 #[derive(Clone, Debug)]
