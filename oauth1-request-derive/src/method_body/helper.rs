@@ -31,7 +31,7 @@ macro_rules! def_tokens_inner {
 }
 
 #[cfg(test)]
-struct Helper;
+struct DeriveRequestAssertion;
 
 def_tokens! {FmtHelper;
     use ::core::fmt::{Display, Formatter, Result};
@@ -47,7 +47,7 @@ def_tokens! {FmtHelper;
         }
     }
 
-    impl Helper {
+    impl DeriveRequestAssertion {
         // The order of arguments is imoprtant here.
         // If you reverse the order, deref coercions won't work for `t` (see the test below).
         fn fmt<'a, F, T: ?Sized>(&self, f: F, t: &'a T) -> Fmt<&'a T, F>
@@ -57,7 +57,7 @@ def_tokens! {FmtHelper;
             Fmt(t, f)
         }
 
-        fn fmt_as_impl_fn<F, T: ?Sized>(&self, f: F) -> impl Fn(&T, &mut Formatter<'_>) -> Result
+        fn fmt_impls_fn<F, T: ?Sized>(&self, f: F) -> impl Fn(&T, &mut Formatter<'_>) -> Result
         where
             F: Fn(&T, &mut Formatter<'_>) -> Result,
         {
@@ -67,8 +67,8 @@ def_tokens! {FmtHelper;
 }
 
 def_tokens! {SkipIfHelper;
-    impl Helper {
-        fn skip_if_as_impl_fn<F, T: ?Sized>(&self, f: F) -> impl Fn(&T) -> bool
+    impl DeriveRequestAssertion {
+        fn skip_if_impls_fn<F, T: ?Sized>(&self, f: F) -> impl Fn(&T) -> bool
         where
             F: Fn(&T) -> bool,
         {
@@ -87,12 +87,12 @@ mod tests {
             unimplemented!();
         }
 
-        let helper = Helper;
+        let helper = DeriveRequestAssertion;
 
-        let fmt = helper.fmt_as_impl_fn(fmt_str);
+        let fmt = helper.fmt_impls_fn(fmt_str);
         // The `&String` should coerce to `&str`.
         let _ = helper.fmt(fmt_str, &String::new());
 
-        let _ = helper.skip_if_as_impl_fn(|&()| true);
+        let _ = helper.skip_if_impls_fn(|&()| true);
     }
 }

@@ -15,6 +15,13 @@ error[E0631]: type mismatch in function arguments
 ...
 56 | fn fmt_arg_not_ref(_: (), _: &mut Formatter<'_>) -> fmt::Result {
    | --------------------------------------------------------------- found signature of `for<'r, 's> fn((), &'r mut Formatter<'s>) -> _`
+   |
+note: required by a bound in `DeriveRequestAssertion::fmt_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::fmt_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0593]: function is expected to take 2 arguments, but it takes 1 argument
   --> tests/ui/typeck.rs:7:20
@@ -24,6 +31,13 @@ error[E0593]: function is expected to take 2 arguments, but it takes 1 argument
 ...
 52 | fn fmt_missing_arg(_: &()) -> fmt::Result {
    | ----------------------------------------- takes 1 argument
+   |
+note: required by a bound in `DeriveRequestAssertion::fmt_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::fmt_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: expected a `Fn<(&_, &mut Formatter<'_>)>` closure, found `()`
   --> tests/ui/typeck.rs:24:20
@@ -32,15 +46,27 @@ error[E0277]: expected a `Fn<(&_, &mut Formatter<'_>)>` closure, found `()`
    |                    ^^^^^^ expected an `Fn<(&_, &mut Formatter<'_>)>` closure, found `()`
    |
    = help: the trait `for<'r, 's, 't0> Fn<(&'r _, &'s mut Formatter<'t0>)>` is not implemented for `()`
+note: required by a bound in `DeriveRequestAssertion::fmt_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::fmt_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0271]: type mismatch resolving `for<'r, 's, 't0> <for<'t1, 't2, 't3> fn(&'t1 (), &'t2 mut Formatter<'t3>) -> Result<(), ()> {fmt_ret_mismatch} as FnOnce<(&'r (), &'s mut Formatter<'t0>)>>::Output == Result<(), std::fmt::Error>`
   --> tests/ui/typeck.rs:21:20
    |
 21 |     #[oauth1(fmt = fmt_ret_mismatch)]
-   |                    ^^^^^^^^^^^^^^^^ expected `()`, found struct `std::fmt::Error`
+   |                    ^^^^^^^^^^^^^^^^ expected struct `std::fmt::Error`, found `()`
    |
-   = note: expected enum `Result<_, ()>`
-              found enum `Result<_, std::fmt::Error>`
+   = note: expected enum `Result<_, std::fmt::Error>`
+              found enum `Result<_, ()>`
+note: required by a bound in `DeriveRequestAssertion::fmt_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::fmt_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `(): AsRef<str>` is not satisfied
   --> tests/ui/typeck.rs:3:10
@@ -68,14 +94,19 @@ note: required by a bound in `fmt_trait_bound_unsatisfied`
    |                                   ^^^^^^^^^^ required by this bound in `fmt_trait_bound_unsatisfied`
 
 error[E0277]: `()` doesn't implement `std::fmt::Display`
- --> tests/ui/typeck.rs:5:18
-  |
-5 |     not_display: (),
-  |                  ^^ `()` cannot be formatted with the default formatter
-  |
-  = help: the trait `std::fmt::Display` is not implemented for `()`
-  = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
-  = note: required because of the requirements on the impl of `std::fmt::Display` for `&()`
+   --> tests/ui/typeck.rs:5:18
+    |
+5   |     not_display: (),
+    |                  ^^ `()` cannot be formatted with the default formatter
+    |
+    = help: the trait `std::fmt::Display` is not implemented for `()`
+    = note: in format strings you may be able to use `{:?}` (or {:#?} for pretty-print) instead
+    = note: required because of the requirements on the impl of `std::fmt::Display` for `&()`
+note: required by a bound in `serialize_parameter`
+   --> $WORKSPACE/oauth1-request/src/serializer.rs
+    |
+    |         V: Display;
+    |            ^^^^^^^ required by this bound in `serialize_parameter`
 
 error[E0308]: mismatched types
   --> tests/ui/typeck.rs:28:24
@@ -103,6 +134,13 @@ error[E0631]: type mismatch in function arguments
 ...
 76 | fn skip_if_arg_not_ref(_: u8) -> bool {
    | ------------------------------------- found signature of `fn(u8) -> _`
+   |
+note: required by a bound in `DeriveRequestAssertion::skip_if_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::skip_if_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: expected a `Fn<(&_,)>` closure, found `()`
   --> tests/ui/typeck.rs:46:24
@@ -111,15 +149,27 @@ error[E0277]: expected a `Fn<(&_,)>` closure, found `()`
    |                        ^^^^^^ expected an `Fn<(&_,)>` closure, found `()`
    |
    = help: the trait `for<'r> Fn<(&'r _,)>` is not implemented for `()`
+note: required by a bound in `DeriveRequestAssertion::skip_if_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::skip_if_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0271]: type mismatch resolving `for<'r> <for<'s> fn(&'s u8) -> Option<()> {skip_if_ret_mismatch} as FnOnce<(&'r u8,)>>::Output == bool`
   --> tests/ui/typeck.rs:43:24
    |
 43 |     #[oauth1(skip_if = skip_if_ret_mismatch)]
-   |                        ^^^^^^^^^^^^^^^^^^^^ expected enum `Option`, found `bool`
+   |                        ^^^^^^^^^^^^^^^^^^^^ expected `bool`, found enum `Option`
    |
-   = note: expected enum `Option<()>`
-              found type `bool`
+   = note: expected type `bool`
+              found enum `Option<()>`
+note: required by a bound in `DeriveRequestAssertion::skip_if_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::skip_if_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0593]: function is expected to take 1 argument, but it takes 2 arguments
   --> tests/ui/typeck.rs:30:24
@@ -129,6 +179,13 @@ error[E0593]: function is expected to take 1 argument, but it takes 2 arguments
 ...
 72 | fn skip_if_too_many_args(_: &u8, _: ()) -> bool {
    | ----------------------------------------------- takes 2 arguments
+   |
+note: required by a bound in `DeriveRequestAssertion::skip_if_impls_fn`
+  --> tests/ui/typeck.rs:3:10
+   |
+3  | #[derive(oauth1_request::Request)]
+   |          ^^^^^^^^^^^^^^^^^^^^^^^ required by this bound in `DeriveRequestAssertion::skip_if_impls_fn`
+   = note: this error originates in the derive macro `oauth1_request::Request` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error[E0277]: the trait bound `u8: AsRef<str>` is not satisfied
   --> tests/ui/typeck.rs:41:38

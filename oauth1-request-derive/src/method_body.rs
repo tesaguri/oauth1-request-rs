@@ -39,14 +39,14 @@ impl<'a> ToTokens for MethodBody<'a> {
                 None
             };
             // The items resolve at call site, so define them in the ephemeral block to avoid
-            // name conflict, and "export" them through the unit struct `Helper`.
+            // name conflict, and "export" them through the unit struct `DeriveRequestAssertion`.
             // TODO: Use def-site hygiene once it stabilizes.
             tokens.extend(quote! {
                 let #helper = {
-                    struct Helper;
+                    struct DeriveRequestAssertion;
                     #fmt
                     #skip_if
-                    Helper
+                    DeriveRequestAssertion
                 };
             });
         }
@@ -98,7 +98,7 @@ impl<'a> ToTokens for MethodBody<'a> {
             let display = if let Some(ref fmt) = f.meta.fmt {
                 // Convert the function to an `impl Fn` so that type errors for it occurs only once.
                 let fmt = quote_spanned! {fmt.span()=>
-                    #helper.fmt_as_impl_fn(#fmt)
+                    #helper.fmt_impls_fn(#fmt)
                 };
                 // Evaluate `#fmt` in advance so that the expression won't see the `#tmp` binding,
                 // which resolves at call site.
@@ -132,7 +132,7 @@ impl<'a> ToTokens for MethodBody<'a> {
 
             if let Some(ref skip_if) = f.meta.skip_if {
                 let skip_if = quote_spanned! {skip_if.span()=>
-                    #helper.skip_if_as_impl_fn(#skip_if)
+                    #helper.skip_if_impls_fn(#skip_if)
                 };
                 let cond = quote_spanned! {f.ty.span()=>
                     !#skip_if({

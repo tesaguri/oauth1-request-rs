@@ -232,9 +232,9 @@ assert_expand! {
     }
 }
 
-// Just checking that these compile.
-// Tests for the code generation around the internal `Helper` struct which `fmt` and `skip_if`
-// attributes share, checking that the attributes don't interfere with or depend on each other.
+// Just checking that these compile. They are tests for the code generation around the internal
+// `DeriveRequestAssertion` struct which `fmt` and `skip_if` attributes share, checking that
+// the attributes don't interfere with or depend on each other.
 #[derive(oauth::Request)]
 struct HasFmtAndSkipIf {
     #[oauth1(fmt = common::fmt_ignore)]
