@@ -1,10 +1,18 @@
 //! Low-level machinery to convert a `Request` to a signature or a URI query/form string.
 
-pub mod auth;
-pub mod urlencode;
+doc_auto_cfg! {
+    pub mod auth;
+    #[cfg(feature = "test")]
+    pub mod recorder;
+    pub mod urlencode;
+}
 
-pub use auth::Authorizer;
-pub use urlencode::Urlencoder;
+doc_auto_cfg! {
+    pub use auth::Authorizer;
+    #[cfg(feature = "test")]
+    pub use recorder::Recorder;
+    pub use urlencode::Urlencoder;
+}
 
 use core::fmt::Display;
 
@@ -191,8 +199,6 @@ mod tests {
 
     #[cfg(feature = "hmac-sha1")]
     use crate::signature_method::HmacSha1;
-    #[cfg(feature = "test")]
-    use crate::signature_method::Identity;
     use crate::signature_method::{Plaintext, Sign, SignatureMethod};
     #[cfg(any(feature = "alloc", feature = "hmac-sha1"))]
     use crate::Credentials;
@@ -228,7 +234,6 @@ mod tests {
     #[derive(Clone, Debug)]
     struct AssertImpl<'a>(
         #[cfg(feature = "hmac-sha1")] Authorizer<'a, HmacSha1, String>,
-        #[cfg(feature = "test")] Authorizer<'a, Identity<String>, String>,
         Authorizer<'a, Plaintext<String>, String>,
     );
 

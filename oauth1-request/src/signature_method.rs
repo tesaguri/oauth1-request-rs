@@ -9,8 +9,6 @@
 doc_auto_cfg! {
     #[cfg(feature = "hmac-sha1")]
     pub mod hmac_sha1;
-    #[cfg(feature = "test")]
-    pub mod identity;
     pub mod plaintext;
     #[cfg(feature = "rsa-sha1")]
     pub mod rsa_sha1;
@@ -26,8 +24,6 @@ doc_auto_cfg! {
     pub use self::hmac_sha1::HmacSha1;
     #[cfg(feature = "hmac-sha1")]
     pub use self::hmac_sha1::HMAC_SHA1;
-    #[cfg(feature = "test")]
-    pub use self::identity::Identity;
     pub use self::plaintext::Plaintext;
     #[cfg(feature = "alloc")]
     pub use self::plaintext::PLAINTEXT;

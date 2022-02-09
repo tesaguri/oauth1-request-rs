@@ -18,11 +18,7 @@ macro_rules! assert_expand {
         fn $Name() {
             extern crate alloc;
 
-            use core::num::NonZeroU64;
-
-            use oauth::serializer::auth::{self, Authorizer};
-            use oauth::signature_method::Identity;
-            use oauth::Credentials;
+            use oauth::serializer::recorder::{Record, Recorder};
 
             mod inner {
                 // Shadow items imported via the prelude:
@@ -53,9 +49,9 @@ macro_rules! assert_expand {
                 $($ty_param: std::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
             {
-                fn expected(&self, auth: Authorizer<'_, Identity>) -> alloc::string::String {
-                    let expand_to: fn(&Self, Authorizer<'_, Identity>) -> _ = $expand_to;
-                    expand_to(self, auth)
+                fn expected(&self) -> alloc::vec::Vec<Record> {
+                    let expand_to: fn(&Self, Recorder) -> _ = $expand_to;
+                    expand_to(self, Recorder::new())
                 }
             }
 
@@ -68,21 +64,10 @@ macro_rules! assert_expand {
                 $($field: this_or_default!($($value)*),)*
             };
 
-            let client = Credentials::new("", "");
-            let mut opts = auth::Options::new();
-            opts.nonce("nonce").timestamp(NonZeroU64::new(9999999999));
-            let auth = Authorizer::authorization(
-                "GET",
-                "https://example.com/get",
-                client,
-                None,
-                &opts,
-                Identity::new(),
-            );
-            let authorization = oauth::Request::serialize(&x, auth.clone());
-            let expected = x.expected(auth);
+            let records = oauth::Request::serialize(&x, Recorder::new());
+            let expected = x.expected();
 
-            assert_eq!(authorization, expected);
+            assert_eq!(records, expected);
         }
     };
 }
