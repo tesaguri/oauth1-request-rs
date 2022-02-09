@@ -294,16 +294,16 @@ macro_rules! append_to_header {
 impl<'a, SM: SignatureMethod, W: Write> Serializer for Authorizer<'a, SM, W> {
     type Output = W;
 
-    fn serialize_parameter<V: Display>(&mut self, k: &str, v: V) {
-        self.check_dictionary_order(k);
+    fn serialize_parameter<V: Display>(&mut self, key: &str, value: V) {
+        self.check_dictionary_order(key);
         self.sign_delimiter();
-        self.sign.parameter(k, DoublePercentEncode(v));
+        self.sign.parameter(key, DoublePercentEncode(value));
     }
 
-    fn serialize_parameter_encoded<V: Display>(&mut self, k: &str, v: V) {
-        self.check_dictionary_order(k);
+    fn serialize_parameter_encoded<V: Display>(&mut self, key: &str, value: V) {
+        self.check_dictionary_order(key);
         self.sign_delimiter();
-        self.sign.parameter(k, PercentEncode(v));
+        self.sign.parameter(key, PercentEncode(value));
     }
 
     fn serialize_oauth_callback(&mut self) {

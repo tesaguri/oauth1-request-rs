@@ -74,20 +74,20 @@ where
 impl<W: Write> Serializer for Urlencoder<W> {
     type Output = W;
 
-    fn serialize_parameter<V>(&mut self, k: &str, v: V)
+    fn serialize_parameter<V>(&mut self, key: &str, value: V)
     where
         V: core::fmt::Display,
     {
         self.append_delim();
-        write!(self.data, "{}={}", k, PercentEncode(&v)).unwrap();
+        write!(self.data, "{}={}", key, PercentEncode(&value)).unwrap();
     }
 
-    fn serialize_parameter_encoded<V>(&mut self, k: &str, v: V)
+    fn serialize_parameter_encoded<V>(&mut self, key: &str, value: V)
     where
         V: core::fmt::Display,
     {
         self.append_delim();
-        write!(self.data, "{}={}", k, v).unwrap();
+        write!(self.data, "{}={}", key, value).unwrap();
     }
 
     super::skip_serialize_oauth_parameters!();

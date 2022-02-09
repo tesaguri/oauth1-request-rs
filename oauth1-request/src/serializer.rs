@@ -100,7 +100,7 @@ pub trait Serializer {
     ///
     /// The parameters must be serialized in byte ascending order
     /// and implementations may panic otherwise.
-    fn serialize_parameter<V>(&mut self, k: &str, v: V)
+    fn serialize_parameter<V>(&mut self, key: &str, value: V)
     where
         V: Display;
 
@@ -112,7 +112,7 @@ pub trait Serializer {
     ///
     /// The parameters must be serialized in byte ascending order
     /// and implementations may panic otherwise.
-    fn serialize_parameter_encoded<V>(&mut self, k: &str, v: V)
+    fn serialize_parameter_encoded<V>(&mut self, key: &str, value: V)
     where
         V: Display;
 
