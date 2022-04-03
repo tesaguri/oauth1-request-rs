@@ -50,7 +50,7 @@ pub trait Request {
 ///     ("article_id", "123456789"),
 ///     ("text", "A request signed with OAuth & Rust 🦀 🔏"),
 /// ]);
-/// let request = oauth::request::AssertSorted(request.iter());
+/// let request = oauth::request::AssertSorted::new(&request);
 ///
 /// let form = oauth::to_form(&request);
 /// assert_eq!(
@@ -59,7 +59,9 @@ pub trait Request {
 /// );
 /// ```
 #[derive(Debug, Clone, Copy, Default)]
-pub struct AssertSorted<I>(pub I);
+pub struct AssertSorted<I> {
+    inner: I,
+}
 
 impl<'a, R> Request for &'a R
 where
@@ -110,6 +112,23 @@ impl<R: Request> Request for Option<R> {
     }
 }
 
+impl<I, K, V> AssertSorted<I>
+where
+    I: Clone + Iterator<Item = (K, V)>,
+    K: AsRef<str>,
+    V: Display,
+{
+    /// Creates a new `AssertSorted`.
+    pub fn new<J>(iterator: J) -> Self
+    where
+        J: IntoIterator<IntoIter = I>,
+    {
+        AssertSorted {
+            inner: iterator.into_iter(),
+        }
+    }
+}
+
 impl<I, K, V> Request for AssertSorted<I>
 where
     I: Clone + Iterator<Item = (K, V)>,
@@ -122,7 +141,7 @@ where
     {
         let mut next_param = OAuthParameter::default();
 
-        for (k, v) in self.0.clone() {
+        for (k, v) in self.inner.clone() {
             let k = k.as_ref();
             while next_param < *k {
                 next_param.serialize(&mut serializer);

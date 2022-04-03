@@ -210,7 +210,7 @@ where
             V: Display,
             P: Borrow<(K, V)>,
         {
-            super::AssertSorted(this.iter().map(|pair| {
+            super::AssertSorted::new(this.iter().map(|pair| {
                 let (ref k, ref v) = *pair.borrow();
                 (k, v)
             }))
