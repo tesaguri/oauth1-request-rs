@@ -16,6 +16,10 @@
 
 #![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.4.2")]
 
+#[macro_use]
+mod meta;
+
+mod container;
 mod field;
 mod method_body;
 mod util;
@@ -30,6 +34,7 @@ use syn::{
     Ident,
 };
 
+use self::container::ContainerMeta;
 use self::field::Field;
 use self::method_body::MethodBody;
 
@@ -49,6 +54,9 @@ pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::To
 
 fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
     let name = &input.ident;
+    let span = input.span();
+
+    let _ = ContainerMeta::new(input.attrs);
 
     let krate;
     let krate = match proc_macro_crate::crate_name("oauth1-request") {
@@ -90,7 +98,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
             fields: Fields::Named(fields),
             ..
         }) => fields,
-        _ => abort!(input.span(), "expected a struct with named fields"),
+        _ => abort!(span, "expected a struct with named fields"),
     };
 
     let mut fields: Vec<_> = fields.named.into_iter().map(Field::new).collect();

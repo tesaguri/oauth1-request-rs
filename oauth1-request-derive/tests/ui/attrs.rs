@@ -1,5 +1,25 @@
 #[derive(oauth1_request::Request)]
-struct Test {
+#[oauth1(unknown)]
+struct UnknownWord {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(unknown::path)]
+struct UnknownPathWord {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(unknown = "")]
+struct UnknownNameValue {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(unknown::path = "")]
+struct UnknownPathName {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(unknown::path(""))]
+struct UnknownList {}
+
+#[derive(oauth1_request::Request)]
+struct Fields {
     #[oauth1(rename = 0)]
     non_str_lit: u8,
 

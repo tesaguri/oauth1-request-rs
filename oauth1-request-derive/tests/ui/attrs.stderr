@@ -1,113 +1,143 @@
+error: unknown attribute `unknown`
+ --> tests/ui/attrs.rs:2:10
+  |
+2 | #[oauth1(unknown)]
+  |          ^^^^^^^
+
+error: unknown attribute `unknown::path`
+ --> tests/ui/attrs.rs:6:10
+  |
+6 | #[oauth1(unknown::path)]
+  |          ^^^^^^^
+
+error: unknown attribute `unknown`
+  --> tests/ui/attrs.rs:10:10
+   |
+10 | #[oauth1(unknown = "")]
+   |          ^^^^^^^
+
+error: unknown attribute `unknown::path`
+  --> tests/ui/attrs.rs:14:10
+   |
+14 | #[oauth1(unknown::path = "")]
+   |          ^^^^^^^
+
+error: unknown attribute `unknown::path`
+  --> tests/ui/attrs.rs:18:10
+   |
+18 | #[oauth1(unknown::path(""))]
+   |          ^^^^^^^
+
 error: expected string literal
- --> tests/ui/attrs.rs:3:23
-  |
-3 |     #[oauth1(rename = 0)]
-  |                       ^
+  --> tests/ui/attrs.rs:23:23
+   |
+23 |     #[oauth1(rename = 0)]
+   |                       ^
 
 error: expected meta word
- --> tests/ui/attrs.rs:6:14
-  |
-6 |     #[oauth1(skip = "")]
-  |              ^^^^
+  --> tests/ui/attrs.rs:26:14
+   |
+26 |     #[oauth1(skip = "")]
+   |              ^^^^
 
 error: expected meta word
- --> tests/ui/attrs.rs:9:14
-  |
-9 |     #[oauth1(skip(""))]
-  |              ^^^^
+  --> tests/ui/attrs.rs:29:14
+   |
+29 |     #[oauth1(skip(""))]
+   |              ^^^^
 
 error: expected name-value meta
-  --> tests/ui/attrs.rs:12:14
+  --> tests/ui/attrs.rs:32:14
    |
-12 |     #[oauth1(skip_if)]
+32 |     #[oauth1(skip_if)]
    |              ^^^^^^^
 
 error: expected name-value meta
-  --> tests/ui/attrs.rs:15:14
+  --> tests/ui/attrs.rs:35:14
    |
-15 |     #[oauth1(skip_if(""))]
+35 |     #[oauth1(skip_if(""))]
    |              ^^^^^^^
 
 error: unknown attribute `unknown`
-  --> tests/ui/attrs.rs:18:14
+  --> tests/ui/attrs.rs:38:14
    |
-18 |     #[oauth1(unknown)]
+38 |     #[oauth1(unknown)]
    |              ^^^^^^^
 
 error: unknown attribute `unknown::path`
-  --> tests/ui/attrs.rs:21:14
+  --> tests/ui/attrs.rs:41:14
    |
-21 |     #[oauth1(unknown::path)]
+41 |     #[oauth1(unknown::path)]
    |              ^^^^^^^
 
 error: unknown attribute `unknown`
-  --> tests/ui/attrs.rs:24:14
+  --> tests/ui/attrs.rs:44:14
    |
-24 |     #[oauth1(unknown = "")]
+44 |     #[oauth1(unknown = "")]
    |              ^^^^^^^
 
 error: unknown attribute `unknown::path`
-  --> tests/ui/attrs.rs:27:14
+  --> tests/ui/attrs.rs:47:14
    |
-27 |     #[oauth1(unknown::path = "")]
+47 |     #[oauth1(unknown::path = "")]
    |              ^^^^^^^
 
 error: unknown attribute `unknown`
-  --> tests/ui/attrs.rs:30:14
+  --> tests/ui/attrs.rs:50:14
    |
-30 |     #[oauth1(unknown(""))]
+50 |     #[oauth1(unknown(""))]
    |              ^^^^^^^
 
 error: unknown attribute `unknown::path`
-  --> tests/ui/attrs.rs:33:14
+  --> tests/ui/attrs.rs:53:14
    |
-33 |     #[oauth1(unknown::path(""))]
+53 |     #[oauth1(unknown::path(""))]
    |              ^^^^^^^
 
 error: duplicate attribute `skip`
-  --> tests/ui/attrs.rs:36:20
+  --> tests/ui/attrs.rs:56:20
    |
-36 |     #[oauth1(skip, skip)]
+56 |     #[oauth1(skip, skip)]
    |                    ^^^^
 
 error: duplicate attribute `encoded`
-  --> tests/ui/attrs.rs:40:14
+  --> tests/ui/attrs.rs:60:14
    |
-40 |     #[oauth1(encoded)]
+60 |     #[oauth1(encoded)]
    |              ^^^^^^^
 
 error: duplicate attribute `rename`
-  --> tests/ui/attrs.rs:43:28
+  --> tests/ui/attrs.rs:63:28
    |
-43 |     #[oauth1(rename = "a", rename = "b")]
+63 |     #[oauth1(rename = "a", rename = "b")]
    |                            ^^^^^^
 
 error: duplicate attribute `rename`
-  --> tests/ui/attrs.rs:47:14
+  --> tests/ui/attrs.rs:67:14
    |
-47 |     #[oauth1(rename = "d")]
+67 |     #[oauth1(rename = "d")]
    |              ^^^^^^
 
 error: expected boolean literal
-  --> tests/ui/attrs.rs:50:23
+  --> tests/ui/attrs.rs:70:23
    |
-50 |     #[oauth1(option = FALSE)]
+70 |     #[oauth1(option = FALSE)]
    |                       ^^^^^
 
 error: expected path
-  --> tests/ui/attrs.rs:53:20
+  --> tests/ui/attrs.rs:73:20
    |
-53 |     #[oauth1(fmt = |_, _| Ok(()))]
+73 |     #[oauth1(fmt = |_, _| Ok(()))]
    |                    ^
 
 error: parameter name must be URI-safe
-  --> tests/ui/attrs.rs:60:23
+  --> tests/ui/attrs.rs:80:23
    |
-60 |     #[oauth1(rename = "?")]
+80 |     #[oauth1(rename = "?")]
    |                       ^^^
 
 error: duplicate parameter "duplicate"
-  --> tests/ui/attrs.rs:57:23
+  --> tests/ui/attrs.rs:77:23
    |
-57 |     #[oauth1(rename = "duplicate")]
+77 |     #[oauth1(rename = "duplicate")]
    |                       ^^^^^^^^^^^
