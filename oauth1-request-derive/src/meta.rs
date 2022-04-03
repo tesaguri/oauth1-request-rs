@@ -5,9 +5,10 @@ use syn::{Expr, ExprLit, ExprPath, Lit, LitBool, LitStr, Path};
 
 macro_rules! def_meta {
     (pub struct $Name:ident { $($field:tt)* }) => {
-        #[derive(Default)]
-        pub struct $Name {
-            $($field)*
+        decl_meta! {
+            pub struct $Name {
+                $($field)*
+            }
         }
 
         impl $Name {
@@ -68,20 +69,35 @@ macro_rules! def_meta {
     };
 }
 
+macro_rules! decl_meta {
+    (pub struct $Name:ident { $(pub $name:ident $(as $_:literal)?: $T:ty),* $(,)? }) => {
+        #[derive(Default)]
+        pub struct $Name {
+            $(pub $name: $T,)*
+        }
+    };
+}
+
 macro_rules! add_meta_impl {
     (($self:expr, $meta:expr) $body:tt) => {
-        add_meta_impl! { @accum ($self, $meta) $body -> {} }
+        add_meta_impl! { @accum ($self, $meta) $body {} }
     };
-    (@accum ($self:expr, $meta:expr) { pub $name:ident: bool, $($rest:tt)* } -> { $($arms:tt)* })
-    => {
-        add_meta_impl! { @accum ($self, $meta) { $($rest)* } -> {
+    (@accum ($self:expr, $meta:expr) {
+        pub $name:ident $(as $rename:literal)?: bool,
+        $($rest:tt)*
+    } { $($arms:tt)* }) => {
+        add_meta_impl! { @accum ($self, $meta) { $($rest)* } {
             $($arms)*
-            stringify!($name) => {
+            meta_name!($name $(as $rename)?) => {
                 if !matches!($meta.kind, MetaKind::Path) {
                     return Err(syn::Error::new($meta.span(), "expected meta word"));
                 }
                 if $self.$name {
-                    let message = concat!("duplicate attribute `", stringify!($name), "`");
+                    let message = concat!(
+                        "duplicate attribute `",
+                        meta_name!($name $(as $rename)?),
+                        "`"
+                    );
                     return Err(syn::Error::new($meta.path.span(), message));
                 }
                 $self.$name = true;
@@ -89,11 +105,13 @@ macro_rules! add_meta_impl {
             }
         } }
     };
-    (@accum ($self:expr, $meta:expr) { pub $name:ident: $_:ty, $($rest:tt)* } -> { $($arms:tt)* })
-    => {
-        add_meta_impl! { @accum ($self, $meta) { $($rest)* } -> {
+    (@accum ($self:expr, $meta:expr) {
+        pub $name:ident $(as $rename:literal)?: $_:ty,
+        $($rest:tt)*
+    } { $($arms:tt)* }) => {
+        add_meta_impl! { @accum ($self, $meta) { $($rest)* } {
             $($arms)*
-            stringify!($name) => {
+            meta_name!($name $(as $rename)?) => {
                 let value = if let MetaKind::NameValue(value) = $meta.kind {
                     value
                 } else {
@@ -104,7 +122,11 @@ macro_rules! add_meta_impl {
                     Err(e) => return Err(e),
                 };
                 if $self.$name.is_some() {
-                    let message = concat!("duplicate attribute `", stringify!($name), "`");
+                    let message = concat!(
+                        "duplicate attribute `",
+                        meta_name!($name $(as $rename)?),
+                        "`"
+                    );
                     return Err(syn::Error::new($meta.path.span(), message));
                 }
                 $self.$name = Some(value);
@@ -112,7 +134,7 @@ macro_rules! add_meta_impl {
             }
         }}
     };
-    (@accum ($self:expr, $meta:expr) {} -> { $($arms:tt)* }) => {{
+    (@accum ($self:expr, $meta:expr) {} { $($arms:tt)* }) => {{
         let name = if let Some(name) = $meta.path.get_ident() {
             name
         } else {
@@ -131,6 +153,15 @@ macro_rules! add_meta_impl {
             ))
         }
     }};
+}
+
+macro_rules! meta_name {
+    ($name:ident) => {
+        stringify!($name)
+    };
+    ($_:ident as $rename:literal) => {
+        $rename
+    };
 }
 
 /// Like `syn::Meta` but accepts an `Expr` as the value of `MetaNameValue`

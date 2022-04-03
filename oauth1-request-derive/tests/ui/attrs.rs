@@ -19,6 +19,23 @@ struct UnknownPathName {}
 struct UnknownList {}
 
 #[derive(oauth1_request::Request)]
+#[oauth1(crate)]
+struct ExpectedNameValueUnexpectedWord {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(crate(""))]
+struct ExpectedNameValueUnexpectedList {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(crate = oauth1_request)]
+#[oauth1(crate = oauth1_request)]
+struct DuplicateNameValue {}
+
+#[derive(oauth1_request::Request)]
+#[oauth1(crate = oauth1_request, crate = oauth1_request)]
+struct DuplicateNameValue2 {}
+
+#[derive(oauth1_request::Request)]
 struct Fields {
     #[oauth1(rename = 0)]
     non_str_lit: u8,

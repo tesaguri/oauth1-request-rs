@@ -176,9 +176,14 @@ assert_expand! {
     }
 }
 
+// Just checking that this compiles.
+#[derive(oauth::Request)]
+#[oauth1(crate = oauth)]
+struct Crate {}
+
 assert_expand! {
     #[derive(oauth::Request)]
-    struct Attrs['a][T: ('static + std::fmt::Debug)] {
+    struct FieldAttrs['a][T: ('static + std::fmt::Debug)] {
         #[oauth1(encoded)]
         percent_encoded: T = "%20",
 

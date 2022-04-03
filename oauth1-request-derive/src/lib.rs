@@ -56,30 +56,40 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
     let name = &input.ident;
     let span = input.span();
 
-    let _ = ContainerMeta::new(input.attrs);
+    let meta = ContainerMeta::new(input.attrs);
 
-    let krate;
-    let krate = match proc_macro_crate::crate_name("oauth1-request") {
-        Ok(FoundCrate::Name(k)) => {
-            krate = k;
-            &*krate
+    let use_oauth1_request = if let Some(krate) = meta.krate {
+        quote! {
+            use #krate as _oauth1_request;
         }
-        // This is used in `oauth1_request`'s doctests.
-        Ok(FoundCrate::Itself) => {
-            krate = std::env::var("CARGO_CRATE_NAME").unwrap();
-            &*krate
+    } else {
+        let krate;
+        let krate = match proc_macro_crate::crate_name("oauth1-request") {
+            Ok(FoundCrate::Name(k)) => {
+                krate = k;
+                &*krate
+            }
+            // This is used in `oauth1_request`'s doctests.
+            Ok(FoundCrate::Itself) => {
+                krate = std::env::var("CARGO_CRATE_NAME").unwrap();
+                &*krate
+            }
+            Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request",
+            Err(e) => Err(e).unwrap(),
+        };
+        let krate = Ident::new(krate, Span::call_site());
+        quote! {
+            extern crate #krate as _oauth1_request;
         }
-        Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request",
-        Err(e) => Err(e).unwrap(),
     };
-    let krate = Ident::new(krate, Span::call_site());
 
     add_trait_bounds(&mut input.generics);
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     proc_macro_error::set_dummy(quote! {
         const _: () = {
-            extern crate #krate as _oauth1_request;
+            #use_oauth1_request
+
             impl #impl_generics _oauth1_request::Request for #name #ty_generics
                 #where_clause
             {
@@ -119,7 +129,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 
     quote_spanned! {Span::mixed_site()=>
         const _: () = {
-            extern crate #krate as _oauth1_request;
+            #use_oauth1_request
 
             #[automatically_derived]
             impl #impl_generics _oauth1_request::Request for #name #ty_generics
