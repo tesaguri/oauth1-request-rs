@@ -121,7 +121,7 @@ where
     /// Creates a new `AssertSorted`.
     pub fn new<J>(iterator: J) -> Self
     where
-        J: IntoIterator<IntoIter = I>,
+        J: IntoIterator<Item = (K, V), IntoIter = I>,
     {
         AssertSorted {
             inner: iterator.into_iter(),
