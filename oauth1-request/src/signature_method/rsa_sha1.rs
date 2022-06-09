@@ -6,7 +6,7 @@
 
 extern crate alloc;
 
-pub use rsa::pkcs8::FromPrivateKey;
+pub use rsa::pkcs8::DecodePrivateKey;
 pub use rsa::RsaPrivateKey;
 
 use alloc::vec::Vec;
