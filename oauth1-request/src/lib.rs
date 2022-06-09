@@ -193,6 +193,17 @@ doc_auto_cfg! {
     ///
     /// Call the function at `path` and do not serialize the field if the function returns `true`.
     /// The function must be callable as `fn(&T) -> bool`.
+    ///
+    /// ## Container attributes
+    ///
+    /// - `#[oauth1(crate = "name")]`
+    ///
+    /// Specify the path of `oauth1_request` crate. The path is automatically determined by the
+    /// derive macro by default, even if the crate is renamed with the [`[package]`][package] key of
+    /// `Cargo.toml`, so you usually don't need this attribute. It may be useful if you are using an
+    /// exotic build tool where the crate name cannot be determined reliably.
+    ///
+    /// [package]: <https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#renaming-dependencies-in-cargotoml>
     #[cfg(feature = "derive")]
     #[doc(inline)]
     pub use oauth1_request_derive::Request;
