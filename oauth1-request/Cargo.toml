@@ -1,6 +1,6 @@
 [package]
 name = "oauth1-request"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2018"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -9,7 +9,7 @@ keywords = ["oauth", "oauth1"]
 categories = ["authentication"]
 homepage = "https://github.com/tesaguri/oauth1-request-rs"
 repository = "https://github.com/tesaguri/oauth1-request-rs"
-documentation = "https://docs.rs/oauth1-request/0.5.1/oauth1_request/"
+documentation = "https://docs.rs/oauth1-request/0.6.0/oauth1_request/"
 description = """
 Yet yet yet another OAuth 1.0 client library.
 """
@@ -50,7 +50,7 @@ js-sys = { version = "0.3", optional = true }
 [dev-dependencies]
 base64 = "0.13"
 # Trick to make `proc-macro-crate` work in doctests.
-oauth1-request = { version = "0.5", path = "", default-features = false }
+oauth1-request = { version = "0.6", path = "", default-features = false }
 version-sync = "0.9"
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]

@@ -31,7 +31,7 @@ http-body = "0.4"
 hyper = { version = "0.14", features = ["client", "http1", "runtime", "server", "stream"] }
 log = "0.4"
 nom = "6"
-oauth = { version = "0.5", package = "oauth1-request" }
+oauth = { version = "0.6", package = "oauth1-request" }
 oauth-credentials = { version = "0.3", features = ["serde"] }
 percent-encoding = "2"
 pin-project = "1"

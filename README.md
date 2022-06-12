@@ -12,7 +12,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-oauth = { version = "0.5", package = "oauth1-request" }
+oauth = { version = "0.6", package = "oauth1-request" }
 ```
 
 A typical authorization flow looks like this:

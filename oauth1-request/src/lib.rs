@@ -6,7 +6,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! oauth = { version = "0.5", package = "oauth1-request" }
+//! oauth = { version = "0.6", package = "oauth1-request" }
 //! ```
 //!
 //! For brevity, we refer to the crate name as `oauth` throughout the documentation,
@@ -115,7 +115,7 @@
 //! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.5.1")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.6.0")]
 #![warn(missing_docs, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
 

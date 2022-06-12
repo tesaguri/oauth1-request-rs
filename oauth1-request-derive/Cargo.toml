@@ -22,6 +22,6 @@ quote = "1"
 syn = { version = "1", features = ["full"] }
 
 [dev-dependencies]
-oauth1-request = { version = "0.5", default-features = false, features = ["alloc", "derive", "test"] }
+oauth1-request = { version = "0.6", default-features = false, features = ["alloc", "derive", "test"] }
 trybuild = "1"
 version-sync = "0.9"
