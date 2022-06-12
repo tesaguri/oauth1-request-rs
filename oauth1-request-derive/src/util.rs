@@ -21,7 +21,7 @@ impl OAuthParameter {
     }
 }
 
-impl<'a> ToTokens for OAuthParameter {
+impl ToTokens for OAuthParameter {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let method = self
             .serialize_method_name()
