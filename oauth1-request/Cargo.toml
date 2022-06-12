@@ -24,7 +24,7 @@ required-features = ["std"]
 [dependencies]
 base64 = { version = "0.13", default-features = false }
 cfg-if = "1"
-fmt-cmp = "0.1"
+fmt-cmp = "0.1.1"
 oauth-credentials = { version = "0.3", default-features = false }
 percent-encoding = { version = "2.1", default-features = false }
 rand = { version = "0.8", default-features = false, features = ["getrandom"] }
