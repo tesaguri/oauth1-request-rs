@@ -217,7 +217,7 @@ doc_auto_cfg! {
     #[cfg(feature = "hmac-sha1")]
     pub use self::signature_method::HmacSha1;
     pub use self::signature_method::Plaintext;
-    #[cfg(feature = "rsa-sha1")]
+    #[cfg(feature = "rsa-sha1-06")]
     pub use self::signature_method::RsaSha1;
     #[cfg(feature = "hmac-sha1")]
     pub use self::signature_method::HMAC_SHA1;

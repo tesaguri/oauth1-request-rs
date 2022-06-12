@@ -2,18 +2,18 @@
 //!
 //! [rfc]: https://datatracker.ietf.org/doc/html/rfc5849#section-3.4.3
 //!
-//! This module is only available when `rsa-sha1` feature is activated.
+//! This module is only available when `rsa-sha1-06` feature is activated.
 
 extern crate alloc;
 
-pub use rsa::pkcs8::DecodePrivateKey;
-pub use rsa::RsaPrivateKey;
+pub use rsa06::pkcs8::DecodePrivateKey;
+pub use rsa06::RsaPrivateKey;
 
 use alloc::vec::Vec;
 use core::fmt::{self, Display, Formatter};
 
 use digest::Digest;
-use rsa::{Hash, PaddingScheme};
+use rsa06::{Hash, PaddingScheme};
 use sha1::Sha1;
 
 use super::digest_common::{Base64PercentEncodeDisplay, UpdateSign};

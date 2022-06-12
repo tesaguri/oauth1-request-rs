@@ -40,8 +40,8 @@ digest = { version = "0.10", optional = true }
 hmac = { version = "0.12.1", optional = true }
 sha-1 = { version = "0.10", optional = true }
 
-# `rsa-sha1` feature
-rsa = { version = "0.6", optional = true }
+# `rsa-sha1-06` feature
+rsa06 = { version = "0.6", optional = true, package = "rsa" }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 # `js` feature
@@ -62,7 +62,7 @@ default = ["derive", "hmac-sha1", "std"]
 alloc = ["oauth-credentials/alloc"]
 derive = ["oauth1-request-derive"]
 hmac-sha1 = ["digest", "hmac", "sha-1"]
-rsa-sha1 = ["digest", "rsa", "sha-1"]
+rsa-sha1-06 = ["digest", "rsa06", "sha-1"]
 js = ["js-sys"]
 serde = ["oauth-credentials/serde"]
 # Note: `percent-encoding` depends on `std` until servo/rust-url#691 lands.

@@ -10,11 +10,11 @@ doc_auto_cfg! {
     #[cfg(feature = "hmac-sha1")]
     pub mod hmac_sha1;
     pub mod plaintext;
-    #[cfg(feature = "rsa-sha1")]
-    pub mod rsa_sha1;
+    #[cfg(feature = "rsa-sha1-06")]
+    pub mod rsa_sha1_06;
 }
 
-#[cfg(any(feature = "hmac-sha1", feature = "rsa-sha1"))]
+#[cfg(any(feature = "hmac-sha1", feature = "rsa-sha1-06"))]
 mod digest_common;
 #[cfg(feature = "either")]
 mod either;
@@ -27,8 +27,8 @@ doc_auto_cfg! {
     pub use self::plaintext::Plaintext;
     #[cfg(feature = "alloc")]
     pub use self::plaintext::PLAINTEXT;
-    #[cfg(feature = "rsa-sha1")]
-    pub use self::rsa_sha1::RsaSha1;
+    #[cfg(feature = "rsa-sha1-06")]
+    pub use self::rsa_sha1_06::RsaSha1;
 }
 
 use core::fmt::{self, Display, Write};
