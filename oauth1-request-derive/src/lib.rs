@@ -151,7 +151,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 fn add_trait_bounds(generics: &mut Generics) {
     for param in &mut generics.params {
         if let GenericParam::Type(ref mut type_param) = *param {
-            type_param.bounds.push(parse_quote!(::std::fmt::Display));
+            type_param.bounds.push(parse_quote!(::core::fmt::Display));
         }
     }
 }

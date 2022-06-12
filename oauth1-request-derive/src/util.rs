@@ -27,6 +27,6 @@ impl<'a> ToTokens for OAuthParameter {
             .serialize_method_name()
             .expect("called `to_tokens` on `OAuthParameter::None`");
         let ident = Ident::new(method, Span::call_site());
-        tokens.extend(std::iter::once(TokenTree::Ident(ident)));
+        tokens.extend(::core::iter::once(TokenTree::Ident(ident)));
     }
 }

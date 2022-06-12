@@ -46,7 +46,7 @@ macro_rules! assert_expand {
 
             impl<$($lt,)* $($ty_param$(: $($bound)*)*),*> inner::$Name<$($lt,)* $($ty_param),*>
             where
-                $($ty_param: std::fmt::Display,)*
+                $($ty_param: core::fmt::Display,)*
                 $($($where_ty: $($where_bound)*,)*)*
             {
                 fn expected(&self) -> alloc::vec::Vec<Record> {
