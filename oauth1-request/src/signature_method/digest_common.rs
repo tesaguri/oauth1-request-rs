@@ -35,9 +35,9 @@ impl<U: Update> UpdateSign<U> {
 
 impl<A: AsRef<[u8]>> Display for Base64PercentEncodeDisplay<A> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let d = PercentEncode(Base64Display::with_config(
+        let d = PercentEncode(Base64Display::new(
             self.0.as_ref(),
-            base64::STANDARD,
+            &base64::engine::general_purpose::STANDARD,
         ));
         Display::fmt(&d, f)
     }

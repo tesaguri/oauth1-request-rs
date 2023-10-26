@@ -430,8 +430,11 @@ fn gen_nonce<'a, R: RngCore + CryptoRng>(buf: &'a mut [u8; NONCE_LEN], rng: &mut
     // Trim leading zeroes to be stingy.
     let i = rand.iter().position(|&b| b != 0).unwrap_or(rand.len());
     let rand = &rand[i..];
+    use base64::{engine::general_purpose, Engine as _};
 
-    let len = base64::encode_config_slice(&rand, base64::URL_SAFE_NO_PAD, buf);
+    let len = general_purpose::URL_SAFE_NO_PAD
+        .encode_slice(&rand, buf)
+        .unwrap();
     let buf = &buf[..len];
 
     str::from_utf8(buf).unwrap()
