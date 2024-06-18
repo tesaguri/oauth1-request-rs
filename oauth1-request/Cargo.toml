@@ -22,7 +22,7 @@ name = "pull_9"
 required-features = ["std"]
 
 [dependencies]
-base64 = { version = "0.13", default-features = false }
+base64 = { version = "0.21", default-features = false }
 cfg-if = "1"
 fmt-cmp = "0.1.1"
 oauth-credentials = { version = "0.3", default-features = false }
@@ -48,7 +48,7 @@ rsa06 = { version = "0.6", optional = true, package = "rsa" }
 js-sys = { version = "0.3", optional = true }
 
 [dev-dependencies]
-base64 = "0.13"
+base64 = "0.21"
 # Trick to make `proc-macro-crate` work in doctests.
 oauth1-request = { version = "0.6", path = "", default-features = false }
 version-sync = "0.9"
