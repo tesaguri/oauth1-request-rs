@@ -118,6 +118,7 @@ assert_expand! {
 }
 
 // Just checking that this compiles.
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 struct Unsized {
     a: u64,
@@ -177,6 +178,7 @@ assert_expand! {
 }
 
 // Just checking that this compiles.
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 #[oauth1(crate = oauth)]
 struct Crate {}
@@ -240,6 +242,7 @@ assert_expand! {
 // Just checking that these compile. They are tests for the code generation around the internal
 // `DeriveRequestAssertion` struct which `fmt` and `skip_if` attributes share, checking that
 // the attributes don't interfere with or depend on each other.
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 struct HasFmtAndSkipIf {
     #[oauth1(fmt = common::fmt_ignore)]
@@ -247,11 +250,13 @@ struct HasFmtAndSkipIf {
     #[oauth1(skip_if = common::always)]
     skip_if: u8,
 }
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 struct HasFmtOnly {
     #[oauth1(fmt = common::fmt_ignore)]
     fmt: (),
 }
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 struct HasSkipIfOnly {
     #[oauth1(skip_if = common::always)]
@@ -259,6 +264,7 @@ struct HasSkipIfOnly {
 }
 
 // Just checking that this compiles.
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 struct Hygiene {
     // The expanded code defines a binding named `helper`. This attribute should not refer to that.
@@ -272,17 +278,21 @@ struct Hygiene {
     #[oauth1(fmt = serializer)]
     should_not_conflict_with_serializer_arg: (),
 }
+#[allow(dead_code)]
 fn helper(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
     unimplemented!();
 }
+#[allow(dead_code)]
 fn tmp(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
     unimplemented!();
 }
+#[allow(dead_code)]
 fn serializer(_: &(), _: &mut Formatter<'_>) -> fmt::Result {
     unimplemented!();
 }
 
 // Just checking that this produces no warnings.
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 #[allow(nonstandard_style)]
 struct non_camel_case {
@@ -290,6 +300,7 @@ struct non_camel_case {
     SHOUTING_SNAKE_CASE: Option<&'static str>,
 }
 
+#[allow(dead_code)]
 #[derive(oauth::Request)]
 struct WeirdAttrs {
     #[rustfmt::skip]

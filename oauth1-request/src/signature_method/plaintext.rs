@@ -61,9 +61,7 @@ where
 
 impl<W> Clone for Plaintext<W> {
     fn clone(&self) -> Self {
-        Plaintext {
-            marker: PhantomData,
-        }
+        *self
     }
 }
 

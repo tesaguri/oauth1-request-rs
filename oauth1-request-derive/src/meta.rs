@@ -13,41 +13,32 @@ macro_rules! def_meta {
 
         impl $Name {
             pub fn new(attrs: Vec<syn::Attribute>) -> Self {
-                use syn::parse::{Parse, Parser};
-                use syn::spanned::Spanned;
+                use syn::parse::Parse;
 
                 use $crate::meta::Meta;
 
                 let mut ret = Self::default();
 
                 for attr in attrs {
-                    let path = attr.path;
+                    let path = attr.path();
                     if path.get_ident().map_or(true, |ident| ident != "oauth1") {
                         continue;
                     }
 
                     let parser = |input: syn::parse::ParseStream<'_>| {
-                        if input.is_empty() {
-                            // Manually create an error to work around `syn::parenthesized`'s
-                            // behavior to span the error at call site in this case.
-                            let message = "expected parentheses after `oauth1`";
-                            return Err(syn::Error::new(path.span(), message));
-                        }
-                        let content;
-                        syn::parenthesized!(content in input);
-                        content.parse_terminated::<_, syn::Token![,]>(Meta::parse)
+                        input.parse_terminated(Meta::parse, syn::Token![,])
                     };
-                    let meta_list = match parser.parse2(attr.tokens) {
+                    let meta_list = match attr.parse_args_with(parser) {
                         Ok(list) => list,
                         Err(e) => {
-                            proc_macro_error::emit_error!(e);
+                            proc_macro_error::emit_error!(e.span(), e.to_string());
                             continue;
                         }
                     };
 
                     for meta in meta_list {
                         if let Err(e) = ret.add_meta(meta) {
-                            proc_macro_error::emit_error!(e);
+                            proc_macro_error::emit_error!(e.span(), e.to_string());
                         }
                     }
                 }

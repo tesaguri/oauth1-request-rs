@@ -22,7 +22,7 @@ name = "pull_9"
 required-features = ["std"]
 
 [dependencies]
-base64 = { version = "0.21", default-features = false }
+base64 = { version = "0.22", default-features = false }
 cfg-if = "1"
 fmt-cmp = "0.1.1"
 oauth-credentials = { version = "0.3", default-features = false }
@@ -38,17 +38,20 @@ either = { version = "1.2", optional = true }
 # `hmac-sha1` feature
 digest = { version = "0.10", optional = true }
 hmac = { version = "0.12.1", optional = true }
-sha-1 = { version = "0.10", optional = true }
+sha1 = { version = "0.10", optional = true }
 
 # `rsa-sha1-06` feature
 rsa06 = { version = "0.6", optional = true, package = "rsa" }
+
+# `rsa-sha1-09` feature
+rsa09 = { version = "0.9", optional = true, package = "rsa" }
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
 # `js` feature
 js-sys = { version = "0.3", optional = true }
 
 [dev-dependencies]
-base64 = "0.21"
+base64 = "0.22"
 # Trick to make `proc-macro-crate` work in doctests.
 oauth1-request = { version = "0.6", path = "", default-features = false }
 version-sync = "0.9"
@@ -61,8 +64,9 @@ wasm-bindgen-test = "0.3"
 default = ["derive", "hmac-sha1", "std"]
 alloc = ["oauth-credentials/alloc"]
 derive = ["oauth1-request-derive"]
-hmac-sha1 = ["digest", "hmac", "sha-1"]
-rsa-sha1-06 = ["digest", "rsa06", "sha-1"]
+hmac-sha1 = ["digest", "hmac", "sha1"]
+rsa-sha1-06 = ["digest", "rsa06", "sha1"]
+rsa-sha1-09 = ["digest", "rsa09", "sha1/oid"]
 js = ["js-sys"]
 serde = ["oauth-credentials/serde"]
 # Note: `percent-encoding` depends on `std` until servo/rust-url#691 lands.

@@ -12,9 +12,15 @@ doc_auto_cfg! {
     pub mod plaintext;
     #[cfg(feature = "rsa-sha1-06")]
     pub mod rsa_sha1_06;
+    #[cfg(feature = "rsa-sha1-09")]
+    pub mod rsa_sha1_09;
 }
 
-#[cfg(any(feature = "hmac-sha1", feature = "rsa-sha1-06"))]
+#[cfg(any(
+    feature = "hmac-sha1",
+    feature = "rsa-sha1-06",
+    feature = "rsa-sha1-09"
+))]
 mod digest_common;
 #[cfg(feature = "either")]
 mod either;
@@ -27,8 +33,11 @@ doc_auto_cfg! {
     pub use self::plaintext::Plaintext;
     #[cfg(feature = "alloc")]
     pub use self::plaintext::PLAINTEXT;
+    // TODO: Suffix the re-export with the version number on next breaking change.
     #[cfg(feature = "rsa-sha1-06")]
     pub use self::rsa_sha1_06::RsaSha1;
+    #[cfg(feature = "rsa-sha1-09")]
+    pub use self::rsa_sha1_09::RsaSha1 as Rsa09Sha1;
 }
 
 use core::fmt::{self, Display, Write};

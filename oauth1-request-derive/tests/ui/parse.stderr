@@ -1,10 +1,10 @@
-error: expected parentheses after `oauth1`
+error: expected attribute arguments in parentheses: #[oauth1(...)]
  --> tests/ui/parse.rs:3:7
   |
 3 |     #[oauth1]
   |       ^^^^^^
 
-error: expected parentheses
+error: expected parentheses: #[oauth1(...)]
  --> tests/ui/parse.rs:6:14
   |
 6 |     #[oauth1 = ""]
@@ -40,7 +40,7 @@ error: expected `,`
 21 |     #[oauth1(name = value value value)]
    |                           ^^^^^
 
-error: unexpected end of input, expected expression
+error: unexpected end of input, expected an expression
   --> tests/ui/parse.rs:24:21
    |
 24 |     #[oauth1(name = )]
