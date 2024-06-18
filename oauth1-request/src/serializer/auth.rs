@@ -4,6 +4,7 @@ use core::fmt::{self, Display, Write};
 use core::num::NonZeroU64;
 use core::str;
 
+use base64::{Engine as _};
 use rand::prelude::*;
 
 use crate::signature_method::{Sign, SignatureMethod};
@@ -430,9 +431,8 @@ fn gen_nonce<'a, R: RngCore + CryptoRng>(buf: &'a mut [u8; NONCE_LEN], rng: &mut
     // Trim leading zeroes to be stingy.
     let i = rand.iter().position(|&b| b != 0).unwrap_or(rand.len());
     let rand = &rand[i..];
-    use base64::{engine::general_purpose, Engine as _};
 
-    let len = general_purpose::URL_SAFE_NO_PAD
+    let len = base64::engine::general_purpose::URL_SAFE_NO_PAD
         .encode_slice(&rand, buf)
         .unwrap();
     let buf = &buf[..len];
