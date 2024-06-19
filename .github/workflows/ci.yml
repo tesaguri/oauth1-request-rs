@@ -2,33 +2,28 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  CARGO_INCREMENTAL: '0'
+  CARGO_PROFILE_DEV_DEBUG: '0'
+  CARGO_PROFILE_TEST_DEBUG: '0'
+  CARGO_TERM_COLOR: always
+
 jobs:
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          components: rustfmt
-      - name: cargo fmt -- --check
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: -- --check
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install --no-self-update --profile=minimal --component=rustfmt -- stable
+      - run: cargo fmt -- --check --color=always
   test:
     name: Test
     runs-on: ubuntu-latest
     env:
-      CARGO_INCREMENTAL: 0
-      CARGO_PROFILE_DEBUG_DEBUG: 0
       CARGO_TARGET_DIR: target
       RUSTDOCFLAGS: --deny warnings
       RUSTFLAGS: --deny warnings
-      RUST_BACKTRACE: 1
+      RUST_BACKTRACE: '1'
     strategy:
       fail-fast: false
       matrix:
@@ -36,6 +31,8 @@ jobs:
           - stable
           - beta
           - nightly
+          # The old toolchain is tested to detect accidental compatibility breakage, but we don't
+          # explicitly guarantee minimum toolchain version and this may increase at any time.
           - '1.48.0'
         target:
           -
@@ -61,16 +58,13 @@ jobs:
           - toolchain: '1.48.0'
             minimum_rust: true
     steps:
-      - uses: actions/checkout@v2
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@21dc36fb71dd22e3317045c0c31a3f4249868b17
         with:
           toolchain: ${{ matrix.toolchain }}
-          target: ${{ matrix.target }}
-          profile: minimal
-          override: true
+          targets: ${{ matrix.target }}
           components: ${{ matrix.components }}
-      - uses: Swatinem/rust-cache@v1
+      - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
       - name: Install `wasm-bindgen-test-runner`
@@ -89,45 +83,27 @@ jobs:
         if: matrix.target != ''
       - name: Clippy `oauth1-request`
         if: contains(matrix.components, 'clippy')
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+        run: cargo clippy --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
       - name: Check docs of `oauth1-request`
         if: ${{ !matrix.minimum_rust && matrix.features == 'js,derive' }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: doc
-          args: --verbose --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}' --no-deps
+        run: cargo doc --verbose --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}' --no-deps
       - name: Build `oauth1-request`
         if: ${{ !matrix.minimum_rust }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+        run: cargo build --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
       - name: Check `oauth1-request`
         if: matrix.minimum_rust
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          # Cargo of toolchain v1.48.0 fails to resolve some dependencies, presumably because of the
-          # use of the resovler v2 by some the dependencies, even when none of the enabled crate
-          # features depend on them. To work around this, we instead build `oauth1-request`
-          # indirectly through `oauth1-request-test` crate, which depends on the crate but without
-          # the crate features that causes the issue.
-          args: --verbose --tests --manifest-path oauth1-request-test/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
-      - name: Build `examples`
+        # Cargo of toolchain v1.48.0 fails to resolve some dependencies, presumably because of the
+        # use of the resovler v2 by some the dependencies, even when none of the enabled crate
+        # features depend on them. To work around this, we instead build `oauth1-request` indirectly
+        # through `oauth1-request-test` crate, which depends on the crate but without the crate
+        # features that causes the issue.
+        run: cargo check --verbose --tests --manifest-path oauth1-request-test/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+      - name: Check `examples`
         if: ${{ !matrix.minimum_rust && matrix.target == '' }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --manifest-path examples/Cargo.toml
+        run: cargo check --verbose --manifest-path examples/Cargo.toml
       - name: Test `oauth1-request`
         if: ${{ !matrix.minimum_rust && matrix.target == '' }}
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+        run: cargo test --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
   derive-test:
     name: Test `oauth1-request-derive`
     runs-on: ubuntu-latest
@@ -143,24 +119,14 @@ jobs:
     # Also, we don't want the workflow to break nightly :)
     continue-on-error: ${{ matrix.toolchain != 'stable' }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          profile: minimal
-          override: true
-      - uses: Swatinem/rust-cache@v1
+        run: rustup toolchain install --no-self-update ${{ matrix.toolchain }} --profile=minimal && rustup default ${{ matrix.toolchain }}
+      - uses: Swatinem/rust-cache@v2
       - name: Build `oauth1-request-derive`
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --tests --manifest-path oauth1-request-derive/Cargo.toml
+        run: cargo build --verbose --tests --manifest-path=oauth1-request-derive/Cargo.toml
       - name: Test `oauth1-request-derive`
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose --manifest-path oauth1-request-derive/Cargo.toml
+        run: cargo test --verbose --manifest-path oauth1-request-derive/Cargo.toml
   credentials-msrv:
     name: Build `oauth-credentials` on MSRV
     runs-on: ubuntu-latest
@@ -177,15 +143,11 @@ jobs:
           - toolchain: '1.36.0'
             features: alloc
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          profile: minimal
-          override: true
-      - uses: Swatinem/rust-cache@v1
-      - uses: actions/checkout@v2
+        run: rustup toolchain install --no-self-update ${{ matrix.toolchain }} --profile=minimal && rustup default ${{ matrix.toolchain }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@v4
         with:
           repository: rust-lang/crates.io-index
           ref: 46a429eac9f70fd7281922780d7dd42e2fb7ab77
@@ -201,13 +163,10 @@ jobs:
           registry = "file://$GITHUB_WORKSPACE/crates.io-index"
           EOF
       - name: Build `oauth-credentials`
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
-          # because the toolchains do not understand Cargo registry's information for `serde`, so we
-          # use the same trick that we used for `oauth1-request`'s minimum tested toolchain.
-          args: --verbose --manifest-path oauth-credentials-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
+        # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
+        # because the toolchains do not understand Cargo registry's information for `serde`, so we
+        # use the same trick that we used for `oauth1-request`'s minimum tested toolchain.
+        run: cargo build --verbose --manifest-path oauth-credentials-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
     name: Test `oauth-credentials`
     runs-on: ubuntu-latest
@@ -224,44 +183,25 @@ jobs:
           - serde
           - std
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
-          profile: minimal
-          override: true
-      - uses: Swatinem/rust-cache@v1
+        run: rustup toolchain install --no-self-update ${{ matrix.toolchain }} --profile=minimal && rustup default ${{ matrix.toolchain }}
+      - uses: Swatinem/rust-cache@v2
       - name: Build `oauth-credentials`
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
+        run: cargo build --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
       - name: Test `oauth-credentials`
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
+        run: cargo test --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
   min-deps:
     name: Check with `-Z minimal-versions`
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-      - uses: Swatinem/rust-cache@v1
+        run: rustup toolchain install --no-self-update stable --profile=minimal && rustup default
+      - uses: Swatinem/rust-cache@v2
       - name: Cargo update
-        uses: actions-rs/cargo@v1
-        with:
-          command: update
-          args: -Z minimal-versions
+        run: cargo update -Z minimal-versions
         env:
-          RUSTC_BOOTSTRAP: 1
+          RUSTC_BOOTSTRAP: '1'
       - name: Check
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --verbose --all-features
+        run: cargo check --verbose --all-features
