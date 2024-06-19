@@ -36,13 +36,18 @@ jobs:
           - stable
           - beta
           - nightly
-          - '1.46.0'
+          - '1.48.0'
         target:
           -
         features:
           - js
           - js,derive
           - js,hmac-sha1
+        exclude:
+          - toolchain: '1.48.0'
+            features: js,derive
+          - toolchain: '1.48.0'
+            features: js,hmac-sha1
         include:
           - toolchain: stable
             components: clippy
@@ -53,6 +58,8 @@ jobs:
           - toolchain: stable
             features: js
             target: wasm32-unknown-unknown
+          - toolchain: '1.48.0'
+            minimum_rust: true
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust toolchain
@@ -77,7 +84,7 @@ jobs:
           tar -xzf "$NAME.tar.gz" "$NAME/wasm-bindgen-test-runner"
           mv "$NAME/wasm-bindgen-test-runner" /usr/local/bin/
       - run: echo "RUSTFLAGS=$RUSTFLAGS --allow unknown_lints" >> "$GITHUB_ENV"
-        if: matrix.toolchain == '1.46.0'
+        if: matrix.minimum_rust
       - run: echo 'CARGO_BUILD_TARGET=${{ matrix.target }}' >> "$GITHUB_ENV"
         if: matrix.target != ''
       - name: Clippy `oauth1-request`
@@ -87,23 +94,36 @@ jobs:
           command: clippy
           args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
       - name: Check docs of `oauth1-request`
-        if: matrix.features == 'js,derive'
+        if: ${{ !matrix.minimum_rust && matrix.features == 'js,derive' }}
         uses: actions-rs/cargo@v1
         with:
           command: doc
           args: --verbose --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}' --no-deps
       - name: Build `oauth1-request`
+        if: ${{ !matrix.minimum_rust }}
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+      - name: Check `oauth1-request`
+        if: matrix.minimum_rust
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          # Cargo of toolchain v1.48.0 fails to resolve some dependencies, presumably because of the
+          # use of the resovler v2 by some the dependencies, even when none of the enabled crate
+          # features depend on them. To work around this, we instead build `oauth1-request`
+          # indirectly through `oauth1-request-test` crate, which depends on the crate but without
+          # the crate features that causes the issue.
+          args: --verbose --tests --manifest-path oauth1-request-test/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
       - name: Build `examples`
-        if: ${{ matrix.target == '' && matrix.toolchain != '1.46.0' }}
+        if: ${{ !matrix.minimum_rust && matrix.target == '' }}
         uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --manifest-path examples/Cargo.toml
       - name: Test `oauth1-request`
+        if: ${{ !matrix.minimum_rust && matrix.target == '' }}
         uses: actions-rs/cargo@v1
         with:
           command: test
@@ -185,10 +205,8 @@ jobs:
         with:
           command: build
           # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
-          # because the toolchains do not understand Cargo registry's information for `serde`
-          # (see <https://github.com/rust-lang/cargo/issues/3763>).
-          # So, with these toolchains, we instead build a dependant crate of `oauth-credentials`
-          # without `serde` feature.
+          # because the toolchains do not understand Cargo registry's information for `serde`, so we
+          # use the same trick that we used for `oauth1-request`'s minimum tested toolchain.
           args: --verbose --manifest-path oauth-credentials-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
     name: Test `oauth-credentials`
