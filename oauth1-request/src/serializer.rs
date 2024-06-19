@@ -231,6 +231,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     #[derive(Clone, Debug)]
     struct AssertImpl<'a>(
         #[cfg(feature = "hmac-sha1")] Authorizer<'a, HmacSha1, String>,

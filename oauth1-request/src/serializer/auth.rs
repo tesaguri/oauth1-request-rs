@@ -217,7 +217,7 @@ fn make_sign<SM: SignatureMethod, T: Display>(
     signature_method: SM,
 ) -> SM::Sign {
     // This is a no_alloc-equivalent of `assert!(!uri.to_string().contains('?'))`.
-    // We can determine if the URI contains a query part by just checking if it containsa `'?'`
+    // We can determine if the URI contains a query part by just checking if it contains a `'?'`
     // character, because the scheme and authority part of a valid URI does not contain
     // that character.
     #[cfg(debug_assertions)]
@@ -433,7 +433,7 @@ fn gen_nonce<'a, R: RngCore + CryptoRng>(buf: &'a mut [u8; NONCE_LEN], rng: &mut
     let rand = &rand[i..];
 
     let len = base64::engine::general_purpose::URL_SAFE_NO_PAD
-        .encode_slice(&rand, buf)
+        .encode_slice(rand, buf)
         .unwrap();
     let buf = &buf[..len];
 

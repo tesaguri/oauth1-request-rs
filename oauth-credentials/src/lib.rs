@@ -5,6 +5,17 @@
 
 #![doc(html_root_url = "https://docs.rs/oauth-credentials/0.3.0")]
 #![allow(deprecated)]
+#![
+    allow(
+        // We unconditionally allow Clippy lints since `cfg_attr(feature = "cargo-clippy", …)`
+        // won't work since toolchain 1.80.0 as the `cfg` condition raises
+        // `clippy::unexpected_cfgs` warning, which triggers just as the `cfg` is evaluated and thus
+        // cannot be conditionally allowed.
+        unknown_lints,
+        renamed_and_removed_lints,
+        needless_lifetimes,
+    )
+]
 #![warn(missing_docs, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -63,7 +74,7 @@ pub struct Credentials<T = String> {
 /// - Client credentials (consumer key and secret) used to authenticate as a client.
 /// - Temporary credentials (request token and secret) which represent an authorization request.
 /// - Token credentials (access token and secret) which represent an access grant from
-/// a resource owner to a client.
+///   a resource owner to a client.
 ///
 /// In order to make requests on behalf of a resource owner, you (the client) need a set of
 /// client credentials and token credentials, which is represented by the [Token] type.

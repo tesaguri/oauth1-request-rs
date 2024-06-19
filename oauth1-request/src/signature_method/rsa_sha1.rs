@@ -83,7 +83,7 @@ impl<'a> SignatureMethod for &'a RsaSha1 {
     }
 }
 
-impl<'a> Sign for RsaSha1Sign {
+impl Sign for RsaSha1Sign {
     type Signature = RsaSha1Signature;
 
     fn get_signature_method_name(&self) -> &'static str {

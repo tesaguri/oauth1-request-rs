@@ -2,6 +2,7 @@
 name = "oauth1-request"
 version = "0.6.0"
 edition = "2018"
+rust-version = "1.46.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
 readme = "../README.md"

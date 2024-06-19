@@ -75,7 +75,7 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
                 &*krate
             }
             Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request",
-            Err(e) => Err(e).unwrap(),
+            Err(e) => panic!("{:?}", e),
         };
         let krate = Ident::new(krate, Span::call_site());
         quote! {
