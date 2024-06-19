@@ -149,22 +149,11 @@ jobs:
         toolchain:
           - '1.0.0'
           - '1.6.0'
-          - '1.8.0'
-          - '1.13.0'
           - '1.36.0'
         include:
           - toolchain: '1.0.0'
             features: std
-            # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
-            # because the toolchains do not understand Cargo registry's information for `serde`
-            # (see <https://github.com/rust-lang/cargo/issues/3763>).
-            # So, with these toolchains, we compile a crate named `oauth-credentials-test` instead,
-            # which depends on `oauth-credentials` without `serde` feature.
-            crate_suffix: '-test'
           - toolchain: '1.6.0'
-            crate_suffix: '-test'
-          - toolchain: '1.13.0'
-            features: serde
           - toolchain: '1.36.0'
             features: alloc
     steps:
@@ -195,7 +184,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --manifest-path oauth-credentials${{ matrix.crate_suffix }}/Cargo.toml --no-default-features --features=${{ matrix.features }}
+          # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
+          # because the toolchains do not understand Cargo registry's information for `serde`
+          # (see <https://github.com/rust-lang/cargo/issues/3763>).
+          # So, with these toolchains, we instead build a dependant crate of `oauth-credentials`
+          # without `serde` feature.
+          args: --verbose --manifest-path oauth-credentials-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
     name: Test `oauth-credentials`
     runs-on: ubuntu-latest

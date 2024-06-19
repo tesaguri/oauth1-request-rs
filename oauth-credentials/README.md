@@ -38,7 +38,7 @@ Feature | MSRV
 -|-
 (none) | 1.6.0
 `std` (default) | 1.0.0
-`serde` |  1.13.0
+`serde` | (See [Serde's `rust-version`][serde-cargo-toml])
 `alloc` (without `std`) | 1.36.0
 
 Note that if your crate uses the `serde` feature (even if optionally!), it
@@ -46,4 +46,5 @@ cannot be compiled directly with Rust 1.7.x and older due to
 [rust-lang/cargo#3763], but it can somehow be compiled as a dependency of
 another crate if the feature is disabled.
 
+[serde-cargo-toml]: https://docs.rs/crate/serde/latest/source/Cargo.toml.orig
 [rust-lang/cargo#3763]: https://github.com/rust-lang/cargo/issues/3763
