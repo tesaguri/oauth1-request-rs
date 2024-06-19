@@ -2,7 +2,7 @@
 
 //! This crate provides a derive macro for [`oauth1_request::Request`][Request]:
 //!
-//! [Request]: https://docs.rs/oauth1-request/0.5/oauth1_request/trait.Request.html
+//! [Request]: https://docs.rs/oauth1-request/0.6/oauth1_request/trait.Request.html
 //!
 //! ```
 //! # extern crate oauth1_request as oauth;
@@ -14,7 +14,7 @@
 //! is enabled (which is on by default).
 //! You should use the re-export instead of depending on this crate directly.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.5.0")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request-derive/0.5.1")]
 
 #[macro_use]
 mod meta;
@@ -40,11 +40,11 @@ use self::method_body::MethodBody;
 
 /// A derive macro for [`oauth1_request::Request`][Request] trait.
 ///
-/// [Request]: https://docs.rs/oauth1-request/0.5/oauth1_request/trait.Request.html
+/// [Request]: https://docs.rs/oauth1-request/0.6/oauth1_request/trait.Request.html
 ///
 /// See the [documentation] on the `oauth1_request` crate.
 ///
-/// [documentation]: https://docs.rs/oauth1-request/0.5/oauth1_request/derive.Request.html
+/// [documentation]: https://docs.rs/oauth1-request/0.6/oauth1_request/derive.Request.html
 #[proc_macro_error]
 #[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {

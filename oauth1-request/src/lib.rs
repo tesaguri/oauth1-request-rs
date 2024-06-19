@@ -115,7 +115,7 @@
 //! ```
 
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![doc(html_root_url = "https://docs.rs/oauth1-request/0.6.0")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request/0.6.1")]
 #![warn(missing_docs, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
