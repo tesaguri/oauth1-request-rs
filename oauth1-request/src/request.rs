@@ -15,7 +15,7 @@ use crate::util::OAuthParameter;
 /// and `x-www-form-urlencoded` string.
 ///
 /// This trait can be implemented automatically by
-/// [`#[derive(Request)]`][oauth1_request_derive::Request] derive macro.
+/// [`#[derive(Request)]`][oauth_request_derive_ios::Request] derive macro.
 /// In most cases, you won't need to implement it manually.
 pub trait Request {
     /// Feeds a [`Serializer`] implementation with the key-value pairs of the request

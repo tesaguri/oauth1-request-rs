@@ -75,7 +75,7 @@
 //! );
 //! ```
 //!
-//! See [`Request`][oauth1_request_derive::Request] for more details on the derive macro.
+//! See [`Request`][oauth_request_derive_ios::Request] for more details on the derive macro.
 //!
 //! If you want to authorize a request with dynamic keys, use
 //! [`oauth::ParameterList`][ParameterList].
