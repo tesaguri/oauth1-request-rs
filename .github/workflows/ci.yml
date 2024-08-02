@@ -81,16 +81,16 @@ jobs:
         if: matrix.minimum_rust
       - run: echo 'CARGO_BUILD_TARGET=${{ matrix.target }}' >> "$GITHUB_ENV"
         if: matrix.target != ''
-      - name: Clippy `oauth1-request`
+      - name: Clippy `oauth1-request-ios`
         if: contains(matrix.components, 'clippy')
-        run: cargo clippy --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
-      - name: Check docs of `oauth1-request`
+        run: cargo clippy --verbose --tests --manifest-path oauth1-request-ios/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+      - name: Check docs of `oauth1-request-ios`
         if: ${{ !matrix.minimum_rust && matrix.features == 'js,derive' }}
-        run: cargo doc --verbose --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}' --no-deps
-      - name: Build `oauth1-request`
+        run: cargo doc --verbose --manifest-path oauth1-request-ios/Cargo.toml --no-default-features '--features=${{ matrix.features }}' --no-deps
+      - name: Build `oauth1-request-ios`
         if: ${{ !matrix.minimum_rust }}
-        run: cargo build --verbose --tests --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
-      - name: Check `oauth1-request`
+        run: cargo build --verbose --tests --manifest-path oauth1-request-ios/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+      - name: Check `oauth1-request-ios`
         if: matrix.minimum_rust
         # Cargo of toolchain v1.48.0 fails to resolve some dependencies, presumably because of the
         # use of the resovler v2 by some the dependencies, even when none of the enabled crate
@@ -101,9 +101,9 @@ jobs:
       - name: Check `examples`
         if: ${{ !matrix.minimum_rust && matrix.target == '' }}
         run: cargo check --verbose --manifest-path examples/Cargo.toml
-      - name: Test `oauth1-request`
+      - name: Test `oauth1-request-ios`
         if: ${{ !matrix.minimum_rust && matrix.target == '' }}
-        run: cargo test --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
+        run: cargo test --manifest-path oauth1-request-ios/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
   derive-test:
     name: Test `oauth1-request-derive-ios`
     runs-on: ubuntu-latest
@@ -165,7 +165,7 @@ jobs:
       - name: Build `oauth-credentials-ios`
         # Toolchains older than 1.8.0 cannot compile `oauth-credentials-ios` directly
         # because the toolchains do not understand Cargo registry's information for `serde`, so we
-        # use the same trick that we used for `oauth1-request`'s minimum tested toolchain.
+        # use the same trick that we used for `oauth1-request-ios`'s minimum tested toolchain.
         run: cargo build --verbose --manifest-path oauth-credentials-ios-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
     name: Test `oauth-credentials-ios`

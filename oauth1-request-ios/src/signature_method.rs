@@ -114,7 +114,7 @@ stringify!($name), "\"` as the first argument."
 ///
 #[cfg_attr(feature = "alloc", doc = " ```")]
 #[cfg_attr(not(feature = "alloc"), doc = " ```ignore")]
-/// # use oauth1_request::signature_method::{Sign, SignatureMethod, PLAINTEXT};
+/// # use oauth1_request_ios::signature_method::{Sign, SignatureMethod, PLAINTEXT};
 /// # let mut sign = PLAINTEXT.sign_with("", Some(""));
 /// sign.request_method("POST");
 /// sign.uri("http%3A%2F%2Fexample.com%2Frequest");

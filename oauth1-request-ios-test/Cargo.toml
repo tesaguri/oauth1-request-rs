@@ -9,15 +9,15 @@ description = "A hack to make the CI work with older toolchains."
 publish = false
 
 [dependencies]
-oauth1-request = { path = "../oauth1-request", default-features = false }
+oauth1-request-ios = { path = "../oauth1-request-ios", default-features = false }
 
 [features]
 default = ["std"]
-alloc = ["oauth1-request/alloc"]
+alloc = ["oauth1-request-ios/alloc"]
 # derive = ["oauth1-request/derive"]
 # hmac-sha1 = ["oauth1-request/hmac-sha1"]
-rsa-sha1-06 = ["oauth1-request/rsa-sha1-06"]
-js = ["oauth1-request/js"]
-serde = ["oauth1-request/serde"]
-std = ["oauth1-request/std"]
-test = ["oauth1-request/test"]
+rsa-sha1-06 = ["oauth1-request-ios/rsa-sha1-06"]
+js = ["oauth1-request-ios/js"]
+serde = ["oauth1-request-ios/serde"]
+std = ["oauth1-request-ios/std"]
+test = ["oauth1-request-ios/test"]

@@ -1,20 +1,20 @@
 #![warn(rust_2018_idioms)]
 
-//! This crate provides a derive macro for [`oauth1_request::Request`][Request]:
+//! This crate provides a derive macro for [`oauth1_request_ios::Request`][Request]:
 //!
-//! [Request]: https://docs.rs/oauth1-request/0.6/oauth1_request/trait.Request.html
+//! [Request]: https://docs.rs/oauth1-request-ios/0.0.1/oauth1_request_ios/trait.Request.html
 //!
 //! ```
-//! # extern crate oauth1_request as oauth;
+//! # extern crate oauth1_request_ios as oauth;
 //! #[derive(oauth::Request)]
 //! # struct Foo {}
 //! ```
 //!
-//! `oauth1_request` crate re-exports the derive macro if the `derive` feature of the crate
+//! `oauth1_request_ios` crate re-exports the derive macro if the `derive` feature of the crate
 //! is enabled (which is on by default).
 //! You should use the re-export instead of depending on this crate directly.
 
-#![doc(html_root_url = "https://docs.rs/oauth1-request-derive-ios/0.5.1")]
+#![doc(html_root_url = "https://docs.rs/oauth1-request-derive-ios/0.0.1")]
 
 #[macro_use]
 mod meta;
@@ -38,13 +38,13 @@ use self::container::ContainerMeta;
 use self::field::Field;
 use self::method_body::MethodBody;
 
-/// A derive macro for [`oauth1_request::Request`][Request] trait.
+/// A derive macro for [`oauth1_request_ios::Request`][Request] trait.
 ///
-/// [Request]: https://docs.rs/oauth1-request/0.6/oauth1_request/trait.Request.html
+/// [Request]: https://docs.rs/oauth1-request-ios/0.0.1/oauth1_request_ios/trait.Request.html
 ///
-/// See the [documentation] on the `oauth1_request` crate.
+/// See the [documentation] on the `oauth1_request_ios` crate.
 ///
-/// [documentation]: https://docs.rs/oauth1-request/0.6/oauth1_request/derive.Request.html
+/// [documentation]: https://docs.rs/oauth1-request-ios/0.0.1/oauth1_request_ios/derive.Request.html
 #[proc_macro_error]
 #[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -58,13 +58,13 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 
     let meta = ContainerMeta::new(input.attrs);
 
-    let use_oauth1_request = if let Some(krate) = meta.krate {
+    let use_oauth1_request_ios = if let Some(krate) = meta.krate {
         quote! {
-            use #krate as _oauth1_request;
+            use #krate as _oauth1_request_ios;
         }
     } else {
         let krate;
-        let krate = match proc_macro_crate::crate_name("oauth1-request") {
+        let krate = match proc_macro_crate::crate_name("oauth1-request-ios") {
             Ok(FoundCrate::Name(k)) => {
                 krate = k;
                 &*krate
@@ -74,12 +74,12 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
                 krate = std::env::var("CARGO_CRATE_NAME").unwrap();
                 &*krate
             }
-            Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request",
+            Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request_ios",
             Err(e) => panic!("{:?}", e),
         };
         let krate = Ident::new(krate, Span::call_site());
         quote! {
-            extern crate #krate as _oauth1_request;
+            extern crate #krate as _oauth1_request_ios;
         }
     };
 
@@ -88,14 +88,14 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 
     proc_macro_error::set_dummy(quote! {
         const _: () = {
-            #use_oauth1_request
+            #use_oauth1_request_ios
 
-            impl #impl_generics _oauth1_request::Request for #name #ty_generics
+            impl #impl_generics _oauth1_request_ios::Request for #name #ty_generics
                 #where_clause
             {
                 fn serialize<S>(&self, serializer: S) -> S::Output
                 where
-                    S: _oauth1_request::serializer::Serializer,
+                    S: _oauth1_request_ios::serializer::Serializer,
                 {
                     unimplemented!();
                 }
@@ -129,17 +129,17 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
 
     quote_spanned! {Span::mixed_site()=>
         const _: () = {
-            #use_oauth1_request
+            #use_oauth1_request_ios
 
             #[automatically_derived]
-            impl #impl_generics _oauth1_request::Request for #name #ty_generics
+            impl #impl_generics _oauth1_request_ios::Request for #name #ty_generics
                 #where_clause
             {
                 // `_S`'s span resolves at call site so prefix it with underscore to avoid conflict.
                 // TODO: Use def-site hygiene once it stabilizes.
                 fn serialize<_S>(&self, mut serializer: _S) -> _S::Output
                 where
-                    _S: _oauth1_request::serializer::Serializer,
+                    _S: _oauth1_request_ios::serializer::Serializer,
                 {
                     #body
                 }

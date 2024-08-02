@@ -3,7 +3,7 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
 
-#![doc(html_root_url = "https://docs.rs/oauth-credentials-ios/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/oauth-credentials-ios/0.0.1")]
 #![allow(deprecated)]
 #![
     allow(

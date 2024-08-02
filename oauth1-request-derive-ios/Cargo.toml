@@ -2,14 +2,14 @@
 name = "oauth1-request-derive-ios"
 edition = "2018"
 rust-version = "1.46.0"
-version = "0.5.1"
+version = "0.0.1"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 license = "MIT OR Apache-2.0"
-homepage = "https://github.com/tesaguri/oauth1-request-rs"
-repository = "https://github.com/tesaguri/oauth1-request-rs"
-documentation = "https://docs.rs/oauth1-request-derive-ios/0.5.1/oauth1_request_derive/"
+homepage = "https://github.com/samgj18/oauth1-ios-rs"
+repository = "https://github.com/samgj18/oauth1-ios-rs"
+documentation = "https://docs.rs/oauth1-request-derive-ios/0.0.1/oauth1_request_derive_ios/"
 description = """
-A derive macro for `oauth1_request::Request` trait.
+A derive macro for `oauth1_request_ios::Request` trait.
 """
 
 [lib]
@@ -23,7 +23,7 @@ quote = "1"
 syn = { version = "2", features = ["full"] }
 
 [dev-dependencies]
-oauth1-request = { version = "0.6", default-features = false, features = [
+oauth1-request-ios = { path = "../oauth1-request-ios", default-features = false, features = [
     "alloc",
     "derive",
     "test",

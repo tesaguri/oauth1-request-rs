@@ -1,4 +1,4 @@
-#[derive(oauth1_request::Request)]
+#[derive(oauth1_request_ios::Request)]
 struct Test {
     #[oauth1(fmt = missing_fmt)]
     missing_fmt: (),

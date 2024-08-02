@@ -1,6 +1,6 @@
 use std::fmt::{self, Formatter};
 
-#[derive(oauth1_request::Request)]
+#[derive(oauth1_request_ios::Request)]
 struct Test {
     not_display: (),
 

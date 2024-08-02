@@ -1,6 +1,6 @@
 [package]
-name = "oauth1-request"
-version = "0.6.1"
+name = "oauth1-request-ios"
+version = "0.0.1"
 edition = "2018"
 rust-version = "1.46.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
@@ -8,11 +8,11 @@ license = "MIT OR Apache-2.0"
 readme = "../README.md"
 keywords = ["oauth", "oauth1"]
 categories = ["authentication"]
-homepage = "https://github.com/tesaguri/oauth1-request-rs"
-repository = "https://github.com/tesaguri/oauth1-request-rs"
-documentation = "https://docs.rs/oauth1-request/0.6.1/oauth1_request/"
+homepage = "https://github.com/samgj18/oauth1-ios-rs"
+repository = "https://github.com/samgj18/oauth1-ios-rs"
+documentation = "https://docs.rs/oauth1-request-ios/0.0.1/oauth1_request_ios/"
 description = """
-Yet yet yet another OAuth 1.0 client library.
+OAuth 1.0 client library for Rust with HMAC-SHA256 support.
 """
 
 [package.metadata.docs.rs]
@@ -26,7 +26,7 @@ required-features = ["std"]
 base64 = { version = "0.22", default-features = false }
 cfg-if = "1"
 fmt-cmp = "0.1.1"
-oauth-credentials-ios = { version = "0.3", default-features = false }
+oauth-credentials-ios = { path = "../oauth-credentials-ios", default-features = false }
 percent-encoding = { version = "2.1", default-features = false }
 rand = { version = "0.8", default-features = false, features = ["getrandom"] }
 
@@ -57,7 +57,7 @@ js-sys = { version = "0.3", optional = true }
 [dev-dependencies]
 base64 = "0.22"
 # Trick to make `proc-macro-crate` work in doctests.
-oauth1-request = { version = "0.6", path = "", default-features = false }
+oauth1-request-ios = { version = "0.0.1", path = "", default-features = false }
 version-sync = "0.9"
 
 [target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dev-dependencies]

@@ -5,10 +5,10 @@ use wasm_bindgen_test::wasm_bindgen_test as test;
 
 #[test]
 fn pull_9() {
-    let _ = oauth1_request::get(
+    let _ = oauth1_request_ios::get(
         "",
         &(),
         &oauth_credentials_ios::Token::from_parts("", "", "", ""),
-        oauth1_request::PLAINTEXT,
+        oauth1_request_ios::PLAINTEXT,
     );
 }
