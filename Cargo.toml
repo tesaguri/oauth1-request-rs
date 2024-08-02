@@ -1,7 +1,11 @@
 [workspace]
-members = ["oauth-credentials-ios", "oauth1-request", "oauth1-request-derive"]
+members = [
+    "oauth-credentials-ios",
+    "oauth1-request",
+    "oauth1-request-derive-ios",
+]
 
 [patch.crates-io]
 oauth-credentials-ios = { path = "oauth-credentials-ios" }
 oauth1-request = { path = "oauth1-request" }
-oauth1-request-derive = { path = "oauth1-request-derive" }
+oauth1-request-derive-ios = { path = "oauth1-request-derive-ios" }

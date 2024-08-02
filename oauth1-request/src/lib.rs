@@ -206,7 +206,7 @@ doc_auto_cfg! {
     /// [package]: <https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#renaming-dependencies-in-cargotoml>
     #[cfg(feature = "derive")]
     #[doc(inline)]
-    pub use oauth1_request_derive::Request;
+    pub use oauth1_request_derive_ios::Request;
 }
 #[doc(no_inline)]
 pub use oauth_credentials_ios::{Credentials, Token};

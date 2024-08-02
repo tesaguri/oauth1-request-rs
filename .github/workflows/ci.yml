@@ -105,7 +105,7 @@ jobs:
         if: ${{ !matrix.minimum_rust && matrix.target == '' }}
         run: cargo test --manifest-path oauth1-request/Cargo.toml --no-default-features '--features=${{ matrix.features }}'
   derive-test:
-    name: Test `oauth1-request-derive`
+    name: Test `oauth1-request-derive-ios`
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -123,10 +123,10 @@ jobs:
       - name: Install Rust toolchain
         run: rustup toolchain install --no-self-update ${{ matrix.toolchain }} --profile=minimal && rustup default ${{ matrix.toolchain }}
       - uses: Swatinem/rust-cache@v2
-      - name: Build `oauth1-request-derive`
-        run: cargo build --verbose --tests --manifest-path=oauth1-request-derive/Cargo.toml
-      - name: Test `oauth1-request-derive`
-        run: cargo test --verbose --manifest-path oauth1-request-derive/Cargo.toml
+      - name: Build `oauth1-request-derive-ios`
+        run: cargo build --verbose --tests --manifest-path=oauth1-request-derive-ios/Cargo.toml
+      - name: Test `oauth1-request-derive-ios`
+        run: cargo test --verbose --manifest-path oauth1-request-derive-ios/Cargo.toml
   credentials-msrv:
     name: Build `oauth-credentials-ios` on MSRV
     runs-on: ubuntu-latest

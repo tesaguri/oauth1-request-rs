@@ -31,7 +31,7 @@ percent-encoding = { version = "2.1", default-features = false }
 rand = { version = "0.8", default-features = false, features = ["getrandom"] }
 
 # `derive` feature
-oauth1-request-derive = { version = "0.5", optional = true }
+oauth1-request-derive-ios = { path = "../oauth1-request-derive-ios", optional = true }
 
 # `either` feature
 either = { version = "1.2", optional = true }
@@ -67,7 +67,7 @@ wasm-bindgen-test = "0.3"
 [features]
 default = ["derive", "hmac-sha1", "std", "hmac-sha256"]
 alloc = ["oauth-credentials-ios/alloc"]
-derive = ["oauth1-request-derive"]
+derive = ["oauth1-request-derive-ios"]
 hmac-sha1 = ["digest", "hmac", "sha1"]
 hmac-sha256 = ["hmac", "sha2", "digest"]
 rsa-sha1-06 = ["digest", "rsa06", "sha1"]
