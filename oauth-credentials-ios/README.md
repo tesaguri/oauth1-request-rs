@@ -1,17 +1,17 @@
-# oauth-credentials
+#oauth-credentials-ios
 
-[![crates.io](https://img.shields.io/crates/v/oauth-credentials.svg)](https://crates.io/crates/oauth-credentials)
-[![docs.rs](https://docs.rs/oauth-credentials/badge.svg)](https://docs.rs/oauth-credentials/)
+[![crates.io](https://img.shields.io/crates/v/oauth-credentials-ios.svg)](https://crates.io/crates/oauth-credentials-ios)
+[![docs.rs](https://docs.rs/oauth-credentials-ios/badge.svg)](https://docs.rs/oauth-credentials-ios/)
 [![Rust 1.0.0+](https://img.shields.io/badge/rust-1.0.0%2B-blue.svg)](#section-msrv)
 
-`oauth-credentials` crate defines Rust types related to the "credentials" pair
+`oauth-credentials-ios` crate defines Rust types related to the "credentials" pair
 ([RFC 5849 section 1.1][rfc]) of the OAuth 1.0 protocol.
 
 [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
 
 ## Stability
 
-The goal of `oauth-credentials` is to provide a stable and interoperable
+The goal of `oauth-credentials-ios` is to provide a stable and interoperable
 foundation for OAuth implementations.
 
 However, the crate is still unstable in the sense of Semantic Versioning. But we
@@ -30,7 +30,7 @@ an unstable crate and as a private dependency of a stable crate.
 
 ## <span id="section-msrv">MSRV</span>
 
-The minimum supported Rust version of `oauth-credentials` is Rust 1.0.0.
+The minimum supported Rust version of `oauth-credentials-ios` is Rust 1.0.0.
 
 Some Cargo features require newer Rust toolchain as shown below.
 

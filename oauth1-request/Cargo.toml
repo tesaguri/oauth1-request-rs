@@ -26,7 +26,7 @@ required-features = ["std"]
 base64 = { version = "0.22", default-features = false }
 cfg-if = "1"
 fmt-cmp = "0.1.1"
-oauth-credentials = { version = "0.3", default-features = false }
+oauth-credentials-ios = { version = "0.3", default-features = false }
 percent-encoding = { version = "2.1", default-features = false }
 rand = { version = "0.8", default-features = false, features = ["getrandom"] }
 
@@ -66,15 +66,15 @@ wasm-bindgen-test = "0.3"
 
 [features]
 default = ["derive", "hmac-sha1", "std", "hmac-sha256"]
-alloc = ["oauth-credentials/alloc"]
+alloc = ["oauth-credentials-ios/alloc"]
 derive = ["oauth1-request-derive"]
 hmac-sha1 = ["digest", "hmac", "sha1"]
 hmac-sha256 = ["hmac", "sha2", "digest"]
 rsa-sha1-06 = ["digest", "rsa06", "sha1"]
 rsa-sha1-09 = ["digest", "rsa09", "sha1/oid"]
 js = ["js-sys"]
-serde = ["oauth-credentials/serde"]
+serde = ["oauth-credentials-ios/serde"]
 # Note: `percent-encoding` depends on `std` until servo/rust-url#691 lands.
 # <https://github.com/servo/rust-url/pull/691>
-std = ["alloc", "oauth-credentials/std", "rand/std", "rand/std_rng"]
+std = ["alloc", "oauth-credentials-ios/std", "rand/std", "rand/std_rng"]
 test = []

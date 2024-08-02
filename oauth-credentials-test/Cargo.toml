@@ -1,15 +1,15 @@
 [package]
-name = "oauth-credentials-test"
+name = "oauth-credentials-ios-test"
 version = "0.0.0"
 authors = ["Daiki Mizukami <tesaguriguma@gmail.com>"]
 description = "A hack to make the CI work with older toolchains."
 publish = false
 
 [dependencies]
-oauth-credentials = { path = "../oauth-credentials", default-features = false }
+oauth-credentials-ios = { path = "../oauth-credentials-ios", default-features = false }
 
 [features]
 default = ["std"]
 
-alloc = ["oauth-credentials/alloc"]
-std = ["oauth-credentials/std"]
+alloc = ["oauth-credentials-ios/alloc"]
+std = ["oauth-credentials-ios/std"]

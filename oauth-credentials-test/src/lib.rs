@@ -1,3 +1,3 @@
-extern crate oauth_credentials;
+extern crate oauth_credentials_ios;
 
-pub use oauth_credentials::*;
+pub use oauth_credentials_ios::*;

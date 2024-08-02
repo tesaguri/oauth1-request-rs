@@ -3,9 +3,9 @@ name: CI
 on: [push, pull_request]
 
 env:
-  CARGO_INCREMENTAL: '0'
-  CARGO_PROFILE_DEV_DEBUG: '0'
-  CARGO_PROFILE_TEST_DEBUG: '0'
+  CARGO_INCREMENTAL: "0"
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_PROFILE_TEST_DEBUG: "0"
   CARGO_TERM_COLOR: always
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       CARGO_TARGET_DIR: target
       RUSTDOCFLAGS: --deny warnings
       RUSTFLAGS: --deny warnings
-      RUST_BACKTRACE: '1'
+      RUST_BACKTRACE: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -33,7 +33,7 @@ jobs:
           - nightly
           # The old toolchain is tested to detect accidental compatibility breakage, but we don't
           # explicitly guarantee minimum toolchain version and this may increase at any time.
-          - '1.48.0'
+          - "1.48.0"
         target:
           -
         features:
@@ -41,9 +41,9 @@ jobs:
           - js,derive
           - js,hmac-sha1
         exclude:
-          - toolchain: '1.48.0'
+          - toolchain: "1.48.0"
             features: js,derive
-          - toolchain: '1.48.0'
+          - toolchain: "1.48.0"
             features: js,hmac-sha1
         include:
           - toolchain: stable
@@ -55,7 +55,7 @@ jobs:
           - toolchain: stable
             features: js
             target: wasm32-unknown-unknown
-          - toolchain: '1.48.0'
+          - toolchain: "1.48.0"
             minimum_rust: true
     steps:
       - uses: actions/checkout@v4
@@ -128,19 +128,19 @@ jobs:
       - name: Test `oauth1-request-derive`
         run: cargo test --verbose --manifest-path oauth1-request-derive/Cargo.toml
   credentials-msrv:
-    name: Build `oauth-credentials` on MSRV
+    name: Build `oauth-credentials-ios` on MSRV
     runs-on: ubuntu-latest
     strategy:
       matrix:
         toolchain:
-          - '1.0.0'
-          - '1.6.0'
-          - '1.36.0'
+          - "1.0.0"
+          - "1.6.0"
+          - "1.36.0"
         include:
-          - toolchain: '1.0.0'
+          - toolchain: "1.0.0"
             features: std
-          - toolchain: '1.6.0'
-          - toolchain: '1.36.0'
+          - toolchain: "1.6.0"
+          - toolchain: "1.36.0"
             features: alloc
     steps:
       - uses: actions/checkout@v4
@@ -157,18 +157,18 @@ jobs:
           # Remove the virtual manifest because Rust 1.13.0 run fails when built as a workspace member.
           rm Cargo.toml
           # Reference: <https://github.com/mcgoo/vcpkg-rs/blob/f75707b/.github/workflows/rust-1.12.yml>
-          mkdir -p oauth-credentials/.cargo
-          cat <<EOF >> oauth-credentials/.cargo/config
+          mkdir -p oauth-credentials-ios/.cargo
+          cat <<EOF >> oauth-credentials-ios/.cargo/config
           [source.crates-io]
           registry = "file://$GITHUB_WORKSPACE/crates.io-index"
           EOF
-      - name: Build `oauth-credentials`
-        # Toolchains older than 1.8.0 cannot compile `oauth-credentials` directly
+      - name: Build `oauth-credentials-ios`
+        # Toolchains older than 1.8.0 cannot compile `oauth-credentials-ios` directly
         # because the toolchains do not understand Cargo registry's information for `serde`, so we
         # use the same trick that we used for `oauth1-request`'s minimum tested toolchain.
-        run: cargo build --verbose --manifest-path oauth-credentials-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
+        run: cargo build --verbose --manifest-path oauth-credentials-ios-test/Cargo.toml --no-default-features --features=${{ matrix.features }}
   credentials-test:
-    name: Test `oauth-credentials`
+    name: Test `oauth-credentials-ios`
     runs-on: ubuntu-latest
     env:
       RUSTFLAGS: --allow unknown_lints
@@ -187,10 +187,10 @@ jobs:
       - name: Install Rust toolchain
         run: rustup toolchain install --no-self-update ${{ matrix.toolchain }} --profile=minimal && rustup default ${{ matrix.toolchain }}
       - uses: Swatinem/rust-cache@v2
-      - name: Build `oauth-credentials`
-        run: cargo build --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
-      - name: Test `oauth-credentials`
-        run: cargo test --verbose --manifest-path oauth-credentials/Cargo.toml --features=${{ matrix.features }}
+      - name: Build `oauth-credentials-ios`
+        run: cargo build --verbose --manifest-path oauth-credentials-ios/Cargo.toml --features=${{ matrix.features }}
+      - name: Test `oauth-credentials-ios`
+        run: cargo test --verbose --manifest-path oauth-credentials-ios/Cargo.toml --features=${{ matrix.features }}
   min-deps:
     name: Check with `-Z minimal-versions`
     runs-on: ubuntu-latest
@@ -202,6 +202,6 @@ jobs:
       - name: Cargo update
         run: cargo update -Z minimal-versions
         env:
-          RUSTC_BOOTSTRAP: '1'
+          RUSTC_BOOTSTRAP: "1"
       - name: Check
         run: cargo check --verbose --all-features

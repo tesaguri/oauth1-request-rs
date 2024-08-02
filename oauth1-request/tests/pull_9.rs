@@ -8,7 +8,7 @@ fn pull_9() {
     let _ = oauth1_request::get(
         "",
         &(),
-        &oauth_credentials::Token::from_parts("", "", "", ""),
+        &oauth_credentials_ios::Token::from_parts("", "", "", ""),
         oauth1_request::PLAINTEXT,
     );
 }

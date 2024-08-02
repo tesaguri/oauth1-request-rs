@@ -26,7 +26,7 @@ const SECRET: &'static str = "oauth_token_secret";
 /// # Example
 ///
 /// ```
-/// use oauth_credentials::Credentials;
+/// use oauth_credentials_ios::Credentials;
 ///
 /// # fn main() -> Result<(), serde_urlencoded::de::Error> {
 /// // Response body from a Temporary Credential Request endpoint.
@@ -59,7 +59,7 @@ const SECRET: &'static str = "oauth_token_secret";
 /// # #[macro_use]
 /// # extern crate serde_derive;
 /// #
-/// use oauth_credentials::Credentials;
+/// use oauth_credentials_ios::Credentials;
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize)]
@@ -151,7 +151,7 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Credentials<T> {
 /// # #[macro_use]
 /// # extern crate serde_derive;
 /// #
-/// use oauth_credentials::Credentials;
+/// use oauth_credentials_ios::Credentials;
 /// use serde::Serialize;
 ///
 /// #[derive(Serialize)]
@@ -194,7 +194,7 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for Credentials<T> {
 /// # #[macro_use]
 /// # extern crate serde_derive;
 /// #
-/// use oauth_credentials::Credentials;
+/// use oauth_credentials_ios::Credentials;
 /// use serde::Serialize;
 ///
 /// #[derive(Serialize)]

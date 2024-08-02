@@ -209,7 +209,7 @@ doc_auto_cfg! {
     pub use oauth1_request_derive::Request;
 }
 #[doc(no_inline)]
-pub use oauth_credentials::{Credentials, Token};
+pub use oauth_credentials_ios::{Credentials, Token};
 
 doc_auto_cfg! {
     pub use self::request::ParameterList;

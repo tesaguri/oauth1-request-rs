@@ -3,7 +3,7 @@
 //!
 //! [rfc]: https://tools.ietf.org/html/rfc5849#section-1.1
 
-#![doc(html_root_url = "https://docs.rs/oauth-credentials/0.3.0")]
+#![doc(html_root_url = "https://docs.rs/oauth-credentials-ios/0.3.0")]
 #![allow(deprecated)]
 #![
     allow(
@@ -145,7 +145,7 @@ impl<T> Credentials<T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use oauth_credentials::Credentials;
+    /// # use oauth_credentials_ios::Credentials;
     /// # const _: &str = stringify! {
     /// async fn get_temporary_credentials() -> Credentials { /* ... */ }
     /// # };
@@ -235,7 +235,7 @@ impl<C, T> Token<C, T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use oauth_credentials::{Credentials, Token};
+    /// # use oauth_credentials_ios::{Credentials, Token};
     /// async fn get_token<C: AsRef<str>, T: AsRef<str>>(temporary: Token<C, T>) -> Token<C, String> {
     ///     // ...
     /// #     Token::new(temporary.client, Credentials::new("", "").map(Into::into))
@@ -263,7 +263,7 @@ impl<C, T> Token<C, T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use oauth_credentials::{Credentials, Token};
+    /// # use oauth_credentials_ios::{Credentials, Token};
     /// async fn get_token<C: AsRef<str>, T: AsRef<str>>(temporary: Token<C, T>) -> Token<C, String> {
     ///     // ...
     /// #     Token::new(temporary.client, Credentials::new("", "").map(Into::into))
@@ -292,7 +292,7 @@ impl<T> Token<T> {
     /// # Example
     ///
     /// ```edition2018
-    /// # use oauth_credentials::Token;
+    /// # use oauth_credentials_ios::Token;
     /// async fn get_token() -> Token {
     ///     // ...
     /// #     Token::from_parts("", "", "", "").map(Into::into)
