@@ -91,7 +91,7 @@ mod tests {
 
         let fmt = helper.fmt_impls_fn(fmt_str);
         // The `&String` should coerce to `&str`.
-        let _ = helper.fmt(fmt_str, &String::new());
+        let _ = helper.fmt(fmt_str, "");
 
         let _ = helper.skip_if_impls_fn(|&()| true);
     }
