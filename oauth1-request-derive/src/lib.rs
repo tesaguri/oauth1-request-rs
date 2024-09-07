@@ -88,10 +88,6 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
 
     let meta = ContainerMeta::new(input.attrs, &mut cx);
 
-    if let Some(tokens) = cx.emit_errors() {
-        return tokens;
-    }
-
     let use_oauth1_request = if let Some(krate) = meta.krate {
         quote! {
             use #krate as _oauth1_request;
@@ -117,10 +113,30 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
         }
     };
 
-    let body = MethodBody::new(&fields);
-
     add_trait_bounds(&mut generics);
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
+    if let Some(mut tokens) = cx.emit_errors() {
+        tokens.extend(quote! {
+            const _: () = {
+                #use_oauth1_request
+
+                impl #impl_generics _oauth1_request::Request for #name #ty_generics
+                    #where_clause
+                {
+                    fn serialize<S>(&self, serializer: S) -> S::Output
+                    where
+                        S: _oauth1_request::serializer::Serializer,
+                    {
+                        unimplemented!();
+                    }
+                }
+            };
+        });
+        return tokens;
+    }
+
+    let body = MethodBody::new(&fields);
 
     quote_spanned! {Span::mixed_site()=>
         const _: () = {
