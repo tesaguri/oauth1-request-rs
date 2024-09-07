@@ -28,7 +28,6 @@ mod util;
 use proc_macro2::{Span, TokenStream};
 use proc_macro_crate::FoundCrate;
 use quote::{quote, quote_spanned};
-use syn::spanned::Spanned;
 use syn::{
     parse_macro_input, parse_quote, Data, DataStruct, DeriveInput, Fields, GenericParam, Generics,
     Ident,
@@ -38,7 +37,6 @@ use self::container::ContainerMeta;
 use self::ctxt::Ctxt;
 use self::field::Field;
 use self::method_body::MethodBody;
-use self::util::error;
 
 /// A derive macro for [`oauth1_request::Request`][Request] trait.
 ///
@@ -59,7 +57,10 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
             fields: Fields::Named(fields),
             ..
         }) => fields,
-        _ => return error("expected a struct with named fields", input.span()),
+        _ => {
+            return syn::Error::new_spanned(input, "expected a struct with named fields")
+                .into_compile_error()
+        }
     };
 
     let mut cx = Ctxt::new();
@@ -81,7 +82,7 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
         let name = f.name();
         let (name, span) = (name.string_value(), name.span());
         if name == prev_name {
-            cx.error(&format!("duplicate parameter \"{}\"", name), span);
+            cx.add_error_message(span, format!("duplicate parameter \"{}\"", name));
         }
         name
     });
@@ -105,7 +106,10 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
                 &*krate
             }
             Err(proc_macro_crate::Error::CargoManifestDirNotSet) => "oauth1_request",
-            Err(e) => panic!("{:?}", e),
+            Err(e) => {
+                cx.add_error_message(Span::call_site(), e);
+                "oauth1_request"
+            }
         };
         let krate = Ident::new(krate, Span::call_site());
         quote! {
@@ -116,7 +120,8 @@ fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
     add_trait_bounds(&mut generics);
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
-    if let Some(mut tokens) = cx.emit_errors() {
+    if let Some(e) = cx.take_error() {
+        let mut tokens = e.into_compile_error();
         tokens.extend(quote! {
             const _: () = {
                 #use_oauth1_request

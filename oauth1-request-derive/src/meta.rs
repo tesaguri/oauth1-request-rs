@@ -31,14 +31,14 @@ macro_rules! def_meta {
                     let meta_list = match attr.parse_args_with(parser) {
                         Ok(list) => list,
                         Err(e) => {
-                            cx.error(&e.to_string(), e.span());
+                            cx.add_error(e);
                             continue;
                         }
                     };
 
                     for meta in meta_list {
                         if let Err(e) = ret.add_meta(meta) {
-                            cx.error(&e.to_string(), e.span());
+                            cx.add_error(e);
                         }
                     }
                 }

@@ -1,40 +1,41 @@
+use core::fmt::Display;
 use std::mem;
 
-use proc_macro2::{Span, TokenStream};
-use quote::ToTokens;
-
-use crate::util::error;
+use proc_macro2::Span;
+use syn::Error;
 
 pub struct Ctxt {
-    errors: Option<TokenStream>,
+    error: Option<Error>,
 }
 
 impl Ctxt {
     pub fn new() -> Self {
-        Self {
-            errors: Some(TokenStream::new()),
-        }
+        Self { error: None }
     }
 
-    pub fn error(&mut self, msg: &str, span: Span) {
-        error(msg, span).to_tokens(self.errors.as_mut().unwrap());
-    }
-
-    pub fn emit_errors(mut self) -> Option<TokenStream> {
-        let errors = self.errors.take().unwrap();
-        mem::forget(self);
-        if errors.is_empty() {
-            None
+    pub fn add_error(&mut self, error: Error) {
+        if let Some(ref mut e) = self.error {
+            e.combine(error);
         } else {
-            Some(errors)
+            self.error = Some(error);
         }
+    }
+
+    pub fn add_error_message<T: Display>(&mut self, span: Span, msg: T) {
+        self.add_error(Error::new(span, msg));
+    }
+
+    pub fn take_error(mut self) -> Option<Error> {
+        let error = self.error.take();
+        mem::forget(self);
+        error
     }
 }
 
 impl Drop for Ctxt {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            panic!("must call `Ctxt::emit_errors`");
+            panic!("must call `Ctxt::take_error`");
         }
     }
 }
