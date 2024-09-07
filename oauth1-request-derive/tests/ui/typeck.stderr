@@ -102,7 +102,7 @@ error[E0277]: expected a `Fn(&_, &mut Formatter<'_>)` closure, found `()`
 24 |     #[oauth1(fmt = NOT_FN)]
    |                    ^^^^^^ expected an `Fn(&_, &mut Formatter<'_>)` closure, found `()`
    |
-   = help: the trait `for<'a, 'b, 'c> Fn<(&'a _, &'b mut Formatter<'c>)>` is not implemented for `()`
+   = help: the trait `for<'a, 'b, 'c> Fn(&'a _, &'b mut Formatter<'c>)` is not implemented for `()`
 note: required by a bound in `DeriveRequestAssertion::fmt_impls_fn`
   --> tests/ui/typeck.rs:3:10
    |
@@ -116,7 +116,7 @@ error[E0277]: expected a `Fn(&_, &mut Formatter<'_>)` closure, found `()`
 3 | #[derive(oauth1_request::Request)]
   |          ^^^^^^^^^^^^^^^^^^^^^^^ expected an `Fn(&_, &mut Formatter<'_>)` closure, found `()`
   |
-  = help: the trait `for<'a, 'b, 'c> Fn<(&'a _, &'b mut Formatter<'c>)>` is not implemented for `()`
+  = help: the trait `for<'a, 'b, 'c> Fn(&'a _, &'b mut Formatter<'c>)` is not implemented for `()`
 note: required by a bound in `DeriveRequestAssertion::fmt_impls_fn`
  --> tests/ui/typeck.rs:3:10
   |
@@ -210,6 +210,9 @@ error[E0308]: mismatched types
               found reference `&u8`
 note: method defined here
   --> $RUST/core/src/option.rs
+   |
+   |     pub const fn as_ref(&self) -> Option<&T> {
+   |                  ^^^^^^
 
 error[E0308]: mismatched types
   --> tests/ui/typeck.rs:37:27
@@ -274,7 +277,7 @@ error[E0277]: expected a `Fn(&_)` closure, found `()`
 46 |     #[oauth1(skip_if = NOT_FN)]
    |                        ^^^^^^ expected an `Fn(&_)` closure, found `()`
    |
-   = help: the trait `for<'a> Fn<(&'a _,)>` is not implemented for `()`
+   = help: the trait `for<'a> Fn(&'a _)` is not implemented for `()`
 note: required by a bound in `DeriveRequestAssertion::skip_if_impls_fn`
   --> tests/ui/typeck.rs:3:10
    |
@@ -288,7 +291,7 @@ error[E0277]: expected a `Fn(&_)` closure, found `()`
 3 | #[derive(oauth1_request::Request)]
   |          ^^^^^^^^^^^^^^^^^^^^^^^ expected an `Fn(&_)` closure, found `()`
   |
-  = help: the trait `for<'a> Fn<(&'a _,)>` is not implemented for `()`
+  = help: the trait `for<'a> Fn(&'a _)` is not implemented for `()`
 note: required by a bound in `DeriveRequestAssertion::skip_if_impls_fn`
  --> tests/ui/typeck.rs:3:10
   |
