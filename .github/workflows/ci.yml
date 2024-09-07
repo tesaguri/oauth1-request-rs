@@ -197,7 +197,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust toolchain
-        run: rustup toolchain install --no-self-update stable --profile=minimal && rustup default
+        run: rustup toolchain install --no-self-update stable --profile=minimal && rustup default stable
       - uses: Swatinem/rust-cache@v2
       - name: Cargo update
         run: cargo update -Z minimal-versions
