@@ -81,7 +81,7 @@ def_tokens! {SkipIfHelper;
 mod tests {
     use super::*;
 
-    #[allow(unused)]
+    #[allow(unused, clippy::unnecessary_owned_empty_strings)]
     fn it_compiles() {
         fn fmt_str(_: &str, _: &mut Formatter<'_>) -> Result {
             unimplemented!();

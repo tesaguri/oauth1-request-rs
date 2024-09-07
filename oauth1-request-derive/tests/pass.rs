@@ -171,7 +171,7 @@ assert_expand! {
         a: &'a str,
     }
     |this, mut ser| {
-        ser.serialize_parameter("a", &this.a);
+        ser.serialize_parameter("a", this.a);
         ser.serialize_oauth_parameters();
         ser.end()
     }

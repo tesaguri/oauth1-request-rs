@@ -41,7 +41,7 @@ use alloc::string::String;
 /// - Client credentials (consumer key and secret) used to authenticate as a client.
 /// - Temporary credentials (request token and secret) which represent an authorization request.
 /// - Token credentials (access token and secret) which represent an access grant from
-/// a resource owner to a client.
+///   a resource owner to a client.
 ///
 /// In order to make requests on behalf of a resource owner, you (the client) need a set of
 /// client credentials and token credentials, which is represented by the [Token] type.
