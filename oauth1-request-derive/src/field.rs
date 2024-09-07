@@ -5,6 +5,8 @@ use syn::{ExprPath, Ident, LitBool, LitStr, Type};
 
 use crate::meta::UriSafe;
 
+use crate::ctxt::Ctxt;
+
 pub struct Field {
     pub ident: Ident,
     pub ty: Type,
@@ -28,11 +30,11 @@ pub enum Name<'a> {
 }
 
 impl Field {
-    pub fn new(field: syn::Field) -> Self {
+    pub fn new(field: syn::Field, cx: &mut Ctxt) -> Self {
         let syn::Field {
             attrs, ident, ty, ..
         } = field;
-        let meta = FieldMeta::new(attrs);
+        let meta = FieldMeta::new(attrs, cx);
         let ident = ident.unwrap().unraw();
         Self { ident, ty, meta }
     }

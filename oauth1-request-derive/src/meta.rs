@@ -12,7 +12,7 @@ macro_rules! def_meta {
         }
 
         impl $Name {
-            pub fn new(attrs: Vec<syn::Attribute>) -> Self {
+            pub fn new(attrs: Vec<syn::Attribute>, cx: &mut crate::ctxt::Ctxt) -> Self {
                 use syn::parse::Parse;
 
                 use $crate::meta::Meta;
@@ -31,14 +31,14 @@ macro_rules! def_meta {
                     let meta_list = match attr.parse_args_with(parser) {
                         Ok(list) => list,
                         Err(e) => {
-                            proc_macro_error::emit_error!(e.span(), e.to_string());
+                            cx.error(&e.to_string(), e.span());
                             continue;
                         }
                     };
 
                     for meta in meta_list {
                         if let Err(e) = ret.add_meta(meta) {
-                            proc_macro_error::emit_error!(e.span(), e.to_string());
+                            cx.error(&e.to_string(), e.span());
                         }
                     }
                 }

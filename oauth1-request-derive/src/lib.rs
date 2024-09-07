@@ -20,13 +20,13 @@
 mod meta;
 
 mod container;
+mod ctxt;
 mod field;
 mod method_body;
 mod util;
 
 use proc_macro2::{Span, TokenStream};
 use proc_macro_crate::FoundCrate;
-use proc_macro_error::{abort, abort_if_dirty, emit_error, proc_macro_error};
 use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{
@@ -35,8 +35,10 @@ use syn::{
 };
 
 use self::container::ContainerMeta;
+use self::ctxt::Ctxt;
 use self::field::Field;
 use self::method_body::MethodBody;
+use self::util::error;
 
 /// A derive macro for [`oauth1_request::Request`][Request] trait.
 ///
@@ -45,18 +47,50 @@ use self::method_body::MethodBody;
 /// See the [documentation] on the `oauth1_request` crate.
 ///
 /// [documentation]: https://docs.rs/oauth1-request/0.6/oauth1_request/derive.Request.html
-#[proc_macro_error]
 #[proc_macro_derive(Request, attributes(oauth1))]
 pub fn derive_oauth1_authorize(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     expand_derive_oauth1_authorize(input).into()
 }
 
-fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
-    let name = &input.ident;
-    let span = input.span();
+fn expand_derive_oauth1_authorize(input: DeriveInput) -> TokenStream {
+    let fields = match input.data {
+        Data::Struct(DataStruct {
+            fields: Fields::Named(fields),
+            ..
+        }) => fields,
+        _ => return error("expected a struct with named fields", input.span()),
+    };
 
-    let meta = ContainerMeta::new(input.attrs);
+    let mut cx = Ctxt::new();
+
+    let DeriveInput {
+        ident: name,
+        mut generics,
+        ..
+    } = input;
+
+    let mut fields: Vec<_> = fields
+        .named
+        .into_iter()
+        .map(|f| Field::new(f, &mut cx))
+        .collect();
+
+    fields.sort_by_cached_key(|f| f.name().string_value());
+    fields.iter().fold(String::new(), |prev_name, f| {
+        let name = f.name();
+        let (name, span) = (name.string_value(), name.span());
+        if name == prev_name {
+            cx.error(&format!("duplicate parameter \"{}\"", name), span);
+        }
+        name
+    });
+
+    let meta = ContainerMeta::new(input.attrs, &mut cx);
+
+    if let Some(tokens) = cx.emit_errors() {
+        return tokens;
+    }
 
     let use_oauth1_request = if let Some(krate) = meta.krate {
         quote! {
@@ -83,49 +117,10 @@ fn expand_derive_oauth1_authorize(mut input: DeriveInput) -> TokenStream {
         }
     };
 
-    add_trait_bounds(&mut input.generics);
-    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
-
-    proc_macro_error::set_dummy(quote! {
-        const _: () = {
-            #use_oauth1_request
-
-            impl #impl_generics _oauth1_request::Request for #name #ty_generics
-                #where_clause
-            {
-                fn serialize<S>(&self, serializer: S) -> S::Output
-                where
-                    S: _oauth1_request::serializer::Serializer,
-                {
-                    unimplemented!();
-                }
-            }
-        };
-    });
-
-    let fields = match input.data {
-        Data::Struct(DataStruct {
-            fields: Fields::Named(fields),
-            ..
-        }) => fields,
-        _ => abort!(span, "expected a struct with named fields"),
-    };
-
-    let mut fields: Vec<_> = fields.named.into_iter().map(Field::new).collect();
-
-    fields.sort_by_cached_key(|f| f.name().string_value());
-    fields.iter().fold(String::new(), |prev_name, f| {
-        let name = f.name();
-        let (name, span) = (name.string_value(), name.span());
-        if name == prev_name {
-            emit_error!(span, "duplicate parameter \"{}\"", name);
-        }
-        name
-    });
-
-    abort_if_dirty();
-
     let body = MethodBody::new(&fields);
+
+    add_trait_bounds(&mut generics);
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     quote_spanned! {Span::mixed_site()=>
         const _: () = {

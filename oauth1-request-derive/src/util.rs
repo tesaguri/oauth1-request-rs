@@ -3,7 +3,7 @@ mod oauth_parameter;
 pub use oauth_parameter::OAuthParameter;
 
 use proc_macro2::{Ident, Span, TokenStream, TokenTree};
-use quote::ToTokens;
+use quote::{quote_spanned, ToTokens};
 
 impl OAuthParameter {
     fn serialize_method_name(self) -> Option<&'static str> {
@@ -29,4 +29,10 @@ impl ToTokens for OAuthParameter {
         let ident = Ident::new(method, Span::call_site());
         tokens.extend(::core::iter::once(TokenTree::Ident(ident)));
     }
+}
+
+pub fn error(msg: &str, span: Span) -> TokenStream {
+    quote_spanned!(span=>
+        compile_error!(#msg);
+    )
 }
